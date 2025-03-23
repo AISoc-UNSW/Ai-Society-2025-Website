@@ -1,7 +1,7 @@
 import secrets
 from typing import Any, List, Optional, Union
 
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import AnyHttpUrl, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings
 
 
@@ -31,10 +31,11 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
     @field_validator("SQLALCHEMY_DATABASE_URI", mode='before')
-    def assemble_db_connection(cls, v: Optional[str], values: dict) -> Any:
+    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:
         if isinstance(v, str):
             return v
-        return f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}/{values.get('POSTGRES_DB')}"
+        data = info.data
+        return f"postgresql://{data.get('POSTGRES_USER')}:{data.get('POSTGRES_PASSWORD')}@{data.get('POSTGRES_SERVER')}/{data.get('POSTGRES_DB')}"
     
     class Config:
         case_sensitive = True

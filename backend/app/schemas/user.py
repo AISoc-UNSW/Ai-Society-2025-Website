@@ -7,8 +7,6 @@ from pydantic import BaseModel, EmailStr
 class UserBase(BaseModel):
     email: Optional[EmailStr] = None
     username: Optional[str] = None
-    is_active: Optional[bool] = True
-    is_superuser: bool = False
 
 
 # Used when creating a user
@@ -16,6 +14,8 @@ class UserCreate(UserBase):
     email: EmailStr
     username: str
     password: str
+    role_id: int
+    discord_id: str
 
 
 # Used when updating a user
@@ -24,16 +24,21 @@ class UserUpdate(UserBase):
 
 
 # User model in API response
-class User(UserBase):
-    id: Optional[int] = None
-
+class UserInDBBase(UserBase):
+    user_id: int
+    
     class Config:
-        from_attributes = True
+        orm_mode = True
+
+
+# User model in API response
+class User(UserInDBBase):
+    pass
 
 
 # Used when logging in
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -45,4 +50,9 @@ class Token(BaseModel):
 
 # Token content
 class TokenPayload(BaseModel):
-    sub: Optional[int] = None 
+    sub: Optional[int] = None
+
+
+# User model in database
+class UserInDB(UserInDBBase):
+    hashed_password: str 

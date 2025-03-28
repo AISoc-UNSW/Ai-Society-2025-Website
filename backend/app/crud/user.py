@@ -12,7 +12,7 @@ def get_by_email(db: Session, email: str) -> Optional[User]:
 
 
 def get_by_id(db: Session, id: int) -> Optional[User]:
-    return db.query(User).filter(User.id == id).first()
+    return db.query(User).filter(User.user_id == id).first()
 
 
 def create(db: Session, *, obj_in: UserCreate) -> User:
@@ -20,7 +20,8 @@ def create(db: Session, *, obj_in: UserCreate) -> User:
         email=obj_in.email,
         username=obj_in.username,
         hashed_password=get_password_hash(obj_in.password),
-        is_superuser=obj_in.is_superuser,
+        role_id=obj_in.role_id,
+        discord_id=obj_in.discord_id,
     )
     db.add(db_obj)
     db.commit()
@@ -54,11 +55,3 @@ def authenticate(db: Session, *, email: str, password: str) -> Optional[User]:
     if not verify_password(password, user.hashed_password):
         return None
     return user
-
-
-def is_active(user: User) -> bool:
-    return user.is_active
-
-
-def is_superuser(user: User) -> bool:
-    return user.is_superuser 

@@ -42,20 +42,16 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-
-def get_current_active_user(
+def get_current_admin(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
-    if not crud.user.is_active(current_user):
-        raise HTTPException(status_code=400, detail="Inactive user")
+    if current_user.role_id != 2:
+        raise HTTPException(status_code=400, detail="The user doesn't have enough privileges")
     return current_user
 
-
-def get_current_active_superuser(
+def get_current_director(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
-    if not crud.user.is_superuser(current_user):
-        raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
-        )
-    return current_user 
+    if current_user.role_id != 3:
+        raise HTTPException(status_code=400, detail="The user doesn't have enough privileges")
+    return current_user

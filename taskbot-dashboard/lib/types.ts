@@ -63,4 +63,3 @@ export interface TranscriptLine {
   timestamp: string
   text: string
 }
-

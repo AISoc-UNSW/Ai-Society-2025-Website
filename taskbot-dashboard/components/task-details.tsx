@@ -28,11 +28,11 @@ export function TaskDetails({ task, isSubtask, onEdit }: TaskDetailsProps) {
       case "Completed":
         return <CheckCircle2 className="h-5 w-5 text-green-500" />
       case "In Progress":
-        return <Clock className="h-5 w-5 text-blue-500" />
+        return <Clock className="h-5 w-5 text-amber-500" />
       case "Cancelled":
         return <XCircle className="h-5 w-5 text-red-500" />
       default:
-        return <Circle className="h-5 w-5 text-gray-400" />
+        return <Circle className="h-5 w-5 text-gray-500" />
     }
   }
 
@@ -85,7 +85,7 @@ export function TaskDetails({ task, isSubtask, onEdit }: TaskDetailsProps) {
             {task.assignees.map((person) => (
               <div key={person.id} className="flex items-center gap-2 rounded-full bg-muted px-3 py-1">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={person.avatar} alt={person.name} />
+                  <AvatarImage src={person.avatar || "/placeholder.svg"} alt={person.name} />
                   <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm">{person.name}</span>
@@ -131,4 +131,3 @@ export function TaskDetails({ task, isSubtask, onEdit }: TaskDetailsProps) {
     </Card>
   )
 }
-

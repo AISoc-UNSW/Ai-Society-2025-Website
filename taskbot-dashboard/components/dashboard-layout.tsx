@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   SidebarProvider,
@@ -12,20 +13,13 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { CalendarDays, LogOut, Settings, SquareStack } from "lucide-react"
+import { CalendarDays, ListChecks, LogOut, Settings, SquareStack } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
-
-const menuItems = [
-  { href: "/tasks", icon: SquareStack, label: "Tasks" },
-  { href: "/task-quick-view", icon: SquareStack, label: "Task Quick-View" },
-  { href: "/meetings", icon: CalendarDays, label: "Meetings" },
-  { href: "/settings", icon: Settings, label: "Settings" },
-]
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
@@ -46,16 +40,38 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href}>
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/tasks"}>
+                  <Link href="/tasks">
+                    <SquareStack className="h-5 w-5" />
+                    <span>Tasks</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/tasks-quick-view"}>
+                  <Link href="/tasks-quick-view">
+                    <ListChecks className="h-5 w-5" />
+                    <span>My Tasks</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/meetings"}>
+                  <Link href="/meetings">
+                    <CalendarDays className="h-5 w-5" />
+                    <span>Meetings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/settings"}>
+                  <Link href="/settings">
+                    <Settings className="h-5 w-5" />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
           <div className="mt-auto p-4">
@@ -80,4 +96,3 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </SidebarProvider>
   )
 }
-

@@ -14,66 +14,6 @@ import { useEffect, useState } from "react"
 const allStatuses: TaskStatus[] = ["Not Started", "In Progress", "Completed", "Cancelled"]
 const allPriorities: PriorityLevel[] = ["Low", "Medium", "High", "Critical"]
 
-function applyFiltersAndSorting(
-  tasks: Task[],
-  selectedDepartments: Department[],
-  selectedStatuses: TaskStatus[],
-  selectedPriorities: PriorityLevel[],
-  searchQuery: string,
-  sortBy: SortOption,
-  sortDirection: SortDirection,
-): Task[] {
-  let result = [...tasks]
-
-  if (selectedDepartments.length > 0) {
-    result = result.filter((task) => selectedDepartments.includes(task.department))
-  }
-
-  if (selectedStatuses.length > 0) {
-    result = result.filter((task) => selectedStatuses.includes(task.status))
-  }
-
-  if (selectedPriorities.length > 0) {
-    result = result.filter((task) => selectedPriorities.includes(task.priority))
-  }
-
-  if (searchQuery) {
-    const query = searchQuery.toLowerCase()
-    result = result.filter(
-      (task) =>
-        task.title.toLowerCase().includes(query) ||
-        task.description.toLowerCase().includes(query) ||
-        task.subtasks.some(
-          (subtask) =>
-            subtask.title.toLowerCase().includes(query) || subtask.description.toLowerCase().includes(query),
-        ),
-    )
-  }
-
-  result.sort((a, b) => {
-    let comparison = 0
-    switch (sortBy) {
-      case "dueDate":
-        comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-        break
-      case "priority":
-        const priorityOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 }
-        comparison = priorityOrder[a.priority] - priorityOrder[b.priority]
-        break
-      case "status":
-        const statusOrder = { "Not Started": 0, "In Progress": 1, Completed: 2, Cancelled: 3 }
-        comparison = statusOrder[a.status] - statusOrder[b.status]
-        break
-      case "title":
-        comparison = a.title.localeCompare(b.title)
-        break
-    }
-    return sortDirection === "asc" ? comparison : -comparison
-  })
-
-  return result
-}
-
 export default function TasksPage() {
   // Selected task state
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(undefined)
@@ -97,17 +37,62 @@ export default function TasksPage() {
 
   // Apply filters and sorting
   useEffect(() => {
-    setFilteredTasks(
-      applyFiltersAndSorting(
-        tasks,
-        selectedDepartments,
-        selectedStatuses,
-        selectedPriorities,
-        searchQuery,
-        sortBy,
-        sortDirection,
-      ),
-    )
+    let result = [...tasks]
+
+    // Apply department filter
+    if (selectedDepartments.length > 0) {
+      result = result.filter((task) => selectedDepartments.includes(task.department))
+    }
+
+    // Apply status filter
+    if (selectedStatuses.length > 0) {
+      result = result.filter((task) => selectedStatuses.includes(task.status))
+    }
+
+    // Apply priority filter
+    if (selectedPriorities.length > 0) {
+      result = result.filter((task) => selectedPriorities.includes(task.priority))
+    }
+
+    // Apply search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(
+        (task) =>
+          task.title.toLowerCase().includes(query) ||
+          task.description.toLowerCase().includes(query) ||
+          task.subtasks.some(
+            (subtask) =>
+              subtask.title.toLowerCase().includes(query) || subtask.description.toLowerCase().includes(query),
+          ),
+      )
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      let comparison = 0
+
+      switch (sortBy) {
+        case "dueDate":
+          comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+          break
+        case "priority":
+          const priorityOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 }
+          comparison = priorityOrder[a.priority] - priorityOrder[b.priority]
+          break
+        case "status":
+          const statusOrder = { "Not Started": 0, "In Progress": 1, Completed: 2, Cancelled: 3 }
+          comparison = statusOrder[a.status] - statusOrder[b.status]
+          break
+        case "title":
+          comparison = a.title.localeCompare(b.title)
+          break
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison
+    })
+
+    setFilteredTasks(result)
   }, [selectedDepartments, selectedStatuses, selectedPriorities, searchQuery, sortBy, sortDirection])
 
   // Handle task selection
@@ -221,4 +206,3 @@ export default function TasksPage() {
     </DashboardLayout>
   )
 }
-

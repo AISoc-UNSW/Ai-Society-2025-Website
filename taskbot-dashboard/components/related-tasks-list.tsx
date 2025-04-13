@@ -39,4 +39,3 @@ export function RelatedTasksList({ tasks }: RelatedTasksListProps) {
     </Card>
   )
 }
-

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DiscIcon as Discord } from "lucide-react"
 import Link from "next/link"
 
 export default function RegisterPage() {
@@ -10,7 +11,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Register</CardTitle>
-          <CardDescription>Create an account to access the dashboard!</CardDescription>
+          <CardDescription>Create a new account to access the dashboard</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -19,7 +20,7 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="Enter your password" />
+            <Input id="password" type="password" placeholder="Create a password" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="discord_id">Discord ID</Label>
@@ -30,9 +31,21 @@ export default function RegisterPage() {
           <Button asChild className="w-full">
             <Link href="/tasks">Register</Link>
           </Button>
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <span className="relative bg-card px-2 text-sm text-muted-foreground">Or continue with</span>
+          </div>
+          <Button variant="outline" className="w-full" asChild>
+            <Link href="/tasks">
+              <Discord className="mr-2 h-4 w-4" />
+              Register with Discord
+            </Link>
+          </Button>
+          <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary underline">
+            <Link href="/login" className="underline">
               Log In
             </Link>
           </div>

@@ -25,11 +25,11 @@ export function TaskCard({ task, onSelectTask, onSelectSubtask, selectedTaskId, 
       case "Completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />
       case "In Progress":
-        return <Clock className="h-4 w-4 text-blue-500" />
+        return <Clock className="h-4 w-4 text-amber-500" />
       case "Cancelled":
         return <XCircle className="h-4 w-4 text-red-500" />
       default:
-        return <Circle className="h-4 w-4 text-gray-400" />
+        return <Circle className="h-4 w-4 text-gray-500" />
     }
   }
 
@@ -65,7 +65,7 @@ export function TaskCard({ task, onSelectTask, onSelectSubtask, selectedTaskId, 
             <div className="mt-1 flex -space-x-2">
               {task.assignees.map((person) => (
                 <Avatar key={person.id} className="h-6 w-6 border-2 border-background">
-                  <AvatarImage src={person.avatar} alt={person.name} />
+                  <AvatarImage src={person.avatar || "/placeholder.svg"} alt={person.name} />
                   <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
                 </Avatar>
               ))}
@@ -123,11 +123,11 @@ function SubtaskRow({ subtask, onSelect, isSelected }: SubtaskRowProps) {
       case "Completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />
       case "In Progress":
-        return <Clock className="h-4 w-4 text-blue-500" />
+        return <Clock className="h-4 w-4 text-amber-500" />
       case "Cancelled":
         return <XCircle className="h-4 w-4 text-red-500" />
       default:
-        return <Circle className="h-4 w-4 text-gray-400" />
+        return <Circle className="h-4 w-4 text-gray-500" />
     }
   }
 
@@ -161,7 +161,7 @@ function SubtaskRow({ subtask, onSelect, isSelected }: SubtaskRowProps) {
           <div className="mt-1 flex -space-x-2">
             {subtask.assignees.map((person) => (
               <Avatar key={person.id} className="h-6 w-6 border-2 border-background">
-                <AvatarImage src={person.avatar} alt={person.name} />
+                <AvatarImage src={person.avatar || "/placeholder.svg"} alt={person.name} />
                 <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
               </Avatar>
             ))}
@@ -181,4 +181,3 @@ function SubtaskRow({ subtask, onSelect, isSelected }: SubtaskRowProps) {
     </div>
   )
 }
-

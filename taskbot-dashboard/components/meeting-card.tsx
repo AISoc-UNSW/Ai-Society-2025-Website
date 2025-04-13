@@ -26,4 +26,3 @@ export function MeetingCard({ meeting }: MeetingCardProps) {
     </Link>
   )
 }
-

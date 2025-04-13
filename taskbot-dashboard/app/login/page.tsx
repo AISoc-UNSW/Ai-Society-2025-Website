@@ -39,9 +39,9 @@ export default function LoginPage() {
               Login with Discord
             </Link>
           </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-primary underline">
+          <div className="mt-4 text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="underline">
               Sign Up
             </Link>
           </div>
@@ -50,4 +50,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

@@ -36,7 +36,7 @@ def root():
 # app.include_router(auth_router)
 @app.get("/auth/discord")
 async def discord_login():
-    # 构造 Discord 授权 URL
+    # Construct Discord Authorization URL
     # print("Redirect URI:", os.getenv("DISCORD_REDIRECT_URI"))
     params = {
         "response_type": "code",
@@ -54,7 +54,7 @@ async def discord_callback(request: Request, code: str = None):
     if code is None:
         raise HTTPException(status_code=400, detail="没有提供 OAuth code")
     
-    # 使用 code 换取 access token
+   # Use code to exchange access token
     data = {
         "client_id": DISCORD_CLIENT_ID,
         "client_secret": DISCORD_CLIENT_SECRET,

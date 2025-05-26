@@ -1,39 +1,32 @@
-from typing import Optional
-
 from pydantic import BaseModel, EmailStr
 
 
 # Shared properties
 class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
-    username: Optional[str] = None
+    email: EmailStr | None = None
+    username: str | None = None
 
 
 # Used when creating a user
-class UserCreate(UserBase):
+class UserCreateRequestBody(UserBase):
     email: EmailStr
     username: str
     password: str
     role_id: int
-    discord_id: str
+    discord_id: str | None = None
+
+
+class UserCreateResponse(UserBase):
+    user_id: int
+    email: EmailStr
+    username: str
+    role_id: int
+    discord_id: str | None = None
 
 
 # Used when updating a user
 class UserUpdate(UserBase):
-    password: Optional[str] = None
-
-
-# User model in API response
-class UserInDBBase(UserBase):
-    user_id: int
-    
-    class Config:
-        orm_mode = True
-
-
-# User model in API response
-class User(UserInDBBase):
-    pass
+    password: str | None = None
 
 
 # Used when logging in
@@ -50,9 +43,7 @@ class Token(BaseModel):
 
 # Token content
 class TokenPayload(BaseModel):
-    sub: Optional[int] = None
-
-
-# User model in database
-class UserInDB(UserInDBBase):
-    hashed_password: str 
+    # 'sub' (subject) is a standard JWT claim that identifies the principal subject of the token
+    # In this context, it typically contains the user's ID after authentication
+    # This field can be an integer (user_id) or None if not authenticated
+    sub: int | None = None

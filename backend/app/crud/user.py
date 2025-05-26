@@ -1,41 +1,46 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreateRequestBody, UserUpdate
 
 
-def get_by_email(db: Session, email: str) -> Optional[User]:
+def get_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
 
 
-def get_by_id(db: Session, id: int) -> Optional[User]:
+def get_by_id(db: Session, id: int) -> User | None:
     return db.query(User).filter(User.user_id == id).first()
 
 
-def create(db: Session, *, obj_in: UserCreate) -> User:
-    db_obj = User(
-        email=obj_in.email,
-        username=obj_in.username,
-        hashed_password=get_password_hash(obj_in.password),
-        role_id=obj_in.role_id,
-        discord_id=obj_in.discord_id,
-    )
+def get_by_discord_id(db: Session, discord_id: str) -> User | None:
+    return db.query(User).filter(User.discord_id == discord_id).first()
+
+
+def create(db: Session, *, obj_in: UserCreateRequestBody) -> User:
+    db_obj = User()
+    db_obj.email = obj_in.email
+    db_obj.username = obj_in.username
+    db_obj.hashed_password = get_password_hash(obj_in.password)
+    db_obj.role_id = obj_in.role_id
+    if obj_in.discord_id is not None:
+        db_obj.discord_id = obj_in.discord_id
+    else:
+        db_obj.discord_id = ""
+
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
     return db_obj
 
 
-def update(
-    db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
-) -> User:
+def update(db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]) -> User:
     if isinstance(obj_in, dict):
         update_data = obj_in
     else:
-        update_data = obj_in.dict(exclude_unset=True)
+        update_data = obj_in.model_dump(exclude_unset=True)
     if update_data.get("password"):
         hashed_password = get_password_hash(update_data["password"])
         del update_data["password"]
@@ -48,7 +53,7 @@ def update(
     return db_obj
 
 
-def authenticate(db: Session, *, email: str, password: str) -> Optional[User]:
+def authenticate(db: Session, *, email: str, password: str) -> User | None:
     user = get_by_email(db, email=email)
     if not user:
         return None

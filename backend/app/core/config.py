@@ -31,7 +31,11 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"  # default port
     DATABASE_URL: Optional[str] = None  # add optional full connection string
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
-
+    SUPABASE_URL: HttpUrl
+    SUPABASE_KEY: str
+    DISCORD_CLIENT_ID: str
+    DISCORD_CLIENT_SECRET: str
+    DISCORD_REDIRECT_URI: HttpUrl
     @field_validator("SQLALCHEMY_DATABASE_URI", mode='before')
     def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:
         if isinstance(v, str):
@@ -48,6 +52,7 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
         env_file = ".env"
+        env_file_encoding = "utf-8"
 
 
 settings = Settings() 

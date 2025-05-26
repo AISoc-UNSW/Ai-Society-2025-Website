@@ -49,6 +49,11 @@ export default function Home() {
           >
             Read our docs
           </a>
+          <a href="http://localhost:8000/auth/discord">
+        <button style={{ padding: "0.5rem 1rem", fontSize: "1rem" }}>
+         Log in via Discord
+        </button>
+      </a>
         </div>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
@@ -97,6 +102,7 @@ export default function Home() {
           />
           Go to nextjs.org →
         </a>
+        
       </footer>
     </div>
   );

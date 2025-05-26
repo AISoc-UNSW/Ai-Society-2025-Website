@@ -3,8 +3,8 @@ from pydantic import BaseModel, EmailStr
 
 # Shared properties
 class UserBase(BaseModel):
-    email: EmailStr | None = None
-    username: str | None = None
+    email: EmailStr
+    username: str
 
 
 # Used when creating a user
@@ -12,8 +12,10 @@ class UserCreateRequestBody(UserBase):
     email: EmailStr
     username: str
     password: str
-    role_id: int
-    discord_id: str | None = None
+
+
+class DiscordUserCreateRequestBody(UserBase):
+    discord_id: str
 
 
 class UserCreateResponse(UserBase):
@@ -30,7 +32,7 @@ class UserUpdate(UserBase):
 
 
 # Used when logging in
-class UserLogin(BaseModel):
+class UserLoginRequest(BaseModel):
     email: EmailStr
     password: str
 
@@ -47,3 +49,25 @@ class TokenPayload(BaseModel):
     # In this context, it typically contains the user's ID after authentication
     # This field can be an integer (user_id) or None if not authenticated
     sub: int | None = None
+
+
+class DiscordUser(BaseModel):
+    """Discord User structure as returned by Discord API"""
+
+    id: str
+    username: str
+    discriminator: str
+    global_name: str | None = None
+    avatar: str | None = None
+    bot: bool | None = None
+    system: bool | None = None
+    mfa_enabled: bool | None = None
+    banner: str | None = None
+    accent_color: int | None = None
+    locale: str | None = None
+    verified: bool | None = None
+    email: str | None = None
+    flags: int | None = None
+    premium_type: int | None = None
+    public_flags: int | None = None
+    avatar_decoration_data: dict | None = None

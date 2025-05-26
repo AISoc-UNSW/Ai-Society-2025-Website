@@ -11,8 +11,8 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(primary_key=True, index=True)
     email: Mapped[str] = mapped_column(Text, unique=True, index=True, nullable=False)
     username: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(nullable=False)
+    hashed_password: Mapped[str | None] = mapped_column(nullable=True)
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.role_id"), nullable=False)
-    discord_id: Mapped[str] = mapped_column(unique=True, nullable=False)
+    discord_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
     # Add relationship with Role model
     role: Mapped["Role"] = relationship("Role", back_populates="users")

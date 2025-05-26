@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
-from app.schemas.user import UserCreateRequestBody, UserUpdate
+from app.schemas.user import (
+    DiscordUserCreateRequestBody,
+    UserCreateRequestBody,
+    UserUpdate,
+)
 
 
 def get_by_email(db: Session, email: str) -> User | None:
@@ -19,16 +23,12 @@ def get_by_discord_id(db: Session, discord_id: str) -> User | None:
     return db.query(User).filter(User.discord_id == discord_id).first()
 
 
-def create(db: Session, *, obj_in: UserCreateRequestBody) -> User:
+def create_user(db: Session, *, obj_in: UserCreateRequestBody) -> User:
     db_obj = User()
     db_obj.email = obj_in.email
     db_obj.username = obj_in.username
     db_obj.hashed_password = get_password_hash(obj_in.password)
-    db_obj.role_id = obj_in.role_id
-    if obj_in.discord_id is not None:
-        db_obj.discord_id = obj_in.discord_id
-    else:
-        db_obj.discord_id = ""
+    db_obj.role_id = 1
 
     db.add(db_obj)
     db.commit()
@@ -36,7 +36,20 @@ def create(db: Session, *, obj_in: UserCreateRequestBody) -> User:
     return db_obj
 
 
-def update(db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]) -> User:
+def create_discord_user(db: Session, *, obj_in: DiscordUserCreateRequestBody) -> User:
+    db_obj = User()
+    db_obj.email = obj_in.email
+    db_obj.username = obj_in.username
+    db_obj.discord_id = obj_in.discord_id
+    db_obj.role_id = 1
+
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+def update_user(db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]) -> User:
     if isinstance(obj_in, dict):
         update_data = obj_in
     else:
@@ -56,6 +69,8 @@ def update(db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any
 def authenticate(db: Session, *, email: str, password: str) -> User | None:
     user = get_by_email(db, email=email)
     if not user:
+        return None
+    if not user.hashed_password:
         return None
     if not verify_password(password, user.hashed_password):
         return None

@@ -2,10 +2,12 @@ import secrets
 
 from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
-from pydantic.types import HttpUrl
+
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
+    API_V1_USERS_STR: str = "/api/v1/users"
+    API_V1_DISCORD_AUTH_STR: str = "/api/v1/auth/discord"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # The expiration time of the access token, 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
@@ -21,13 +23,13 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "ai_society_dashboard_db"
     POSTGRES_PORT: str = "5432"  # default port
     DATABASE_URL: str | None = None  # add optional full connection string
-    SQLALCHEMY_DATABASE_URI: str | None = None
-    SUPABASE_URL: HttpUrl
-    SUPABASE_KEY: str
-    DISCORD_CLIENT_ID: str
-    DISCORD_CLIENT_SECRET: str
-    DISCORD_REDIRECT_URI: HttpUrl
-    @field_validator("SQLALCHEMY_DATABASE_URI", mode='before')
+
+    DISCORD_CLIENT_ID: str = ""
+    DISCORD_CLIENT_SECRET: str = ""
+    DISCORD_REDIRECT_URI: str = ""
+    DISCORD_API_URL: str = "https://discord.com/api"
+
+    @field_validator("DATABASE_URL", mode="before")
     def assemble_db_connection(cls, v: str | None, info: ValidationInfo) -> str | None:
         if isinstance(v, str):
             return v

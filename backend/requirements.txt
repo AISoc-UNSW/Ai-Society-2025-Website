@@ -11,3 +11,7 @@ alembic==1.12.1
 psycopg2-binary==2.9.9  # PostgreSQL driver
 python-dotenv==1.0.0
 email-validator==2.2.0  # For email validation
+types-python-jose==3.4.0.20250516
+types-passlib==1.7.7.20250516
+types-requests==2.32.0.20250515
+requests==2.32.3

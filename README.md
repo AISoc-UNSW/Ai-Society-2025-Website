@@ -5,10 +5,32 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 1. Activate the virtual environment and install dependencies:
 
 ```bash
-cd backend
+cd backend (Best option is to directly open the backend folder in your IDE)
+python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+If you are using Code Editor like VSCode, choose the python interpreter to be the one in the venv folder by:
+
+```bash
+Ctrl(Cmd) + Shift + P
+```
+
+and then search for "Python: Select Interpreter" and select the one in the venv folder.
+
+Also, in .vscode/settings.json, add the following to format the code on save:
+
+```json
+{
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    }
+}
+```
+
+The file backend/pyproject.toml is already configured to format the code
 
 2. Configure environment variables:
 

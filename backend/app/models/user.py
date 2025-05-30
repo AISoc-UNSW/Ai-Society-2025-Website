@@ -16,3 +16,4 @@ class User(Base):
     discord_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
     # Add relationship with Role model
     role: Mapped["Role"] = relationship("Role", back_populates="users")
+    portfolio_id: Mapped[int | None] = mapped_column(ForeignKey("portfolios.portfolio_id"), nullable=True)

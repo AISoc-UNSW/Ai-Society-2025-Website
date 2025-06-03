@@ -47,3 +47,7 @@ __pycache__/
 
 # venv
 venv/
+
+# cursor
+.cursorrules
+.cursor/

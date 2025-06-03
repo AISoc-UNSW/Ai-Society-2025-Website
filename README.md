@@ -64,9 +64,16 @@ alembic upgrade head
 python run.py
 ```
 
-The API will run on http://localhost:8000, you can visit http://localhost:8000/docs to view the API documentation.
+The API will run on http://localhost:8000, you can visit http://localhost:8000/docs or http://localhost:8000/redoc to view the API documentation.
 
-5. Start the Next.js development server:
+5. Run the API tests:
+
+```bash
+cd backend
+python test_apis.py
+```
+
+6. Start the Next.js development server:
 
 ```bash
 npm run dev

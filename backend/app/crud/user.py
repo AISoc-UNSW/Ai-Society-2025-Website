@@ -49,7 +49,7 @@ def create_discord_user(db: Session, *, obj_in: DiscordUserCreateRequestBody) ->
     return db_obj
 
 
-def update_user(db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]) -> User:
+def update_user(db: Session, *, db_obj: User, obj_in: UserUpdate | dict[str, Any]) -> User:
     if isinstance(obj_in, dict):
         update_data = obj_in
     else:

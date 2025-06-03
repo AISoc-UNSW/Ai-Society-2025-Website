@@ -47,3 +47,8 @@ __pycache__/
 
 # venv
 venv/
+
+# cursor, vscode
+.cursorrules
+.cursor/
+.vscode/

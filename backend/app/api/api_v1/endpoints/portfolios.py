@@ -1,4 +1,3 @@
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -62,13 +61,13 @@ def read_portfolio(
     return portfolio_data
 
 
-@router.get("/", response_model=List[PortfolioListResponse])
+@router.get("/", response_model=list[PortfolioListResponse])
 def read_portfolios(
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0, description="Skip items"),
     limit: int = Query(100, ge=1, le=1000, description="Limit items"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[PortfolioListResponse]:
+) -> list[PortfolioListResponse]:
     """
     Get portfolios list
     """
@@ -83,11 +82,11 @@ def read_portfolios(
     return result
 
 
-@router.get("/all/simple", response_model=List[PortfolioListResponse])
+@router.get("/all/simple", response_model=list[PortfolioListResponse])
 def read_all_portfolios_simple(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> List[PortfolioListResponse]:
+) -> list[PortfolioListResponse]:
     """
     Get all portfolios (for dropdown lists, no pagination)
     """
@@ -102,11 +101,11 @@ def read_all_portfolios_simple(
     return result
 
 
-@router.get("/statistics/all", response_model=List[PortfolioStatsResponse])
+@router.get("/statistics/all", response_model=list[PortfolioStatsResponse])
 def read_all_portfolio_statistics(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> List[PortfolioStatsResponse]:
+) -> list[PortfolioStatsResponse]:
     """
     Get statistics for all portfolios
     """
@@ -173,13 +172,13 @@ def delete_portfolio(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/search/", response_model=List[PortfolioListResponse])
+@router.get("/search/", response_model=list[PortfolioListResponse])
 def search_portfolios(
     *,
     db: Session = Depends(deps.get_db),
     q: str = Query(..., min_length=1, description="Search term"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[PortfolioListResponse]:
+) -> list[PortfolioListResponse]:
     """
     Search portfolios by name or description
     """
@@ -250,11 +249,11 @@ def read_portfolio_by_channel(
     return portfolio_data
 
 
-@router.get("/with-channels/", response_model=List[PortfolioListResponse])
+@router.get("/with-channels/", response_model=list[PortfolioListResponse])
 def read_portfolios_with_channels(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> List[PortfolioListResponse]:
+) -> list[PortfolioListResponse]:
     """
     Get portfolios that have Discord channels assigned
     """
@@ -269,11 +268,11 @@ def read_portfolios_with_channels(
     return result
 
 
-@router.get("/without-channels/", response_model=List[PortfolioListResponse])
+@router.get("/without-channels/", response_model=list[PortfolioListResponse])
 def read_portfolios_without_channels(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> List[PortfolioListResponse]:
+) -> list[PortfolioListResponse]:
     """
     Get portfolios that don't have Discord channels assigned
     """

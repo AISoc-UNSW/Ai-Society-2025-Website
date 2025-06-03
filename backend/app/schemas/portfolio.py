@@ -1,12 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional
 
 
 # Shared properties
 class PortfolioBase(BaseModel):
     name: str
-    description: Optional[str] = None
-    channel_id: Optional[str] = None
+    description: str | None = None
+    channel_id: str | None = None
 
 
 # Used when creating a portfolio
@@ -16,9 +15,9 @@ class PortfolioCreateRequestBody(PortfolioBase):
 
 # Used when updating a portfolio
 class PortfolioUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    channel_id: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
+    channel_id: str | None = None
 
 
 # Used for API responses
@@ -33,7 +32,7 @@ class PortfolioResponse(PortfolioBase):
 class PortfolioListResponse(BaseModel):
     portfolio_id: int
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     has_channel: bool = False  # Computed field
     
     class Config:
@@ -43,10 +42,10 @@ class PortfolioListResponse(BaseModel):
 # Used for portfolio detail with statistics
 class PortfolioDetailResponse(PortfolioResponse):
     # Statistics
-    user_count: Optional[int] = None
-    task_count: Optional[int] = None
-    meeting_count: Optional[int] = None
-    active_task_count: Optional[int] = None  # Tasks not completed
+    user_count: int | None = None
+    task_count: int | None = None
+    meeting_count: int | None = None
+    active_task_count: int | None = None  # Tasks not completed
     
     class Config:
         from_attributes = True

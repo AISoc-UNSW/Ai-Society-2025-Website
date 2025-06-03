@@ -1,6 +1,6 @@
-from typing import Any, Dict, Union, List, Optional
+from typing import Any
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 
 from app.models.task_assignment import TaskAssignment
 from app.models.task import Task
@@ -20,24 +20,24 @@ def get_by_task_and_user(db: Session, task_id: int, user_id: int) -> TaskAssignm
     ).first()
 
 
-def get_by_task(db: Session, task_id: int) -> List[TaskAssignment]:
+def get_by_task(db: Session, task_id: int) -> list[TaskAssignment]:
     """Get all assignments for a specific task"""
     return db.query(TaskAssignment).filter(TaskAssignment.task_id == task_id).all()
 
 
-def get_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> List[TaskAssignment]:
+def get_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> list[TaskAssignment]:
     """Get all assignments for a specific user"""
     return db.query(TaskAssignment).filter(TaskAssignment.user_id == user_id).offset(skip).limit(limit).all()
 
 
-def get_by_task_with_users(db: Session, task_id: int) -> List[TaskAssignment]:
+def get_by_task_with_users(db: Session, task_id: int) -> list[TaskAssignment]:
     """Get task assignments with user details"""
     return db.query(TaskAssignment).options(
         joinedload(TaskAssignment.user)
     ).filter(TaskAssignment.task_id == task_id).all()
 
 
-def get_by_user_with_tasks(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> List[TaskAssignment]:
+def get_by_user_with_tasks(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> list[TaskAssignment]:
     """Get user assignments with task details"""
     return db.query(TaskAssignment).options(
         joinedload(TaskAssignment.task)
@@ -47,11 +47,11 @@ def get_by_user_with_tasks(db: Session, user_id: int, skip: int = 0, limit: int 
 def get_multi(
     db: Session,
     *,
-    task_id: Optional[int] = None,
-    user_id: Optional[int] = None,
+    task_id: int | None = None,
+    user_id: int | None = None,
     skip: int = 0,
     limit: int = 100
-) -> List[TaskAssignment]:
+) -> list[TaskAssignment]:
     """Get multiple task assignments with optional filters"""
     query = db.query(TaskAssignment)
     
@@ -80,7 +80,7 @@ def create_task_assignment(db: Session, *, obj_in: TaskAssignmentCreateRequestBo
     return db_obj
 
 
-def create_bulk_task_assignments(db: Session, *, task_id: int, user_ids: List[int]) -> List[TaskAssignment]:
+def create_bulk_task_assignments(db: Session, *, task_id: int, user_ids: list[int]) -> list[TaskAssignment]:
     """Create multiple task assignments for a single task"""
     assignments = []
     
@@ -107,7 +107,7 @@ def create_bulk_task_assignments(db: Session, *, task_id: int, user_ids: List[in
     return assignments
 
 
-def update_task_assignment(db: Session, *, db_obj: TaskAssignment, obj_in: Union[TaskAssignmentUpdate, Dict[str, Any]]) -> TaskAssignment:
+def update_task_assignment(db: Session, *, db_obj: TaskAssignment, obj_in: TaskAssignmentUpdate | dict[str, Any]) -> TaskAssignment:
     """Update existing task assignment"""
     if isinstance(obj_in, dict):
         update_data = obj_in
@@ -167,7 +167,7 @@ def delete_all_user_assignments(db: Session, *, user_id: int) -> int:
     return count
 
 
-def get_user_task_details(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
+def get_user_task_details(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> list[dict[str, Any]]:
     """Get user's assigned tasks with task details"""
     query = db.query(TaskAssignment, Task).join(Task).filter(TaskAssignment.user_id == user_id)
     results = query.offset(skip).limit(limit).all()
@@ -186,7 +186,7 @@ def get_user_task_details(db: Session, user_id: int, skip: int = 0, limit: int =
     return task_details
 
 
-def get_task_user_details(db: Session, task_id: int) -> List[Dict[str, Any]]:
+def get_task_user_details(db: Session, task_id: int) -> list[dict[str, Any]]:
     """Get task's assigned users with user details"""
     query = db.query(TaskAssignment, User).join(User).filter(TaskAssignment.task_id == task_id)
     results = query.all()

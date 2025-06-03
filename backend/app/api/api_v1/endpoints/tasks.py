@@ -1,4 +1,3 @@
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -53,16 +52,16 @@ def read_task(
     return task_data
 
 
-@router.get("/", response_model=List[TaskListResponse])
+@router.get("/", response_model=list[TaskListResponse])
 def read_tasks(
     db: Session = Depends(deps.get_db),
-    portfolio_id: Optional[int] = Query(None, description="Filter by portfolio ID"),
-    status: Optional[str] = Query(None, description="Filter by status"),
-    priority: Optional[str] = Query(None, description="Filter by priority"),
+    portfolio_id: int | None = Query(None, description="Filter by portfolio ID"),
+    status: str | None = Query(None, description="Filter by status"),
+    priority: str | None = Query(None, description="Filter by priority"),
     skip: int = Query(0, ge=0, description="Skip items"),
     limit: int = Query(100, ge=1, le=1000, description="Limit items"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskListResponse]:
+) -> list[TaskListResponse]:
     """
     Get tasks with optional filters
     """
@@ -113,7 +112,7 @@ def delete_task(
     return {"message": "Task deleted successfully"}
 
 
-@router.get("/portfolio/{portfolio_id}", response_model=List[TaskListResponse])
+@router.get("/portfolio/{portfolio_id}", response_model=list[TaskListResponse])
 def read_tasks_by_portfolio(
     *,
     db: Session = Depends(deps.get_db),
@@ -121,7 +120,7 @@ def read_tasks_by_portfolio(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskListResponse]:
+) -> list[TaskListResponse]:
     """
     Get tasks by portfolio ID
     """
@@ -129,13 +128,13 @@ def read_tasks_by_portfolio(
     return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
 
 
-@router.get("/subtasks/{parent_task_id}", response_model=List[TaskListResponse])
+@router.get("/subtasks/{parent_task_id}", response_model=list[TaskListResponse])
 def read_subtasks(
     *,
     db: Session = Depends(deps.get_db),
     parent_task_id: int,
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskListResponse]:
+) -> list[TaskListResponse]:
     """
     Get subtasks of a parent task
     """
@@ -143,13 +142,13 @@ def read_subtasks(
     return [TaskListResponse(**subtask.__dict__) for subtask in subtasks]
 
 
-@router.get("/meeting/{meeting_id}", response_model=List[TaskListResponse])
+@router.get("/meeting/{meeting_id}", response_model=list[TaskListResponse])
 def read_tasks_by_meeting(
     *,
     db: Session = Depends(deps.get_db),
     meeting_id: int,
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskListResponse]:
+) -> list[TaskListResponse]:
     """
     Get tasks created from a specific meeting
     """
@@ -157,14 +156,14 @@ def read_tasks_by_meeting(
     return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
 
 
-@router.get("/search/", response_model=List[TaskListResponse])
+@router.get("/search/", response_model=list[TaskListResponse])
 def search_tasks(
     *,
     db: Session = Depends(deps.get_db),
     q: str = Query(..., min_length=1, description="Search term"),
-    portfolio_id: Optional[int] = Query(None, description="Filter by portfolio ID"),
+    portfolio_id: int | None = Query(None, description="Filter by portfolio ID"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskListResponse]:
+) -> list[TaskListResponse]:
     """
     Search tasks by title or description
     """

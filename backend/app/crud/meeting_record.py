@@ -1,7 +1,7 @@
-from typing import Any, Dict, Union, List, Optional
-from datetime import date
+from typing import Any
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
+from sqlalchemy import func, and_, or_
+from datetime import date
 
 from app.models.meeting_record import MeetingRecord
 from app.schemas.meeting_record import MeetingRecordCreateRequestBody, MeetingRecordUpdate
@@ -12,12 +12,12 @@ def get_by_id(db: Session, meeting_id: int) -> MeetingRecord | None:
     return db.query(MeetingRecord).filter(MeetingRecord.meeting_id == meeting_id).first()
 
 
-def get_by_portfolio(db: Session, portfolio_id: int, skip: int = 0, limit: int = 100) -> List[MeetingRecord]:
+def get_by_portfolio(db: Session, portfolio_id: int, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records by portfolio ID"""
     return db.query(MeetingRecord).filter(MeetingRecord.portfolio_id == portfolio_id).offset(skip).limit(limit).all()
 
 
-def get_by_date_range(db: Session, start_date: date, end_date: date, skip: int = 0, limit: int = 100) -> List[MeetingRecord]:
+def get_by_date_range(db: Session, start_date: date, end_date: date, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records within date range"""
     return db.query(MeetingRecord).filter(
         and_(
@@ -27,14 +27,14 @@ def get_by_date_range(db: Session, start_date: date, end_date: date, skip: int =
     ).offset(skip).limit(limit).all()
 
 
-def get_with_recordings(db: Session, skip: int = 0, limit: int = 100) -> List[MeetingRecord]:
+def get_with_recordings(db: Session, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records that have recording files"""
     return db.query(MeetingRecord).filter(
         MeetingRecord.recording_file_link.isnot(None)
     ).offset(skip).limit(limit).all()
 
 
-def get_with_summaries(db: Session, skip: int = 0, limit: int = 100) -> List[MeetingRecord]:
+def get_with_summaries(db: Session, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records that have summaries"""
     return db.query(MeetingRecord).filter(
         MeetingRecord.summary.isnot(None)
@@ -44,14 +44,14 @@ def get_with_summaries(db: Session, skip: int = 0, limit: int = 100) -> List[Mee
 def get_multi(
     db: Session,
     *,
-    portfolio_id: Optional[int] = None,
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
-    has_recording: Optional[bool] = None,
-    has_summary: Optional[bool] = None,
+    portfolio_id: int | None = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    has_recording: bool | None = None,
+    has_summary: bool | None = None,
     skip: int = 0,
     limit: int = 100
-) -> List[MeetingRecord]:
+) -> list[MeetingRecord]:
     """Get multiple meeting records with optional filters"""
     query = db.query(MeetingRecord)
     
@@ -99,7 +99,7 @@ def create_meeting_record(db: Session, *, obj_in: MeetingRecordCreateRequestBody
     return db_obj
 
 
-def update_meeting_record(db: Session, *, db_obj: MeetingRecord, obj_in: Union[MeetingRecordUpdate, Dict[str, Any]]) -> MeetingRecord:
+def update_meeting_record(db: Session, *, db_obj: MeetingRecord, obj_in: MeetingRecordUpdate | dict[str, Any]) -> MeetingRecord:
     """Update existing meeting record"""
     if isinstance(obj_in, dict):
         update_data = obj_in
@@ -125,7 +125,7 @@ def delete_meeting_record(db: Session, *, meeting_id: int) -> bool:
     return False
 
 
-def search_meeting_records(db: Session, *, search_term: str, portfolio_id: Optional[int] = None) -> List[MeetingRecord]:
+def search_meeting_records(db: Session, *, search_term: str, portfolio_id: int | None = None) -> list[MeetingRecord]:
     """Search meeting records by name or summary"""
     query = db.query(MeetingRecord)
     

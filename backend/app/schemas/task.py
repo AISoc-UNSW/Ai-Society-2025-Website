@@ -1,18 +1,17 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
 
 
 # Shared properties
 class TaskBase(BaseModel):
     title: str
-    description: Optional[str] = None
-    status: Optional[str] = "Not Started"
-    priority: Optional[str] = "medium"
+    description: str | None = None
+    status: str | None = "Not Started"
+    priority: str | None = "medium"
     deadline: datetime
     portfolio_id: int
-    parent_task_id: Optional[int] = None
-    source_meeting_id: Optional[int] = None
+    parent_task_id: int | None = None
+    source_meeting_id: int | None = None
 
 
 # Used when creating a task
@@ -24,21 +23,21 @@ class TaskCreateRequestBody(TaskBase):
 
 # Used when updating a task
 class TaskUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-    priority: Optional[str] = None
-    deadline: Optional[datetime] = None
-    portfolio_id: Optional[int] = None
-    parent_task_id: Optional[int] = None
-    source_meeting_id: Optional[int] = None
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None
+    priority: str | None = None
+    deadline: datetime | None = None
+    portfolio_id: int | None = None
+    parent_task_id: int | None = None
+    source_meeting_id: int | None = None
 
 
 # Used for API responses
 class TaskResponse(TaskBase):
     task_id: int
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
     
     class Config:
         from_attributes = True
@@ -48,8 +47,8 @@ class TaskResponse(TaskBase):
 class TaskListResponse(BaseModel):
     task_id: int
     title: str
-    status: Optional[str] = None
-    priority: Optional[str] = None
+    status: str | None = None
+    priority: str | None = None
     deadline: datetime
     portfolio_id: int
     
@@ -60,7 +59,7 @@ class TaskListResponse(BaseModel):
 # Used for task detail with relationships
 class TaskDetailResponse(TaskResponse):
     # Include subtasks if needed
-    subtasks: Optional[list["TaskListResponse"]] = None
+    subtasks: list["TaskListResponse"] | None = None
     
     class Config:
         from_attributes = True 

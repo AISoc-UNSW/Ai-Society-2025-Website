@@ -1,15 +1,14 @@
 from pydantic import BaseModel
 from datetime import date
-from typing import Optional
 
 
 # Shared properties
 class MeetingRecordBase(BaseModel):
     meeting_date: date
     meeting_name: str
-    recording_file_link: Optional[str] = None
-    auto_caption: Optional[str] = None
-    summary: Optional[str] = None
+    recording_file_link: str | None = None
+    auto_caption: str | None = None
+    summary: str | None = None
     portfolio_id: int
 
 
@@ -22,12 +21,12 @@ class MeetingRecordCreateRequestBody(MeetingRecordBase):
 
 # Used when updating a meeting record
 class MeetingRecordUpdate(BaseModel):
-    meeting_date: Optional[date] = None
-    meeting_name: Optional[str] = None
-    recording_file_link: Optional[str] = None
-    auto_caption: Optional[str] = None
-    summary: Optional[str] = None
-    portfolio_id: Optional[int] = None
+    meeting_date: date | None = None
+    meeting_name: str | None = None
+    recording_file_link: str | None = None
+    auto_caption: str | None = None
+    summary: str | None = None
+    portfolio_id: int | None = None
 
 
 # Used for API responses
@@ -54,7 +53,7 @@ class MeetingRecordListResponse(BaseModel):
 # Used for meeting record detail with related tasks
 class MeetingRecordDetailResponse(MeetingRecordResponse):
     # Include related tasks if needed (imported from task schemas)
-    related_tasks_count: Optional[int] = None
+    related_tasks_count: int | None = None
     
     class Config:
         from_attributes = True 

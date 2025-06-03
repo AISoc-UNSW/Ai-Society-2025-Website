@@ -1,4 +1,3 @@
-from typing import List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -53,18 +52,18 @@ def read_meeting_record(
     return meeting_data
 
 
-@router.get("/", response_model=List[MeetingRecordListResponse])
+@router.get("/", response_model=list[MeetingRecordListResponse])
 def read_meeting_records(
     db: Session = Depends(deps.get_db),
-    portfolio_id: Optional[int] = Query(None, description="Filter by portfolio ID"),
-    start_date: Optional[date] = Query(None, description="Filter by start date"),
-    end_date: Optional[date] = Query(None, description="Filter by end date"),
-    has_recording: Optional[bool] = Query(None, description="Filter by recording availability"),
-    has_summary: Optional[bool] = Query(None, description="Filter by summary availability"),
+    portfolio_id: int | None = Query(None, description="Filter by portfolio ID"),
+    start_date: date | None = Query(None, description="Filter by start date"),
+    end_date: date | None = Query(None, description="Filter by end date"),
+    has_recording: bool | None = Query(None, description="Filter by recording availability"),
+    has_summary: bool | None = Query(None, description="Filter by summary availability"),
     skip: int = Query(0, ge=0, description="Skip items"),
     limit: int = Query(100, ge=1, le=1000, description="Limit items"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[MeetingRecordListResponse]:
+) -> list[MeetingRecordListResponse]:
     """
     Get meeting records with optional filters
     """
@@ -126,7 +125,7 @@ def delete_meeting_record(
     return {"message": "Meeting record deleted successfully"}
 
 
-@router.get("/portfolio/{portfolio_id}", response_model=List[MeetingRecordListResponse])
+@router.get("/portfolio/{portfolio_id}", response_model=list[MeetingRecordListResponse])
 def read_meeting_records_by_portfolio(
     *,
     db: Session = Depends(deps.get_db),
@@ -134,7 +133,7 @@ def read_meeting_records_by_portfolio(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> List[MeetingRecordListResponse]:
+) -> list[MeetingRecordListResponse]:
     """
     Get meeting records by portfolio ID
     """
@@ -150,14 +149,14 @@ def read_meeting_records_by_portfolio(
     return result
 
 
-@router.get("/with-recordings/", response_model=List[MeetingRecordListResponse])
+@router.get("/with-recordings/", response_model=list[MeetingRecordListResponse])
 def read_meeting_records_with_recordings(
     *,
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> List[MeetingRecordListResponse]:
+) -> list[MeetingRecordListResponse]:
     """
     Get meeting records that have recording files
     """
@@ -173,14 +172,14 @@ def read_meeting_records_with_recordings(
     return result
 
 
-@router.get("/with-summaries/", response_model=List[MeetingRecordListResponse])
+@router.get("/with-summaries/", response_model=list[MeetingRecordListResponse])
 def read_meeting_records_with_summaries(
     *,
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> List[MeetingRecordListResponse]:
+) -> list[MeetingRecordListResponse]:
     """
     Get meeting records that have summaries
     """
@@ -196,14 +195,14 @@ def read_meeting_records_with_summaries(
     return result
 
 
-@router.get("/search/", response_model=List[MeetingRecordListResponse])
+@router.get("/search/", response_model=list[MeetingRecordListResponse])
 def search_meeting_records(
     *,
     db: Session = Depends(deps.get_db),
     q: str = Query(..., min_length=1, description="Search term"),
-    portfolio_id: Optional[int] = Query(None, description="Filter by portfolio ID"),
+    portfolio_id: int | None = Query(None, description="Filter by portfolio ID"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[MeetingRecordListResponse]:
+) -> list[MeetingRecordListResponse]:
     """
     Search meeting records by name, summary, or caption
     """

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String, Text, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
@@ -25,6 +25,6 @@ class Task(Base):
 
     # Relationships
     portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="tasks")
-    parent_task: Mapped[Optional["Task"]] = relationship("Task", remote_side=[task_id], back_populates="subtasks")
+    parent_task: Mapped["Task | None"] = relationship("Task", remote_side=[task_id], back_populates="subtasks")
     subtasks: Mapped[list["Task"]] = relationship("Task", back_populates="parent_task", remote_side=[parent_task_id])
-    source_meeting: Mapped[Optional["MeetingRecord"]] = relationship("MeetingRecord", back_populates="tasks") 
+    source_meeting: Mapped["MeetingRecord | None"] = relationship("MeetingRecord", back_populates="tasks") 

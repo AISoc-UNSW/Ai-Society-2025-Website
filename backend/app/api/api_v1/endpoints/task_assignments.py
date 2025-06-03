@@ -1,4 +1,3 @@
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -32,13 +31,13 @@ def create_task_assignment(
     return TaskAssignmentResponse(**assignment.__dict__)
 
 
-@router.post("/bulk", response_model=List[TaskAssignmentResponse])
+@router.post("/bulk", response_model=list[TaskAssignmentResponse])
 def create_bulk_task_assignments(
     *,
     db: Session = Depends(deps.get_db),
     bulk_assignment_in: BulkTaskAssignmentCreate,
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskAssignmentResponse]:
+) -> list[TaskAssignmentResponse]:
     """
     Create multiple task assignments for a single task
     """
@@ -65,15 +64,15 @@ def read_task_assignment(
     return TaskAssignmentDetailResponse(**assignment.__dict__)
 
 
-@router.get("/", response_model=List[TaskAssignmentResponse])
+@router.get("/", response_model=list[TaskAssignmentResponse])
 def read_task_assignments(
     db: Session = Depends(deps.get_db),
-    task_id: Optional[int] = Query(None, description="Filter by task ID"),
-    user_id: Optional[int] = Query(None, description="Filter by user ID"),
+    task_id: int | None = Query(None, description="Filter by task ID"),
+    user_id: int | None = Query(None, description="Filter by user ID"),
     skip: int = Query(0, ge=0, description="Skip items"),
     limit: int = Query(100, ge=1, le=1000, description="Limit items"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskAssignmentResponse]:
+) -> list[TaskAssignmentResponse]:
     """
     Get task assignments with optional filters
     """
@@ -141,13 +140,13 @@ def delete_task_assignment_by_task_and_user(
     return {"message": "Task assignment deleted successfully"}
 
 
-@router.get("/task/{task_id}/users", response_model=List[TaskUserAssignmentResponse])
+@router.get("/task/{task_id}/users", response_model=list[TaskUserAssignmentResponse])
 def read_task_assigned_users(
     *,
     db: Session = Depends(deps.get_db),
     task_id: int,
     current_user: User = Depends(deps.get_current_user),
-) -> List[TaskUserAssignmentResponse]:
+) -> list[TaskUserAssignmentResponse]:
     """
     Get users assigned to a specific task with details
     """
@@ -155,7 +154,7 @@ def read_task_assigned_users(
     return [TaskUserAssignmentResponse(**user_detail) for user_detail in user_details]
 
 
-@router.get("/user/{user_id}/tasks", response_model=List[UserTaskAssignmentResponse])
+@router.get("/user/{user_id}/tasks", response_model=list[UserTaskAssignmentResponse])
 def read_user_assigned_tasks(
     *,
     db: Session = Depends(deps.get_db),
@@ -163,7 +162,7 @@ def read_user_assigned_tasks(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> List[UserTaskAssignmentResponse]:
+) -> list[UserTaskAssignmentResponse]:
     """
     Get tasks assigned to a specific user with details
     """
@@ -171,14 +170,14 @@ def read_user_assigned_tasks(
     return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
 
 
-@router.get("/user/me/tasks", response_model=List[UserTaskAssignmentResponse])
+@router.get("/user/me/tasks", response_model=list[UserTaskAssignmentResponse])
 def read_my_assigned_tasks(
     *,
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> List[UserTaskAssignmentResponse]:
+) -> list[UserTaskAssignmentResponse]:
     """
     Get tasks assigned to current user with details
     """

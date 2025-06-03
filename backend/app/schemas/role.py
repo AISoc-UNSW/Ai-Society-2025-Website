@@ -1,11 +1,10 @@
 from pydantic import BaseModel
-from typing import Optional
 
 
 # Shared properties
 class RoleBase(BaseModel):
     role_name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 # Used when creating a role
@@ -15,8 +14,8 @@ class RoleCreateRequestBody(RoleBase):
 
 # Used when updating a role
 class RoleUpdate(BaseModel):
-    role_name: Optional[str] = None
-    description: Optional[str] = None
+    role_name: str | None = None
+    description: str | None = None
 
 
 # Used for API responses
@@ -34,7 +33,7 @@ class RoleListResponse(RoleResponse):
 
 # Used for role detail with user count
 class RoleDetailResponse(RoleResponse):
-    user_count: Optional[int] = None  # Count of users with this role
+    user_count: int | None = None  # Count of users with this role
     
     class Config:
         from_attributes = True 

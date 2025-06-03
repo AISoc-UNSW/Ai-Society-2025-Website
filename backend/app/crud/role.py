@@ -1,6 +1,6 @@
-from typing import Any, Dict, Union, List, Optional
+from typing import Any
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from app.models.role import Role
 from app.schemas.role import RoleCreateRequestBody, RoleUpdate
@@ -16,12 +16,12 @@ def get_by_name(db: Session, role_name: str) -> Role | None:
     return db.query(Role).filter(Role.role_name == role_name).first()
 
 
-def get_multi(db: Session, *, skip: int = 0, limit: int = 100) -> List[Role]:
+def get_multi(db: Session, *, skip: int = 0, limit: int = 100) -> list[Role]:
     """Get multiple roles"""
     return db.query(Role).offset(skip).limit(limit).all()
 
 
-def get_all(db: Session) -> List[Role]:
+def get_all(db: Session) -> list[Role]:
     """Get all roles (for simple dropdown lists)"""
     return db.query(Role).all()
 
@@ -43,7 +43,7 @@ def create_role(db: Session, *, obj_in: RoleCreateRequestBody) -> Role:
     return db_obj
 
 
-def update_role(db: Session, *, db_obj: Role, obj_in: Union[RoleUpdate, Dict[str, Any]]) -> Role:
+def update_role(db: Session, *, db_obj: Role, obj_in: RoleUpdate | dict[str, Any]) -> Role:
     """Update existing role"""
     if isinstance(obj_in, dict):
         update_data = obj_in
@@ -87,7 +87,7 @@ def get_user_count(db: Session, role_id: int) -> int:
     return db.query(func.count(User.user_id)).filter(User.role_id == role_id).scalar() or 0
 
 
-def search_roles(db: Session, *, search_term: str) -> List[Role]:
+def search_roles(db: Session, *, search_term: str) -> list[Role]:
     """Search roles by name or description"""
     search_filter = Role.role_name.ilike(f"%{search_term}%")
     if search_term:
@@ -97,7 +97,7 @@ def search_roles(db: Session, *, search_term: str) -> List[Role]:
     return db.query(Role).filter(search_filter).all()
 
 
-def get_roles_with_user_counts(db: Session) -> List[Dict[str, Any]]:
+def get_roles_with_user_counts(db: Session) -> list[dict[str, Any]]:
     """Get all roles with their user counts"""
     from app.models.user import User
     

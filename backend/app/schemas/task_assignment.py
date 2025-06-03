@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 
 
 # Shared properties
@@ -16,8 +15,8 @@ class TaskAssignmentCreateRequestBody(TaskAssignmentBase):
 
 # Used when updating a task assignment (rarely needed, but for completeness)
 class TaskAssignmentUpdate(BaseModel):
-    task_id: Optional[int] = None
-    user_id: Optional[int] = None
+    task_id: int | None = None
+    user_id: int | None = None
 
 
 # Used for API responses
@@ -31,9 +30,9 @@ class TaskAssignmentResponse(TaskAssignmentBase):
 # Used for listing task assignments with user/task details
 class TaskAssignmentDetailResponse(TaskAssignmentResponse):
     # Optional fields for related data
-    task_title: Optional[str] = None
-    user_username: Optional[str] = None
-    user_email: Optional[str] = None
+    task_title: str | None = None
+    user_username: str | None = None
+    user_email: str | None = None
     
     class Config:
         from_attributes = True
@@ -50,9 +49,9 @@ class UserTaskAssignmentResponse(BaseModel):
     assignment_id: int
     task_id: int
     task_title: str
-    task_status: Optional[str] = None
-    task_priority: Optional[str] = None
-    task_deadline: Optional[str] = None  # Will be datetime as string
+    task_status: str | None = None
+    task_priority: str | None = None
+    task_deadline: str | None = None  # Will be datetime as string
     
     class Config:
         from_attributes = True

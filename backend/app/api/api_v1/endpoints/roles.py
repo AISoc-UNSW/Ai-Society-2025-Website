@@ -1,4 +1,3 @@
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -55,13 +54,13 @@ def read_role(
     return role_data
 
 
-@router.get("/", response_model=List[RoleListResponse])
+@router.get("/", response_model=list[RoleListResponse])
 def read_roles(
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0, description="Skip items"),
     limit: int = Query(100, ge=1, le=1000, description="Limit items"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[RoleListResponse]:
+) -> list[RoleListResponse]:
     """
     Get roles list
     """
@@ -69,11 +68,11 @@ def read_roles(
     return [RoleListResponse(**role_record.__dict__) for role_record in roles]
 
 
-@router.get("/all/simple", response_model=List[RoleListResponse])
+@router.get("/all/simple", response_model=list[RoleListResponse])
 def read_all_roles_simple(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> List[RoleListResponse]:
+) -> list[RoleListResponse]:
     """
     Get all roles (for dropdown lists, no pagination)
     """
@@ -81,11 +80,11 @@ def read_all_roles_simple(
     return [RoleListResponse(**role_record.__dict__) for role_record in roles]
 
 
-@router.get("/with-counts/", response_model=List[RoleDetailResponse])
+@router.get("/with-counts/", response_model=list[RoleDetailResponse])
 def read_roles_with_user_counts(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> List[RoleDetailResponse]:
+) -> list[RoleDetailResponse]:
     """
     Get all roles with user counts
     """
@@ -135,13 +134,13 @@ def delete_role(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/search/", response_model=List[RoleListResponse])
+@router.get("/search/", response_model=list[RoleListResponse])
 def search_roles(
     *,
     db: Session = Depends(deps.get_db),
     q: str = Query(..., min_length=1, description="Search term"),
     current_user: User = Depends(deps.get_current_user),
-) -> List[RoleListResponse]:
+) -> list[RoleListResponse]:
     """
     Search roles by name or description
     """

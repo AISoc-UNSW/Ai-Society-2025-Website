@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union, List, Optional
+from typing import Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
@@ -21,12 +21,12 @@ def get_by_channel_id(db: Session, channel_id: str) -> Portfolio | None:
     return db.query(Portfolio).filter(Portfolio.channel_id == channel_id).first()
 
 
-def get_multi(db: Session, *, skip: int = 0, limit: int = 100) -> List[Portfolio]:
+def get_multi(db: Session, *, skip: int = 0, limit: int = 100) -> list[Portfolio]:
     """Get multiple portfolios"""
     return db.query(Portfolio).offset(skip).limit(limit).all()
 
 
-def get_all(db: Session) -> List[Portfolio]:
+def get_all(db: Session) -> list[Portfolio]:
     """Get all portfolios (for simple dropdown lists)"""
     return db.query(Portfolio).all()
 
@@ -55,7 +55,7 @@ def create_portfolio(db: Session, *, obj_in: PortfolioCreateRequestBody) -> Port
     return db_obj
 
 
-def update_portfolio(db: Session, *, db_obj: Portfolio, obj_in: Union[PortfolioUpdate, Dict[str, Any]]) -> Portfolio:
+def update_portfolio(db: Session, *, db_obj: Portfolio, obj_in: PortfolioUpdate | dict[str, Any]) -> Portfolio:
     """Update existing portfolio"""
     if isinstance(obj_in, dict):
         update_data = obj_in
@@ -143,7 +143,7 @@ def get_meeting_count(db: Session, portfolio_id: int) -> int:
     ).scalar() or 0
 
 
-def search_portfolios(db: Session, *, search_term: str) -> List[Portfolio]:
+def search_portfolios(db: Session, *, search_term: str) -> list[Portfolio]:
     """Search portfolios by name or description"""
     search_filter = Portfolio.name.ilike(f"%{search_term}%")
     if search_term:
@@ -153,7 +153,7 @@ def search_portfolios(db: Session, *, search_term: str) -> List[Portfolio]:
     return db.query(Portfolio).filter(search_filter).all()
 
 
-def get_portfolio_statistics(db: Session, portfolio_id: int) -> Dict[str, Any]:
+def get_portfolio_statistics(db: Session, portfolio_id: int) -> dict[str, Any]:
     """Get comprehensive statistics for a portfolio"""
     portfolio = get_by_id(db, portfolio_id=portfolio_id)
     if not portfolio:
@@ -176,7 +176,7 @@ def get_portfolio_statistics(db: Session, portfolio_id: int) -> Dict[str, Any]:
     }
 
 
-def get_all_portfolio_statistics(db: Session) -> List[Dict[str, Any]]:
+def get_all_portfolio_statistics(db: Session) -> list[dict[str, Any]]:
     """Get statistics for all portfolios"""
     portfolios = get_all(db)
     statistics = []
@@ -188,11 +188,11 @@ def get_all_portfolio_statistics(db: Session) -> List[Dict[str, Any]]:
     return statistics
 
 
-def get_portfolios_with_channels(db: Session) -> List[Portfolio]:
+def get_portfolios_with_channels(db: Session) -> list[Portfolio]:
     """Get portfolios that have Discord channels assigned"""
     return db.query(Portfolio).filter(Portfolio.channel_id.isnot(None)).all()
 
 
-def get_portfolios_without_channels(db: Session) -> List[Portfolio]:
+def get_portfolios_without_channels(db: Session) -> list[Portfolio]:
     """Get portfolios that don't have Discord channels assigned"""
     return db.query(Portfolio).filter(Portfolio.channel_id.is_(None)).all() 

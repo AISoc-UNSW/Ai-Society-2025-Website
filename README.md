@@ -19,7 +19,7 @@ Ctrl(Cmd) + Shift + P
 
 and then search for "Python: Select Interpreter" and select the one in the venv folder.
 
-Also, in .vscode/settings.json, add the following to format the code on save:
+Also, to format the code on save, install the **Black formatter**. Once installed, you can configure your settings in .vscode/settings.json as follows:
 
 ```json
 {

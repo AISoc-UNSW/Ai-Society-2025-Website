@@ -10,7 +10,7 @@ from app.schemas.portfolio import (
     PortfolioResponse,
     PortfolioListResponse,
     PortfolioDetailResponse,
-    PortfolioStatsResponse
+    PortfolioStatsResponse,
 )
 
 router = APIRouter()
@@ -46,13 +46,13 @@ def read_portfolio(
     portfolio_record = portfolio.get_by_id(db, portfolio_id=portfolio_id)
     if not portfolio_record:
         raise HTTPException(status_code=404, detail="Portfolio not found")
-    
+
     # Get statistics for this portfolio
     user_count = portfolio.get_user_count(db, portfolio_id=portfolio_id)
     task_count = portfolio.get_task_count(db, portfolio_id=portfolio_id)
     meeting_count = portfolio.get_meeting_count(db, portfolio_id=portfolio_id)
     active_task_count = portfolio.get_active_task_count(db, portfolio_id=portfolio_id)
-    
+
     portfolio_data = PortfolioDetailResponse(**portfolio_record.__dict__)
     portfolio_data.user_count = user_count
     portfolio_data.task_count = task_count
@@ -72,13 +72,13 @@ def read_portfolios(
     Get portfolios list
     """
     portfolios = portfolio.get_multi(db, skip=skip, limit=limit)
-    
+
     result = []
     for portfolio_record in portfolios:
         portfolio_data = PortfolioListResponse(**portfolio_record.__dict__)
         portfolio_data.has_channel = bool(portfolio_record.channel_id)
         result.append(portfolio_data)
-    
+
     return result
 
 
@@ -91,13 +91,13 @@ def read_all_portfolios_simple(
     Get all portfolios (for dropdown lists, no pagination)
     """
     portfolios = portfolio.get_all(db)
-    
+
     result = []
     for portfolio_record in portfolios:
         portfolio_data = PortfolioListResponse(**portfolio_record.__dict__)
         portfolio_data.has_channel = bool(portfolio_record.channel_id)
         result.append(portfolio_data)
-    
+
     return result
 
 
@@ -126,7 +126,7 @@ def read_portfolio_statistics(
     stats = portfolio.get_portfolio_statistics(db, portfolio_id=portfolio_id)
     if not stats:
         raise HTTPException(status_code=404, detail="Portfolio not found")
-    
+
     return PortfolioStatsResponse(**stats)
 
 
@@ -144,9 +144,11 @@ def update_portfolio(
     portfolio_record = portfolio.get_by_id(db, portfolio_id=portfolio_id)
     if not portfolio_record:
         raise HTTPException(status_code=404, detail="Portfolio not found")
-    
+
     try:
-        portfolio_record = portfolio.update_portfolio(db, db_obj=portfolio_record, obj_in=portfolio_in)
+        portfolio_record = portfolio.update_portfolio(
+            db, db_obj=portfolio_record, obj_in=portfolio_in
+        )
         return PortfolioResponse(**portfolio_record.__dict__)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -166,7 +168,7 @@ def delete_portfolio(
         success = portfolio.delete_portfolio(db, portfolio_id=portfolio_id)
         if not success:
             raise HTTPException(status_code=404, detail="Portfolio not found")
-        
+
         return {"message": "Portfolio deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -183,13 +185,13 @@ def search_portfolios(
     Search portfolios by name or description
     """
     portfolios = portfolio.search_portfolios(db, search_term=q)
-    
+
     result = []
     for portfolio_record in portfolios:
         portfolio_data = PortfolioListResponse(**portfolio_record.__dict__)
         portfolio_data.has_channel = bool(portfolio_record.channel_id)
         result.append(portfolio_data)
-    
+
     return result
 
 
@@ -206,13 +208,15 @@ def read_portfolio_by_name(
     portfolio_record = portfolio.get_by_name(db, name=portfolio_name)
     if not portfolio_record:
         raise HTTPException(status_code=404, detail="Portfolio not found")
-    
+
     # Get statistics for this portfolio
     user_count = portfolio.get_user_count(db, portfolio_id=portfolio_record.portfolio_id)
     task_count = portfolio.get_task_count(db, portfolio_id=portfolio_record.portfolio_id)
     meeting_count = portfolio.get_meeting_count(db, portfolio_id=portfolio_record.portfolio_id)
-    active_task_count = portfolio.get_active_task_count(db, portfolio_id=portfolio_record.portfolio_id)
-    
+    active_task_count = portfolio.get_active_task_count(
+        db, portfolio_id=portfolio_record.portfolio_id
+    )
+
     portfolio_data = PortfolioDetailResponse(**portfolio_record.__dict__)
     portfolio_data.user_count = user_count
     portfolio_data.task_count = task_count
@@ -234,13 +238,15 @@ def read_portfolio_by_channel(
     portfolio_record = portfolio.get_by_channel_id(db, channel_id=channel_id)
     if not portfolio_record:
         raise HTTPException(status_code=404, detail="Portfolio not found")
-    
+
     # Get statistics for this portfolio
     user_count = portfolio.get_user_count(db, portfolio_id=portfolio_record.portfolio_id)
     task_count = portfolio.get_task_count(db, portfolio_id=portfolio_record.portfolio_id)
     meeting_count = portfolio.get_meeting_count(db, portfolio_id=portfolio_record.portfolio_id)
-    active_task_count = portfolio.get_active_task_count(db, portfolio_id=portfolio_record.portfolio_id)
-    
+    active_task_count = portfolio.get_active_task_count(
+        db, portfolio_id=portfolio_record.portfolio_id
+    )
+
     portfolio_data = PortfolioDetailResponse(**portfolio_record.__dict__)
     portfolio_data.user_count = user_count
     portfolio_data.task_count = task_count
@@ -258,13 +264,13 @@ def read_portfolios_with_channels(
     Get portfolios that have Discord channels assigned
     """
     portfolios = portfolio.get_portfolios_with_channels(db)
-    
+
     result = []
     for portfolio_record in portfolios:
         portfolio_data = PortfolioListResponse(**portfolio_record.__dict__)
         portfolio_data.has_channel = True  # Always true for this endpoint
         result.append(portfolio_data)
-    
+
     return result
 
 
@@ -277,11 +283,11 @@ def read_portfolios_without_channels(
     Get portfolios that don't have Discord channels assigned
     """
     portfolios = portfolio.get_portfolios_without_channels(db)
-    
+
     result = []
     for portfolio_record in portfolios:
         portfolio_data = PortfolioListResponse(**portfolio_record.__dict__)
         portfolio_data.has_channel = False  # Always false for this endpoint
         result.append(portfolio_data)
-    
-    return result 
+
+    return result

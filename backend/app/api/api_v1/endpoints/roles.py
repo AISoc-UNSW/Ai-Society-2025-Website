@@ -9,7 +9,7 @@ from app.schemas.role import (
     RoleUpdate,
     RoleResponse,
     RoleListResponse,
-    RoleDetailResponse
+    RoleDetailResponse,
 )
 
 router = APIRouter()
@@ -45,10 +45,10 @@ def read_role(
     role_record = role.get_by_id(db, role_id=role_id)
     if not role_record:
         raise HTTPException(status_code=404, detail="Role not found")
-    
+
     # Get user count for this role
     user_count = role.get_user_count(db, role_id=role_id)
-    
+
     role_data = RoleDetailResponse(**role_record.__dict__)
     role_data.user_count = user_count
     return role_data
@@ -106,7 +106,7 @@ def update_role(
     role_record = role.get_by_id(db, role_id=role_id)
     if not role_record:
         raise HTTPException(status_code=404, detail="Role not found")
-    
+
     try:
         role_record = role.update_role(db, db_obj=role_record, obj_in=role_in)
         return RoleResponse(**role_record.__dict__)
@@ -128,7 +128,7 @@ def delete_role(
         success = role.delete_role(db, role_id=role_id)
         if not success:
             raise HTTPException(status_code=404, detail="Role not found")
-        
+
         return {"message": "Role deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -161,10 +161,10 @@ def read_role_by_name(
     role_record = role.get_by_name(db, role_name=role_name)
     if not role_record:
         raise HTTPException(status_code=404, detail="Role not found")
-    
+
     # Get user count for this role
     user_count = role.get_user_count(db, role_id=role_record.role_id)
-    
+
     role_data = RoleDetailResponse(**role_record.__dict__)
     role_data.user_count = user_count
-    return role_data 
+    return role_data

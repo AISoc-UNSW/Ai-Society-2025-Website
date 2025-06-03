@@ -9,7 +9,7 @@ from app.schemas.task import (
     TaskUpdate,
     TaskResponse,
     TaskListResponse,
-    TaskDetailResponse
+    TaskDetailResponse,
 )
 
 router = APIRouter()
@@ -42,11 +42,11 @@ def read_task(
     task_record = task.get_by_id(db, task_id=task_id)
     if not task_record:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     # Get subtasks if any
     subtasks = task.get_subtasks(db, parent_task_id=task_id)
     subtasks_data = [TaskListResponse(**subtask.__dict__) for subtask in subtasks]
-    
+
     task_data = TaskDetailResponse(**task_record.__dict__)
     task_data.subtasks = subtasks_data
     return task_data
@@ -66,12 +66,7 @@ def read_tasks(
     Get tasks with optional filters
     """
     tasks = task.get_multi(
-        db,
-        portfolio_id=portfolio_id,
-        status=status,
-        priority=priority,
-        skip=skip,
-        limit=limit
+        db, portfolio_id=portfolio_id, status=status, priority=priority, skip=skip, limit=limit
     )
     return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
 
@@ -90,7 +85,7 @@ def update_task(
     task_record = task.get_by_id(db, task_id=task_id)
     if not task_record:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     task_record = task.update_task(db, db_obj=task_record, obj_in=task_in)
     return TaskResponse(**task_record.__dict__)
 
@@ -108,7 +103,7 @@ def delete_task(
     success = task.delete_task(db, task_id=task_id)
     if not success:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     return {"message": "Task deleted successfully"}
 
 
@@ -168,4 +163,4 @@ def search_tasks(
     Search tasks by title or description
     """
     tasks = task.search_tasks(db, search_term=q, portfolio_id=portfolio_id)
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks] 
+    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]

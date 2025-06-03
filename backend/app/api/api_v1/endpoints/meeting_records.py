@@ -10,7 +10,7 @@ from app.schemas.meeting_record import (
     MeetingRecordUpdate,
     MeetingRecordResponse,
     MeetingRecordListResponse,
-    MeetingRecordDetailResponse
+    MeetingRecordDetailResponse,
 )
 
 router = APIRouter()
@@ -43,10 +43,10 @@ def read_meeting_record(
     meeting_rec = meeting_record.get_by_id(db, meeting_id=meeting_id)
     if not meeting_rec:
         raise HTTPException(status_code=404, detail="Meeting record not found")
-    
+
     # Get related tasks count
     related_tasks_count = meeting_record.get_related_tasks_count(db, meeting_id=meeting_id)
-    
+
     meeting_data = MeetingRecordDetailResponse(**meeting_rec.__dict__)
     meeting_data.related_tasks_count = related_tasks_count
     return meeting_data
@@ -75,9 +75,9 @@ def read_meeting_records(
         has_recording=has_recording,
         has_summary=has_summary,
         skip=skip,
-        limit=limit
+        limit=limit,
     )
-    
+
     # Add computed fields
     result = []
     for meeting_rec in meetings:
@@ -85,7 +85,7 @@ def read_meeting_records(
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = bool(meeting_rec.summary)
         result.append(meeting_data)
-    
+
     return result
 
 
@@ -103,7 +103,7 @@ def update_meeting_record(
     meeting_rec = meeting_record.get_by_id(db, meeting_id=meeting_id)
     if not meeting_rec:
         raise HTTPException(status_code=404, detail="Meeting record not found")
-    
+
     meeting_rec = meeting_record.update_meeting_record(db, db_obj=meeting_rec, obj_in=meeting_in)
     return MeetingRecordResponse(**meeting_rec.__dict__)
 
@@ -121,7 +121,7 @@ def delete_meeting_record(
     success = meeting_record.delete_meeting_record(db, meeting_id=meeting_id)
     if not success:
         raise HTTPException(status_code=404, detail="Meeting record not found")
-    
+
     return {"message": "Meeting record deleted successfully"}
 
 
@@ -137,15 +137,17 @@ def read_meeting_records_by_portfolio(
     """
     Get meeting records by portfolio ID
     """
-    meetings = meeting_record.get_by_portfolio(db, portfolio_id=portfolio_id, skip=skip, limit=limit)
-    
+    meetings = meeting_record.get_by_portfolio(
+        db, portfolio_id=portfolio_id, skip=skip, limit=limit
+    )
+
     result = []
     for meeting_rec in meetings:
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = bool(meeting_rec.summary)
         result.append(meeting_data)
-    
+
     return result
 
 
@@ -161,14 +163,14 @@ def read_meeting_records_with_recordings(
     Get meeting records that have recording files
     """
     meetings = meeting_record.get_with_recordings(db, skip=skip, limit=limit)
-    
+
     result = []
     for meeting_rec in meetings:
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = True  # Always true for this endpoint
         meeting_data.has_summary = bool(meeting_rec.summary)
         result.append(meeting_data)
-    
+
     return result
 
 
@@ -184,14 +186,14 @@ def read_meeting_records_with_summaries(
     Get meeting records that have summaries
     """
     meetings = meeting_record.get_with_summaries(db, skip=skip, limit=limit)
-    
+
     result = []
     for meeting_rec in meetings:
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = True  # Always true for this endpoint
         result.append(meeting_data)
-    
+
     return result
 
 
@@ -207,12 +209,12 @@ def search_meeting_records(
     Search meeting records by name, summary, or caption
     """
     meetings = meeting_record.search_meeting_records(db, search_term=q, portfolio_id=portfolio_id)
-    
+
     result = []
     for meeting_rec in meetings:
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = bool(meeting_rec.summary)
         result.append(meeting_data)
-    
-    return result 
+
+    return result

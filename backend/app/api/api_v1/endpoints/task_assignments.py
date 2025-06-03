@@ -11,7 +11,7 @@ from app.schemas.task_assignment import (
     TaskAssignmentDetailResponse,
     BulkTaskAssignmentCreate,
     UserTaskAssignmentResponse,
-    TaskUserAssignmentResponse
+    TaskUserAssignmentResponse,
 )
 
 router = APIRouter()
@@ -60,7 +60,7 @@ def read_task_assignment(
     assignment = task_assignment.get_by_id(db, assignment_id=assignment_id)
     if not assignment:
         raise HTTPException(status_code=404, detail="Task assignment not found")
-    
+
     return TaskAssignmentDetailResponse(**assignment.__dict__)
 
 
@@ -77,11 +77,7 @@ def read_task_assignments(
     Get task assignments with optional filters
     """
     assignments = task_assignment.get_multi(
-        db,
-        task_id=task_id,
-        user_id=user_id,
-        skip=skip,
-        limit=limit
+        db, task_id=task_id, user_id=user_id, skip=skip, limit=limit
     )
     return [TaskAssignmentResponse(**assignment.__dict__) for assignment in assignments]
 
@@ -100,7 +96,7 @@ def update_task_assignment(
     assignment = task_assignment.get_by_id(db, assignment_id=assignment_id)
     if not assignment:
         raise HTTPException(status_code=404, detail="Task assignment not found")
-    
+
     assignment = task_assignment.update_task_assignment(db, db_obj=assignment, obj_in=assignment_in)
     return TaskAssignmentResponse(**assignment.__dict__)
 
@@ -118,7 +114,7 @@ def delete_task_assignment(
     success = task_assignment.delete_task_assignment(db, assignment_id=assignment_id)
     if not success:
         raise HTTPException(status_code=404, detail="Task assignment not found")
-    
+
     return {"message": "Task assignment deleted successfully"}
 
 
@@ -136,7 +132,7 @@ def delete_task_assignment_by_task_and_user(
     success = task_assignment.delete_by_task_and_user(db, task_id=task_id, user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="Task assignment not found")
-    
+
     return {"message": "Task assignment deleted successfully"}
 
 
@@ -166,7 +162,9 @@ def read_user_assigned_tasks(
     """
     Get tasks assigned to a specific user with details
     """
-    task_details = task_assignment.get_user_task_details(db, user_id=user_id, skip=skip, limit=limit)
+    task_details = task_assignment.get_user_task_details(
+        db, user_id=user_id, skip=skip, limit=limit
+    )
     return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
 
 
@@ -181,7 +179,9 @@ def read_my_assigned_tasks(
     """
     Get tasks assigned to current user with details
     """
-    task_details = task_assignment.get_user_task_details(db, user_id=current_user.user_id, skip=skip, limit=limit)
+    task_details = task_assignment.get_user_task_details(
+        db, user_id=current_user.user_id, skip=skip, limit=limit
+    )
     return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
 
 
@@ -210,4 +210,4 @@ def delete_all_user_assignments(
     Delete all assignments for a specific user
     """
     count = task_assignment.delete_all_user_assignments(db, user_id=user_id)
-    return {"message": f"Deleted {count} user assignments"} 
+    return {"message": f"Deleted {count} user assignments"}

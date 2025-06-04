@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     # Allow cross-domain requests from the following domain list
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
+    # Frontend URL for redirects
+    FRONTEND_URL: str = "http://localhost:3000"
 
     PROJECT_NAME: str = "AI Society Dashboard"
 

@@ -86,32 +86,33 @@ def discord_callback(db: Session = Depends(deps.get_db), code: str | None = None
     # Check if user exists by discord_id
     user_record = user.get_by_discord_id(db, discord_id=discord_id)
     if user_record:
-        # If it exists, log in directly
-        return JSONResponse(
-            content={
-                "message": "The user already exists, login is successful",
-                "discord_id": discord_id,
-                "username": username,
-                "user": {
-                    "user_id": user_record.user_id,
-                    "email": user_record.email,
-                    "username": user_record.username,
-                    "role_id": user_record.role_id,
-                    "discord_id": user_record.discord_id,
-                },
-            }
-        )
+        # If user exists, redirect to dashboard with user info in query params
+        params = {
+            "login": "success",
+            "user_id": str(user_record.user_id),
+            "username": user_record.username,
+            "discord_id": str(user_record.discord_id),
+        }
+        tasks_url = f"{settings.FRONTEND_URL}/tasks?{urlencode(params)}"
+        
+        # Create redirect response and optionally set cookies for authentication
+        response = RedirectResponse(url=tasks_url)
+        # Optional: Set authentication cookies here if needed
+        # response.set_cookie(key="user_id", value=str(user_record.user_id), httponly=True)
+        # response.set_cookie(key="discord_id", value=str(user_record.discord_id), httponly=True)
+        
+        return response
     else:
-        # If it does not exist, the user is prompted to set a password
-        return JSONResponse(
-            content={
-                "message": "New users, please set your password to complete registration",
-                "discord_id": discord_id,
-                "username": username,
-                "email": email,
-                "global_name": discord_user.global_name,
-            }
-        )
+        # If new user, redirect to registration page with Discord info in query params
+        register_params = {
+            "discord_id": str(discord_id),
+            "username": username,
+            "email": email or "",  # Handle case where email might be None
+            "global_name": discord_user.global_name or "",  # Handle case where global_name might be None
+        }
+        register_url = f"{settings.FRONTEND_URL}/discord-register?{urlencode(register_params)}"
+        
+        return RedirectResponse(url=register_url)
 
 
 @router.post("/register", response_model=UserCreateResponse)

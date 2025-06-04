@@ -45,6 +45,7 @@ Update the `backend/.env` file with your specific settings, especially:
 
 - `POSTGRES_PASSWORD`: Your PostgreSQL password
 - `SECRET_KEY`: A secure random string for production
+- `DISCORD_BOT_TOKEN`: Token for your Discord bot
 - Other values as needed
 
 3. Set up the database (If not already done):
@@ -64,7 +65,8 @@ alembic upgrade head
 python run.py
 ```
 
-The API will run on http://localhost:8000, you can visit http://localhost:8000/docs or http://localhost:8000/redoc to view the API documentation.
+The API will run on http://localhost:8000 and the Discord bot will start concurrently.
+You can visit http://localhost:8000/docs or http://localhost:8000/redoc to view the API documentation.
 
 5. Run the API tests:
 
@@ -90,6 +92,17 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Discord Bot
+
+The backend includes a Discord bot that can manage tasks, send reminders and record meeting minutes.
+
+1. Set `DISCORD_BOT_TOKEN` in your `.env` file.
+2. Run `python run.py` to start both the API and the bot.
+3. Use slash commands in Discord:
+   - `/create_task` – create a new task
+   - `/complete_task` – mark a task completed
+   - `/start_record` and `/stop_record` – record meeting audio
 
 ## Learn More
 

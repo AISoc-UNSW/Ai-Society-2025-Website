@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     DISCORD_CLIENT_SECRET: str = ""
     DISCORD_REDIRECT_URI: str = ""
     DISCORD_API_URL: str = "https://discord.com/api"
+    DISCORD_BOT_TOKEN: str = ""
 
     @field_validator("DATABASE_URL", mode="before")
     def assemble_db_connection(cls, v: str | None, info: ValidationInfo) -> str | None:

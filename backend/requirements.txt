@@ -15,3 +15,5 @@ types-python-jose==3.4.0.20250516
 types-passlib==1.7.7.20250516
 types-requests==2.32.0.20250515
 requests==2.32.3
+py-cord[voice]==2.5.0
+PyNaCl==1.5.0

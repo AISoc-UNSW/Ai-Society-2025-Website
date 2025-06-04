@@ -25,9 +25,9 @@ async def on_ready():
 
 
 async def start_bot():
-    await bot.add_cog(TaskCog(bot))
-    await bot.add_cog(ReminderCog(bot))
-    await bot.add_cog(MeetingCog(bot))
+    bot.add_cog(TaskCog(bot))
+    bot.add_cog(ReminderCog(bot))
+    bot.add_cog(MeetingCog(bot))
 
     token = settings.DISCORD_BOT_TOKEN
     if not token:

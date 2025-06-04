@@ -98,7 +98,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 The backend includes a Discord bot that can manage tasks, send reminders and record meeting minutes.
 
 1. Set `DISCORD_BOT_TOKEN` in your `.env` file.
-2. Run `python run.py` to start both the API and the bot.
+2. Run `python run.py` to start both the API and the bot. You'll see log messages when the bot is ready.
 3. Use slash commands in Discord:
    - `/create_task` – create a new task
    - `/complete_task` – mark a task completed

@@ -6,6 +6,7 @@ from app.core.security import get_password_hash, verify_password
 from app.models.user import User
 from app.schemas.user import (
     DiscordUserCreateRequestBody,
+    DiscordUserRegisterRequestBody,
     UserCreateRequestBody,
     UserUpdate,
 )
@@ -41,6 +42,20 @@ def create_discord_user(db: Session, *, obj_in: DiscordUserCreateRequestBody) ->
     db_obj.email = obj_in.email
     db_obj.username = obj_in.username
     db_obj.discord_id = obj_in.discord_id
+    db_obj.role_id = 1
+
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+def create_discord_user_with_password(db: Session, *, obj_in: DiscordUserRegisterRequestBody) -> User:
+    db_obj = User()
+    db_obj.email = obj_in.email
+    db_obj.username = obj_in.username
+    db_obj.discord_id = obj_in.discord_id
+    db_obj.hashed_password = get_password_hash(obj_in.password)
     db_obj.role_id = 1
 
     db.add(db_obj)

@@ -11,6 +11,7 @@ from app.crud import user
 from app.schemas.user import (
     DiscordUser,
     DiscordUserCreateRequestBody,
+    DiscordUserRegisterRequestBody,
     UserCreateResponse,
 )
 
@@ -110,7 +111,7 @@ def discord_callback(db: Session = Depends(deps.get_db), code: str | None = None
             "email": email or "",  # Handle case where email might be None
             "global_name": discord_user.global_name or "",  # Handle case where global_name might be None
         }
-        register_url = f"{settings.FRONTEND_URL}/discord-register?{urlencode(register_params)}"
+        register_url = f"{settings.FRONTEND_URL}/register?{urlencode(register_params)}"
         
         return RedirectResponse(url=register_url)
 
@@ -118,7 +119,7 @@ def discord_callback(db: Session = Depends(deps.get_db), code: str | None = None
 @router.post("/register", response_model=UserCreateResponse)
 async def discord_register(
     db: Session = Depends(deps.get_db),
-    discord_user_in: DiscordUserCreateRequestBody = Body(...),
+    discord_user_in: DiscordUserRegisterRequestBody = Body(...),
 ):
     """
     New user registration interface for processing password setting requests submitted by the front-end
@@ -134,15 +135,8 @@ async def discord_register(
             detail="The user with this email already exists in the system.",
         )
 
-    # Create user object
-    user_in = DiscordUserCreateRequestBody(
-        email=discord_user_in.email,
-        username=discord_user_in.username,
-        discord_id=discord_user_in.discord_id,
-    )
-
-    # Try to create user
-    user_record = user.create_discord_user(db, obj_in=user_in)
+    # Try to create user with password
+    user_record = user.create_discord_user_with_password(db, obj_in=discord_user_in)
     if not user_record:
         raise HTTPException(
             status_code=400,

@@ -13,7 +13,22 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-2. Run the taskbot:
+2. Configure environment variables:
+
+Copy the example environment file and update it with your settings:
+
+```bash
+cd taskbot
+cp .env.example .env  # On Windows: copy .env.example .env
+```
+
+Update the `taskbot/.env` file with your specific settings, especially:
+
+DISCORD_TOKEN=token
+API_USERNAME=username
+API_PASSWORD=password
+
+3. Run the taskbot:
 
 ```bash
 python bot.py

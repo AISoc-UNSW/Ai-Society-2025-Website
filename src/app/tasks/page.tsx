@@ -12,6 +12,15 @@ import { Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 
+// 角色映射函数 - Add this function
+const getRoleName = (roleId: string): string => {
+  const roleMap: { [key: string]: string } = {
+    "1": "Member",
+    "2": "Administrator",
+    "3": "Director"
+  }
+  return roleMap[roleId] || "Member"
+}
 
 const allStatuses: TaskStatus[] = ["Not Started", "In Progress", "Completed", "Cancelled"]
 const allPriorities: PriorityLevel[] = ["Low", "Medium", "High", "Critical"]
@@ -22,6 +31,8 @@ export default function TasksPage() {
     userId: string
     username: string
     discordId: string
+    role: string
+    roleId?: string
   } | null>(null)
 
   // Get search params and router
@@ -34,10 +45,18 @@ export default function TasksPage() {
     const userId = searchParams.get("user_id")          // database user_id
     const username = searchParams.get("username")       // database username
     const discordId = searchParams.get("discord_id")    // Discord user ID
+    const roleId = searchParams.get("role_id")          // Role ID
 
     // 2. If login === "success" and other required fields exist, it is an existing user just logged in via Discord
     if (login === "success" && userId && username && discordId) {
-      setOauthUser({ userId, username, discordId })
+      const role = roleId ? getRoleName(roleId) : "Member"
+      setOauthUser({
+        userId,
+        username,
+        discordId,
+        role,
+        roleId: roleId || "1"
+      })
       // 3. Remove OAuth login status from URL
       router.replace("/tasks")
     }
@@ -170,13 +189,16 @@ export default function TasksPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      username={oauthUser?.username}
+      role={oauthUser?.role}
+    >
       {oauthUser && (
         <div className="mb-4 rounded-lg bg-green-100 p-3 text-green-800">
           Welcome back, <strong>{oauthUser.username}</strong>! Discord ID: {oauthUser.discordId}
         </div>
       )}
-      
+
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tasks</h1>
         <Button onClick={() => setCreateDialogOpen(true)}>

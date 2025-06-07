@@ -53,7 +53,7 @@ export default function RegisterPage() {
     try {
       const endpoint = isDiscordRegistration
         ? "/api/v1/auth/discord/register"
-        : "/api/v1/auth/register" // For regular registration (if you have this endpoint)
+        : "/api/v1/auth/register"
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}${endpoint}`, {
         method: 'POST',
@@ -70,9 +70,19 @@ export default function RegisterPage() {
 
       const userData = await response.json()
 
-      // Store user data and redirect to tasks page
+      // Store user data and redirect to tasks page with user info
       localStorage.setItem('user', JSON.stringify(userData))
-      router.push('/tasks')
+
+      // Create URL with user parameters for consistent behavior with OAuth login
+      const params = new URLSearchParams({
+        login: "success",
+        user_id: userData.user_id.toString(),
+        username: userData.username,
+        discord_id: userData.discord_id || "",
+        role_id: userData.role_id.toString()
+      })
+
+      router.push(`/tasks?${params.toString()}`)
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')

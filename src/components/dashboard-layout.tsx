@@ -19,10 +19,25 @@ import { usePathname } from "next/navigation"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
+  username?: string
+  role?: string
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, username, role }: DashboardLayoutProps) {
   const pathname = usePathname()
+
+  // 生成用户姓名首字母缩写
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .join('')
+      .slice(0, 2)
+  }
+
+  const displayName = username || "John Doe"
+  const displayRole = role || "Administrator"
+  const initials = getInitials(displayName)
 
   return (
     <SidebarProvider>
@@ -31,11 +46,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <SidebarHeader className="flex flex-col items-center justify-center py-6">
             <Avatar className="h-12 w-12">
               <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="mt-2 text-center">
-              <p className="text-sm font-medium">John Doe</p>
-              <p className="text-xs text-muted-foreground">Administrator</p>
+              <p className="text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground">{displayRole}</p>
             </div>
           </SidebarHeader>
           <SidebarContent>

@@ -2,19 +2,67 @@
 
 import { CreateTaskDialog } from "@/components/create-task-dialog"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
 import { TaskCard } from "@/components/task-card"
 import { TaskDetails } from "@/components/task-details"
 import { type SortDirection, type SortOption, TaskFilters } from "@/components/task-filters"
+import { Button } from "@/components/ui/button"
 import { departments, people, tasks } from "@/lib/data"
 import type { Department, PriorityLevel, SubTask, Task, TaskStatus } from "@/lib/types"
 import { Plus } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+
+// Role mapping function
+const getRoleName = (roleId: string): string => {
+  const roleMap: { [key: string]: string } = {
+    "1": "Member",
+    "2": "Administrator",
+    "3": "Director"
+  }
+  return roleMap[roleId] || "Member"
+}
 
 const allStatuses: TaskStatus[] = ["Not Started", "In Progress", "Completed", "Cancelled"]
 const allPriorities: PriorityLevel[] = ["Low", "Medium", "High", "Critical"]
 
 export default function TasksPage() {
+  // Oauth user state
+  const [oauthUser, setOauthUser] = useState<{
+    userId: string
+    username: string
+    discordId: string
+    role: string
+    roleId?: string
+  } | null>(null)
+
+  // Get search params and router
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    // 1. Get OAuth login status from URL
+    const login = searchParams.get("login")             // "success"
+    const userId = searchParams.get("user_id")          // database user_id
+    const username = searchParams.get("username")       // database username
+    const discordId = searchParams.get("discord_id")    // Discord user ID
+    const roleId = searchParams.get("role_id")          // Role ID
+
+    // 2. If login === "success" and other required fields exist, it is an existing user just logged in via Discord
+    if (login === "success" && userId && username && discordId) {
+      const role = roleId ? getRoleName(roleId) : "Member"
+      setOauthUser({
+        userId,
+        username,
+        discordId,
+        role,
+        roleId: roleId || "1"
+      })
+      // 3. Remove OAuth login status from URL
+      router.replace("/tasks")
+    }
+  }, [searchParams, router])
+
+
   // Selected task state
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(undefined)
   const [selectedSubtaskId, setSelectedSubtaskId] = useState<string | undefined>(undefined)
@@ -141,7 +189,16 @@ export default function TasksPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      username={oauthUser?.username}
+      role={oauthUser?.role}
+    >
+      {oauthUser && (
+        <div className="mb-4 rounded-lg bg-green-100 p-3 text-green-800">
+          Welcome back, <strong>{oauthUser.username}</strong>! Discord ID: {oauthUser.discordId}
+        </div>
+      )}
+
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tasks</h1>
         <Button onClick={() => setCreateDialogOpen(true)}>

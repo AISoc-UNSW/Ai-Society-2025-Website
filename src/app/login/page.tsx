@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { DiscIcon as Discord } from "lucide-react"
 import Link from "next/link"
 
-// const discordApiUrl = process.env.NEXT_PUBLIC_API_BASE + "/api/v1/auth/discord/"
+const discordApiUrl = process.env.NEXT_PUBLIC_API_BASE + "/api/v1/auth/discord/"
 export default function LoginPage() {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-muted/40">
@@ -35,8 +35,7 @@ export default function LoginPage() {
             <span className="relative bg-card px-2 text-sm text-muted-foreground">Or continue with</span>
           </div>
           <Button variant="outline" className="w-full" asChild>
-            {/* <a href={discordApiUrl}> */}
-            <a href='/tasks'>
+            <a href={process.env.NEXT_PUBLIC_API_BASE + "/api/v1/auth/discord/"}>
               <Discord className="mr-2 h-4 w-4" />
               Login with Discord
             </a>

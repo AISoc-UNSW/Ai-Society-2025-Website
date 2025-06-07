@@ -1,3 +1,4 @@
+
 # Import all models to ensure SQLAlchemy recognizes all table relationships
 from app.models.user import User
 from app.models.role import Role
@@ -13,4 +14,4 @@ __all__ = [
     "Task",
     "MeetingRecord",
     "TaskAssignment",
-] 
+]

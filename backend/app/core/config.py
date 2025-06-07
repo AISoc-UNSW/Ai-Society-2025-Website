@@ -1,9 +1,8 @@
 import secrets
 import pytz
 
-from pydantic import ValidationInfo, field_validator
+from pydantic import ValidationInfo, field_validator, Field
 from pydantic_settings import BaseSettings
-
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
@@ -13,7 +12,10 @@ class Settings(BaseSettings):
     # The expiration time of the access token, 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     # Allow cross-domain requests from the following domain list
-    BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
+    # BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
+    BACKEND_CORS_ORIGINS: str = Field("http://localhost:3000", env="BACKEND_CORS_ORIGINS")
+    # Frontend URL for redirects
+    FRONTEND_URL: str = "http://localhost:3000"
 
     PROJECT_NAME: str = "AI Society Dashboard"
     

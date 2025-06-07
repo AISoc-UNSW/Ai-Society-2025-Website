@@ -18,6 +18,11 @@ class DiscordUserCreateRequestBody(UserBase):
     discord_id: str
 
 
+class DiscordUserRegisterRequestBody(UserBase):
+    discord_id: str
+    password: str
+
+
 class UserCreateResponse(UserBase):
     user_id: int
     email: EmailStr

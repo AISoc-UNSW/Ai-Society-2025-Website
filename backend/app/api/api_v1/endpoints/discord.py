@@ -135,8 +135,8 @@ async def discord_register(
             detail="The user with this email already exists in the system.",
         )
 
-    # Try to create user with password
-    user_record = user.create_discord_user_with_password(db, obj_in=discord_user_in)
+    # Try to create user 
+    user_record = user.create_discord_user(db, obj_in=discord_user_in)
     if not user_record:
         raise HTTPException(
             status_code=400,

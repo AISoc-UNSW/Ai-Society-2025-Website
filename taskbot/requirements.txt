@@ -1,0 +1,16 @@
+# Discord bot dependencies
+py-cord[voice]>=2.6.0
+
+# Voice support dependencies
+PyNaCl>=1.5.0
+
+# HTTP client for backend communication
+aiohttp>=3.9.1
+
+# Audio processing
+pydub>=0.25.1
+
+# Note: ffmpeg and opus library need to be installed separately on the system
+# Windows: Download opus.dll and ffmpeg.exe, add to PATH
+# Linux: sudo apt install libopus0 ffmpeg
+# macOS: brew install opus ffmpeg

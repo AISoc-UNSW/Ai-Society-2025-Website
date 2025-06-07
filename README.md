@@ -2,6 +2,30 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Taskbot
+
+1. Activate the virtual environment and install dependencies:
+
+```bash
+cd taskbot
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2. Run the taskbot:
+
+```bash
+python bot.py
+```
+
+Or run the taskbot in the background (Recommended):
+
+```bash
+nohup python bot.py > taskbot.log 2>&1 &
+```
+
+### Backend and Frontend
 1. Activate the virtual environment and install dependencies:
 
 ```bash

@@ -1,10 +1,13 @@
 from typing import Any
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
-from datetime import datetime
+from sqlalchemy import func, and_, or_, text
+from datetime import datetime, timezone, timedelta
+import pytz
 
 from app.models.task import Task
+from app.models.portfolio import Portfolio
 from app.schemas.task import TaskCreateRequestBody, TaskUpdate
+from app.utils.timezone import tz
 
 
 def get_by_id(db: Session, task_id: int) -> Task | None:
@@ -66,12 +69,19 @@ def create_task(db: Session, *, obj_in: TaskCreateRequestBody) -> Task:
     db_obj.description = obj_in.description
     db_obj.status = obj_in.status or "Not Started"
     db_obj.priority = obj_in.priority or "medium"
-    db_obj.deadline = obj_in.deadline
+    
+    # Ensure deadline is converted to UTC for storage
+    if obj_in.deadline.tzinfo is None:
+        # If no timezone info, assume project default timezone
+        db_obj.deadline = tz.to_utc(obj_in.deadline)
+    else:
+        db_obj.deadline = obj_in.deadline.astimezone(pytz.UTC)
+    
     db_obj.portfolio_id = obj_in.portfolio_id
     db_obj.parent_task_id = obj_in.parent_task_id
     db_obj.source_meeting_id = obj_in.source_meeting_id
-    db_obj.created_at = datetime.utcnow()
-    db_obj.updated_at = datetime.utcnow()
+    db_obj.created_at = tz.now_utc()
+    db_obj.updated_at = tz.now_utc()
 
     db.add(db_obj)
     db.commit()
@@ -86,8 +96,18 @@ def update_task(db: Session, *, db_obj: Task, obj_in: dict | TaskUpdate) -> Task
     else:
         update_data = obj_in.model_dump(exclude_unset=True)
     
+    # Handle deadline timezone conversion if being updated
+    if "deadline" in update_data and update_data["deadline"] is not None:
+        deadline = update_data["deadline"]
+        if isinstance(deadline, datetime):
+            if deadline.tzinfo is None:
+                # If no timezone info, assume project default timezone
+                update_data["deadline"] = tz.to_utc(deadline)
+            else:
+                update_data["deadline"] = deadline.astimezone(pytz.UTC)
+    
     # Always update the updated_at timestamp
-    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_at"] = tz.now_utc()
     
     for field in update_data:
         setattr(db_obj, field, update_data[field])
@@ -120,4 +140,35 @@ def search_tasks(db: Session, *, search_term: str, portfolio_id: int | None = No
         Task.description.ilike(f"%{search_term}%")
     )
     
-    return query.filter(search_filter).all() 
+    return query.filter(search_filter).all()
+
+
+def get_tomorrow_reminders(db: Session, portfolio_id: int | None = None) -> list[Task]:
+    """Get tasks due tomorrow and not completed (project timezone)"""
+    
+    # Get current project timezone time
+    now_local = tz.now_local()
+    
+    # Calculate tomorrow's date range (project timezone)
+    tomorrow_start = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow_end = tomorrow_start + timedelta(days=1)
+    
+    # Convert to UTC time for database query
+    tomorrow_start_utc = tz.to_utc(tomorrow_start)
+    tomorrow_end_utc = tz.to_utc(tomorrow_end)
+    
+    # Query tasks with join to get portfolio info
+    query = db.query(Task).join(Portfolio)
+    
+    # Use UTC time range for query (since deadline is now stored with timezone in UTC)
+    query = query.filter(
+        Task.deadline >= tomorrow_start_utc,
+        Task.deadline < tomorrow_end_utc,
+        Task.status.in_(['Not Started', 'In Progress'])
+    )
+    
+    # Optional portfolio filter
+    if portfolio_id:
+        query = query.filter(Task.portfolio_id == portfolio_id)
+    
+    return query.order_by(Task.priority.desc(), Task.deadline.asc()).all() 

@@ -10,6 +10,8 @@ from app.schemas.task import (
     TaskResponse,
     TaskListResponse,
     TaskDetailResponse,
+    TaskReminderResponse,
+    TomorrowRemindersResponse,
 )
 
 router = APIRouter()
@@ -164,3 +166,37 @@ def search_tasks(
     """
     tasks = task.search_tasks(db, search_term=q, portfolio_id=portfolio_id)
     return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+
+
+@router.get("/reminders/tomorrow", response_model=TomorrowRemindersResponse)
+def get_tomorrow_reminders(
+    *,
+    db: Session = Depends(deps.get_db),
+    portfolio_id: int | None = Query(None, description="Filter by portfolio ID"),
+    current_user: User = Depends(deps.get_current_user),
+) -> TomorrowRemindersResponse:
+    """
+    Get tasks due tomorrow and not completed (Sydney timezone)
+    Returns tasks with status 'Not Started' or 'In Progress' that are due tomorrow
+    """
+    tasks = task.get_tomorrow_reminders(db, portfolio_id=portfolio_id)
+    
+    # Convert to response model with portfolio info
+    task_reminders = []
+    for task_record in tasks:
+        reminder = TaskReminderResponse(
+            task_id=task_record.task_id,
+            title=task_record.title,
+            description=task_record.description,
+            deadline=task_record.deadline,
+            priority=task_record.priority,
+            status=task_record.status,
+            portfolio_id=task_record.portfolio_id,
+            portfolio_name=task_record.portfolio.name if task_record.portfolio else "Unknown"
+        )
+        task_reminders.append(reminder)
+    
+    return TomorrowRemindersResponse(
+        tasks=task_reminders,
+        total_count=len(task_reminders)
+    )

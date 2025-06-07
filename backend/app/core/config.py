@@ -1,4 +1,5 @@
 import secrets
+import pytz
 
 from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
@@ -15,6 +16,10 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
     PROJECT_NAME: str = "AI Society Dashboard"
+    
+    # Timezone configuration
+    DEFAULT_TIMEZONE: str = "Australia/Sydney"  # Project default timezone
+    DATABASE_TIMEZONE: str = "UTC"              # Database timezone (recommended to keep UTC)
 
     # Database settings
     POSTGRES_SERVER: str = "localhost"
@@ -41,6 +46,15 @@ class Settings(BaseSettings):
 
         # Otherwise, build the connection string
         return f"postgresql://{data.get('POSTGRES_USER')}:{data.get('POSTGRES_PASSWORD')}@{data.get('POSTGRES_SERVER')}:{data.get('POSTGRES_PORT')}/{data.get('POSTGRES_DB')}"
+
+    # Timezone related methods
+    def get_default_timezone(self) -> pytz.BaseTzInfo:
+        """Get project default timezone object"""
+        return pytz.timezone(self.DEFAULT_TIMEZONE)
+    
+    def get_database_timezone(self) -> pytz.BaseTzInfo:
+        """Get database timezone object"""
+        return pytz.timezone(self.DATABASE_TIMEZONE)
 
     class Config:
         case_sensitive = True

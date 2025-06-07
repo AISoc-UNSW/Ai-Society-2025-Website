@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from app.core.config import settings
 from app.database.session import Base
 
-# Import all models - 确保所有模型都被导入到元数据中
+# Import all models 
 from app.models import User, Role, Portfolio  # noqa
 
 # this is the Alembic Config object, which provides

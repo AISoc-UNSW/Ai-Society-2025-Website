@@ -2,7 +2,6 @@ import secrets
 
 from pydantic import ValidationInfo, field_validator, Field
 from pydantic_settings import BaseSettings
-from typing import List
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"

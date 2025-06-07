@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import TYPE_CHECKING
 
 from app.database.session import Base
 
 if TYPE_CHECKING:
-    from app.models.role import Role
+    from app.models.role import Role 
     from app.models.portfolio import Portfolio
 
 

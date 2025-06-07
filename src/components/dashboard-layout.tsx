@@ -4,13 +4,13 @@ import type React from "react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { CalendarDays, ListChecks, LogOut, Settings, SquareStack } from "lucide-react"
@@ -26,7 +26,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, username, role }: DashboardLayoutProps) {
   const pathname = usePathname()
 
-  // 生成用户姓名首字母缩写
+  // Generate user initials from name
   const getInitials = (name: string) => {
     return name
       .split(' ')

@@ -1807,6 +1807,63 @@
                 }
             }
         },
+        "/api/v1/tasks/reminders/tomorrow": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Get Tomorrow Reminders",
+                "description": "Get tasks due tomorrow and not completed (Sydney timezone)\nReturns tasks with status 'Not Started' or 'In Progress' that are due tomorrow",
+                "operationId": "get_tomorrow_reminders_api_v1_tasks_reminders_tomorrow_get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by portfolio ID",
+                            "title": "Portfolio Id"
+                        },
+                        "description": "Filter by portfolio ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TomorrowRemindersResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/meeting-records/": {
             "post": {
                 "tags": [
@@ -4376,6 +4433,94 @@
                 ],
                 "title": "TaskListResponse"
             },
+            "TaskReminderResponse": {
+                "properties": {
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Deadline"
+                    },
+                    "priority": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Priority"
+                    },
+                    "status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "portfolio_name": {
+                        "type": "string",
+                        "title": "Portfolio Name"
+                    },
+                    "deadline_local": {
+                        "type": "string",
+                        "title": "Deadline Local",
+                        "description": "Get deadline formatted in project timezone",
+                        "readOnly": true
+                    },
+                    "deadline_local_date": {
+                        "type": "string",
+                        "title": "Deadline Local Date",
+                        "description": "Get deadline date in project timezone",
+                        "readOnly": true
+                    },
+                    "deadline_local_time": {
+                        "type": "string",
+                        "title": "Deadline Local Time",
+                        "description": "Get deadline time in project timezone",
+                        "readOnly": true
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "task_id",
+                    "title",
+                    "deadline",
+                    "portfolio_id",
+                    "portfolio_name",
+                    "deadline_local",
+                    "deadline_local_date",
+                    "deadline_local_time"
+                ],
+                "title": "TaskReminderResponse"
+            },
             "TaskResponse": {
                 "properties": {
                     "title": {
@@ -4626,6 +4771,27 @@
                     "token_type"
                 ],
                 "title": "Token"
+            },
+            "TomorrowRemindersResponse": {
+                "properties": {
+                    "tasks": {
+                        "items": {
+                            "$ref": "#/components/schemas/TaskReminderResponse"
+                        },
+                        "type": "array",
+                        "title": "Tasks"
+                    },
+                    "total_count": {
+                        "type": "integer",
+                        "title": "Total Count"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "tasks",
+                    "total_count"
+                ],
+                "title": "TomorrowRemindersResponse"
             },
             "UserCreateRequestBody": {
                 "properties": {

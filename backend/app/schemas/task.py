@@ -65,7 +65,17 @@ class TaskDetailResponse(TaskResponse):
         from_attributes = True
 
 
-# Used for task reminders (includes portfolio info)
+# Used for assigned user info in reminders
+class AssignedUserResponse(BaseModel):
+    user_id: int
+    username: str
+    discord_id: str | None = None
+    
+    class Config:
+        from_attributes = True
+
+
+# Used for task reminders (includes portfolio info and assigned users)
 class TaskReminderResponse(BaseModel):
     task_id: int
     title: str
@@ -75,6 +85,8 @@ class TaskReminderResponse(BaseModel):
     status: str | None = None
     portfolio_id: int
     portfolio_name: str
+    portfolio_channel: str | None = None  # Discord channel ID for the portfolio
+    assigned_users: list[AssignedUserResponse] = []  # Users assigned to this task
     
     @computed_field
     @property

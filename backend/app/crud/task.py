@@ -6,6 +6,8 @@ import pytz
 
 from app.models.task import Task
 from app.models.portfolio import Portfolio
+from app.models.task_assignment import TaskAssignment
+from app.models.user import User
 from app.schemas.task import TaskCreateRequestBody, TaskUpdate
 from app.utils.timezone import tz
 
@@ -143,8 +145,8 @@ def search_tasks(db: Session, *, search_term: str, portfolio_id: int | None = No
     return query.filter(search_filter).all()
 
 
-def get_tomorrow_reminders(db: Session, portfolio_id: int | None = None) -> list[Task]:
-    """Get tasks due tomorrow and not completed (project timezone)"""
+def get_tomorrow_reminders(db: Session, portfolio_id: int | None = None) -> list[dict]:
+    """Get tasks due tomorrow and not completed with portfolio and user info (project timezone)"""
     
     # Get current project timezone time
     now_local = tz.now_local()
@@ -171,4 +173,36 @@ def get_tomorrow_reminders(db: Session, portfolio_id: int | None = None) -> list
     if portfolio_id:
         query = query.filter(Task.portfolio_id == portfolio_id)
     
-    return query.order_by(Task.priority.desc(), Task.deadline.asc()).all() 
+    tasks = query.order_by(Task.priority.desc(), Task.deadline.asc()).all()
+    
+    # Build result with portfolio and user info
+    result = []
+    for task in tasks:
+        # Get assigned users for this task
+        assigned_users = db.query(User).join(TaskAssignment).filter(
+            TaskAssignment.task_id == task.task_id
+        ).all()
+        
+        # Build task data with portfolio and user info
+        task_data = {
+            'task_id': task.task_id,
+            'title': task.title,
+            'description': task.description,
+            'deadline': task.deadline,
+            'priority': task.priority,
+            'status': task.status,
+            'portfolio_id': task.portfolio_id,
+            'portfolio_name': task.portfolio.name,
+            'portfolio_channel': task.portfolio.channel_id,
+            'assigned_users': [
+                {
+                    'user_id': user.user_id,
+                    'username': user.username,
+                    'discord_id': user.discord_id
+                }
+                for user in assigned_users
+            ]
+        }
+        result.append(task_data)
+    
+    return result 

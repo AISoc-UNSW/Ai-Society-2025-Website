@@ -178,21 +178,24 @@ def get_tomorrow_reminders(
     """
     Get tasks due tomorrow and not completed (Sydney timezone)
     Returns tasks with status 'Not Started' or 'In Progress' that are due tomorrow
+    Includes portfolio channel and assigned users with their Discord IDs
     """
-    tasks = task.get_tomorrow_reminders(db, portfolio_id=portfolio_id)
+    tasks_data = task.get_tomorrow_reminders(db, portfolio_id=portfolio_id)
     
-    # Convert to response model with portfolio info
+    # Convert to response model with portfolio and user info
     task_reminders = []
-    for task_record in tasks:
+    for task_data in tasks_data:
         reminder = TaskReminderResponse(
-            task_id=task_record.task_id,
-            title=task_record.title,
-            description=task_record.description,
-            deadline=task_record.deadline,
-            priority=task_record.priority,
-            status=task_record.status,
-            portfolio_id=task_record.portfolio_id,
-            portfolio_name=task_record.portfolio.name if task_record.portfolio else "Unknown"
+            task_id=task_data['task_id'],
+            title=task_data['title'],
+            description=task_data['description'],
+            deadline=task_data['deadline'],
+            priority=task_data['priority'],
+            status=task_data['status'],
+            portfolio_id=task_data['portfolio_id'],
+            portfolio_name=task_data['portfolio_name'],
+            portfolio_channel=task_data['portfolio_channel'],
+            assigned_users=task_data['assigned_users']
         )
         task_reminders.append(reminder)
     

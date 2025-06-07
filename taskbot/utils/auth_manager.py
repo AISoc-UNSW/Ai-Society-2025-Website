@@ -4,8 +4,6 @@ Authentication Token Manager
 Responsible for managing authentication tokens with backend API, including acquisition, storage, refresh and validation
 """
 
-import asyncio
-from typing import Optional
 from datetime import datetime, timedelta
 import logging
 
@@ -25,9 +23,9 @@ class AuthManager:
             base_url: Base URL of the backend API
         """
         self.base_url = base_url
-        self._token: Optional[str] = None
+        self._token: str | None = None
         self._token_type: str = "Bearer"
-        self._expires_at: Optional[datetime] = None
+        self._expires_at: datetime | None = None
         
     @property
     def is_authenticated(self) -> bool:

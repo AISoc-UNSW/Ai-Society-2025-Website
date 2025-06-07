@@ -6,8 +6,6 @@ Responsible for handling meeting record related API calls
 
 import logging
 from datetime import date
-from typing import Optional
-from pathlib import Path
 
 from .api_client import APIClient
 from .auth_manager import AuthManager
@@ -44,8 +42,8 @@ class MeetingService:
         meeting_name: str,
         portfolio_id: int,
         recording_file_path: str,
-        meeting_date: Optional[date] = None
-    ) -> Optional[dict]:
+        meeting_date: date | None = None
+    ) -> dict | None:
         """
         Create meeting record
         

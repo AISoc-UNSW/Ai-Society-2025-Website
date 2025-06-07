@@ -5,9 +5,8 @@ This module provides timezone conversion and management functions
 to handle timezone differences between database (UTC) and application logic.
 """
 
-from datetime import datetime, timezone, date
+from datetime import datetime, date
 import pytz
-from typing import Optional
 from app.core.config import settings
 
 
@@ -35,7 +34,7 @@ class TimezoneManager:
         return datetime.now(settings.get_default_timezone())
     
     @staticmethod
-    def to_utc(dt: datetime, from_tz: Optional[str] = None) -> datetime:
+    def to_utc(dt: datetime, from_tz: str | None = None) -> datetime:
         """Convert local time to UTC time
         
         Args:
@@ -52,7 +51,7 @@ class TimezoneManager:
         return dt.astimezone(pytz.UTC)
     
     @staticmethod
-    def to_local(dt: datetime, to_tz: Optional[str] = None) -> datetime:
+    def to_local(dt: datetime, to_tz: str | None = None) -> datetime:
         """Convert UTC time to local time
         
         Args:
@@ -70,7 +69,7 @@ class TimezoneManager:
         return dt.astimezone(target_tz)
     
     @staticmethod
-    def get_date_in_timezone(dt: datetime, tz: Optional[str] = None) -> date:
+    def get_date_in_timezone(dt: datetime, tz: str | None = None) -> date:
         """Get date in specified timezone
         
         Args:
@@ -87,7 +86,7 @@ class TimezoneManager:
         return local_dt.date()
     
     @staticmethod
-    def format_local_time(dt: datetime, fmt: str = '%Y-%m-%d %H:%M:%S %Z', tz: Optional[str] = None) -> str:
+    def format_local_time(dt: datetime, fmt: str = '%Y-%m-%d %H:%M:%S %Z', tz: str | None = None) -> str:
         """Format datetime as local time string
         
         Args:

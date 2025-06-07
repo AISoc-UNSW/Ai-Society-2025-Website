@@ -9,8 +9,7 @@ import discord
 from discord.ext import commands, tasks
 import aiohttp
 import logging
-from datetime import datetime, time
-import asyncio
+from datetime import time
 from typing import List, Dict, Any
 
 from utils.config import config

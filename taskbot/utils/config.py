@@ -6,7 +6,6 @@ Responsible for reading and managing environment variable configurations
 
 import os
 from pathlib import Path
-from typing import Optional
 
 
 class Config:

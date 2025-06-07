@@ -6,7 +6,6 @@ from app.database.session import Base
 
 if TYPE_CHECKING:
     from app.models.role import Role
-    from app.models.portfolio import Portfolio
 
 
 class User(Base):
@@ -20,5 +19,3 @@ class User(Base):
     discord_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
     # Add relationship with Role model
     role: Mapped["Role"] = relationship("Role", back_populates="users")
-    portfolio_id: Mapped[int | None] = mapped_column(ForeignKey("portfolios.portfolio_id"), nullable=True)
-    portfolio: Mapped["Portfolio | None"] = relationship("Portfolio", back_populates="users")

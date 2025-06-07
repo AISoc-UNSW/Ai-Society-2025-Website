@@ -48,13 +48,13 @@ class ReminderCog(commands.Cog):
         logger.info("Reminder cog unloaded")
 
     async def ensure_session(self):
-        """确保 HTTP session 已经初始化"""
+        """Ensure HTTP session is initialized"""
         if self.session is None:
             self.session = aiohttp.ClientSession()
             logger.info("Created new HTTP session")
 
     async def ensure_authenticated(self) -> bool:
-        """确保已经通过后端 API 认证"""
+        """Ensure authentication with backend API"""
         if not self._authenticated:
             success = await self.auth_manager.login(
                 config.api_username, 
@@ -101,10 +101,10 @@ class ReminderCog(commands.Cog):
     async def fetch_tomorrow_tasks(self) -> Dict[str, Any]:
         """Fetch tasks due tomorrow from the API"""
         try:
-            # 确保 session 已经初始化
+            # Ensure session is initialized
             await self.ensure_session()
             
-            # 确保已经认证
+            # Ensure authentication
             if not await self.ensure_authenticated():
                 logger.error("Cannot fetch tasks: authentication failed")
                 return {}
@@ -112,13 +112,13 @@ class ReminderCog(commands.Cog):
             url = f"{config.api_base_url}/api/v1/tasks/reminders/tomorrow"
             logger.info(f"Making request to: {url}")
             
-            # 获取认证头
+            # Get authentication headers
             headers = self.auth_manager.auth_headers
             
             async with self.session.get(url, headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
-                    # 检查数据是否为 None 或空
+                    # Check if data is None or empty
                     if data is None:
                         logger.warning("API returned None data")
                         return {}
@@ -127,7 +127,7 @@ class ReminderCog(commands.Cog):
                     return data
                 else:
                     logger.error(f"API request failed with status {response.status}")
-                    # 尝试获取错误响应内容
+                    # Try to get error response content
                     try:
                         error_text = await response.text()
                         logger.error(f"Error response: {error_text}")
@@ -283,17 +283,17 @@ class ReminderCog(commands.Cog):
         await ctx.defer()
         
         try:
-            # 确保 session 已经初始化
+            # Ensure session is initialized
             await self.ensure_session()
             
-            # 确保已经认证
+            # Ensure authentication
             if not await self.ensure_authenticated():
-                await ctx.followup.send("❌ API 认证失败", ephemeral=True)
+                await ctx.followup.send("❌ API authentication failed", ephemeral=True)
                 return
             
             url = f"{config.api_base_url}/api/v1/tasks/reminders/tomorrow"
             
-            # 获取认证头
+            # Get authentication headers
             headers = self.auth_manager.auth_headers
             
             async with self.session.get(url, headers=headers) as response:
@@ -306,38 +306,38 @@ class ReminderCog(commands.Cog):
                 except Exception as json_error:
                     try:
                         text_data = await response.text()
-                        data_preview = f"JSON解析失败: {json_error}\n原始响应: {text_data[:300]}..."
+                        data_preview = f"JSON parsing failed: {json_error}\nRaw response: {text_data[:300]}..."
                     except:
-                        data_preview = f"无法读取响应内容: {json_error}"
+                        data_preview = f"Cannot read response content: {json_error}"
                 
                 embed = discord.Embed(
-                    title="🔧 API 连接测试",
+                    title="🔧 API Connection Test",
                     color=discord.Color.blue() if status == 200 else discord.Color.red()
                 )
                 
                 embed.add_field(name="URL", value=url, inline=False)
-                embed.add_field(name="状态码", value=str(status), inline=True)
+                embed.add_field(name="Status Code", value=str(status), inline=True)
                 embed.add_field(name="Content-Type", value=headers.get('content-type', 'Unknown'), inline=True)
-                embed.add_field(name="响应数据", value=f"```json\n{data_preview}\n```", inline=False)
+                embed.add_field(name="Response Data", value=f"```json\n{data_preview}\n```", inline=False)
                 
                 await ctx.followup.send(embed=embed, ephemeral=True)
                 
         except Exception as e:
-            await ctx.followup.send(f"❌ API 测试失败: {str(e)}", ephemeral=True)
+            await ctx.followup.send(f"❌ API test failed: {str(e)}", ephemeral=True)
 
     @discord.slash_command(description="Show configuration (Admin only)")
     @commands.has_permissions(administrator=True)
     async def show_config(self, ctx: discord.ApplicationContext):
-        """显示当前配置信息"""
+        """Show current configuration information"""
         embed = discord.Embed(
-            title="🔧 机器人配置",
+            title="🔧 Bot Configuration",
             color=discord.Color.blue()
         )
         
         embed.add_field(name="API Base URL", value=config.api_base_url, inline=False)
-        embed.add_field(name="Session Status", value="✅ 已初始化" if self.session else "❌ 未初始化", inline=True)
-        embed.add_field(name="Auth Status", value="✅ 已认证" if self._authenticated else "❌ 未认证", inline=True)
-        embed.add_field(name="Daily Task Status", value="✅ 运行中" if self.daily_reminder_check.is_running() else "❌ 已停止", inline=True)
+        embed.add_field(name="Session Status", value="✅ Initialized" if self.session else "❌ Not Initialized", inline=True)
+        embed.add_field(name="Auth Status", value="✅ Authenticated" if self._authenticated else "❌ Not Authenticated", inline=True)
+        embed.add_field(name="Daily Task Status", value="✅ Running" if self.daily_reminder_check.is_running() else "❌ Stopped", inline=True)
         
         await ctx.respond(embed=embed, ephemeral=True)
 

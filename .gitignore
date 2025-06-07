@@ -52,3 +52,5 @@ venv/
 .cursorrules
 .cursor/
 .vscode/
+
+.env.example

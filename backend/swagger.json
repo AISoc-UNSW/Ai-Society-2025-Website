@@ -1,0 +1,4796 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Ai Society 2025 Website",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/api/v1/login/access-token": {
+            "post": {
+                "tags": [
+                    "Login"
+                ],
+                "summary": "Login Access Token",
+                "description": "username should be email of user\nOAuth2 compatible token login, get an access token for future requests",
+                "operationId": "login_access_token_api_v1_login_access_token_post",
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_login_access_token_api_v1_login_access_token_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Token"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create User",
+                "description": "Create new user",
+                "operationId": "create_user_api_v1_users__post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreateRequestBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Read User Me",
+                "description": "Get current user",
+                "operationId": "read_user_me_api_v1_users_me_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserCreateResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/discord/": {
+            "get": {
+                "tags": [
+                    "Discord"
+                ],
+                "summary": "Discord Login",
+                "operationId": "discord_login_api_v1_auth_discord__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/discord/callback": {
+            "get": {
+                "tags": [
+                    "Discord"
+                ],
+                "summary": "Discord Callback",
+                "operationId": "discord_callback_api_v1_auth_discord_callback_get",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Code"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/discord/register": {
+            "post": {
+                "tags": [
+                    "Discord"
+                ],
+                "summary": "Discord Register",
+                "description": "New user registration interface for processing password setting requests submitted by the front-end",
+                "operationId": "discord_register_api_v1_auth_discord_register_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DiscordUserCreateRequestBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/": {
+            "post": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Create Role",
+                "description": "Create new role (Admin only)",
+                "operationId": "create_role_api_v1_roles__post",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RoleCreateRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Read Roles",
+                "description": "Get roles list",
+                "operationId": "read_roles_api_v1_roles__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Skip items",
+                            "default": 0,
+                            "title": "Skip"
+                        },
+                        "description": "Skip items"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "description": "Limit items",
+                            "default": 100,
+                            "title": "Limit"
+                        },
+                        "description": "Limit items"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoleListResponse"
+                                    },
+                                    "title": "Response Read Roles Api V1 Roles  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{role_id}": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Read Role",
+                "description": "Get role by ID with details",
+                "operationId": "read_role_api_v1_roles__role_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Role Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Update Role",
+                "description": "Update role (Admin only)",
+                "operationId": "update_role_api_v1_roles__role_id__put",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Role Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RoleUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Delete Role",
+                "description": "Delete role (Admin only)",
+                "operationId": "delete_role_api_v1_roles__role_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Role Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/all/simple": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Read All Roles Simple",
+                "description": "Get all roles (for dropdown lists, no pagination)",
+                "operationId": "read_all_roles_simple_api_v1_roles_all_simple_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoleListResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Read All Roles Simple Api V1 Roles All Simple Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/roles/with-counts/": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Read Roles With User Counts",
+                "description": "Get all roles with user counts",
+                "operationId": "read_roles_with_user_counts_api_v1_roles_with_counts__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoleDetailResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Read Roles With User Counts Api V1 Roles With Counts  Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/roles/search/": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Search Roles",
+                "description": "Search roles by name or description",
+                "operationId": "search_roles_api_v1_roles_search__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Search term",
+                            "title": "Q"
+                        },
+                        "description": "Search term"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RoleListResponse"
+                                    },
+                                    "title": "Response Search Roles Api V1 Roles Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/name/{role_name}": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Read Role By Name",
+                "description": "Get role by name with details",
+                "operationId": "read_role_by_name_api_v1_roles_name__role_name__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "role_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Role Name"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/portfolios/": {
+            "post": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Create Portfolio",
+                "description": "Create new portfolio (Admin only)",
+                "operationId": "create_portfolio_api_v1_portfolios__post",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PortfolioCreateRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfolioResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read Portfolios",
+                "description": "Get portfolios list",
+                "operationId": "read_portfolios_api_v1_portfolios__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Skip items",
+                            "default": 0,
+                            "title": "Skip"
+                        },
+                        "description": "Skip items"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "description": "Limit items",
+                            "default": 100,
+                            "title": "Limit"
+                        },
+                        "description": "Limit items"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioListResponse"
+                                    },
+                                    "title": "Response Read Portfolios Api V1 Portfolios  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/portfolios/{portfolio_id}": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read Portfolio",
+                "description": "Get portfolio by ID with details and statistics",
+                "operationId": "read_portfolio_api_v1_portfolios__portfolio_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfolioDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Update Portfolio",
+                "description": "Update portfolio (Admin only)",
+                "operationId": "update_portfolio_api_v1_portfolios__portfolio_id__put",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PortfolioUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfolioResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Delete Portfolio",
+                "description": "Delete portfolio (Admin only)",
+                "operationId": "delete_portfolio_api_v1_portfolios__portfolio_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/portfolios/all/simple": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read All Portfolios Simple",
+                "description": "Get all portfolios (for dropdown lists, no pagination)",
+                "operationId": "read_all_portfolios_simple_api_v1_portfolios_all_simple_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioListResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Read All Portfolios Simple Api V1 Portfolios All Simple Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/portfolios/statistics/all": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read All Portfolio Statistics",
+                "description": "Get statistics for all portfolios",
+                "operationId": "read_all_portfolio_statistics_api_v1_portfolios_statistics_all_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioStatsResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Read All Portfolio Statistics Api V1 Portfolios Statistics All Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/portfolios/{portfolio_id}/statistics": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read Portfolio Statistics",
+                "description": "Get detailed statistics for a specific portfolio",
+                "operationId": "read_portfolio_statistics_api_v1_portfolios__portfolio_id__statistics_get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfolioStatsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/portfolios/search/": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Search Portfolios",
+                "description": "Search portfolios by name or description",
+                "operationId": "search_portfolios_api_v1_portfolios_search__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Search term",
+                            "title": "Q"
+                        },
+                        "description": "Search term"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioListResponse"
+                                    },
+                                    "title": "Response Search Portfolios Api V1 Portfolios Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/portfolios/name/{portfolio_name}": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read Portfolio By Name",
+                "description": "Get portfolio by name with details",
+                "operationId": "read_portfolio_by_name_api_v1_portfolios_name__portfolio_name__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Portfolio Name"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfolioDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/portfolios/channel/{channel_id}": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read Portfolio By Channel",
+                "description": "Get portfolio by Discord channel ID with details",
+                "operationId": "read_portfolio_by_channel_api_v1_portfolios_channel__channel_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "channel_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Channel Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfolioDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/portfolios/with-channels/": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read Portfolios With Channels",
+                "description": "Get portfolios that have Discord channels assigned",
+                "operationId": "read_portfolios_with_channels_api_v1_portfolios_with_channels__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioListResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Read Portfolios With Channels Api V1 Portfolios With Channels  Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/portfolios/without-channels/": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Read Portfolios Without Channels",
+                "description": "Get portfolios that don't have Discord channels assigned",
+                "operationId": "read_portfolios_without_channels_api_v1_portfolios_without_channels__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioListResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Read Portfolios Without Channels Api V1 Portfolios Without Channels  Get"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tasks/": {
+            "post": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Create Task",
+                "description": "Create new task",
+                "operationId": "create_task_api_v1_tasks__post",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskCreateRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Read Tasks",
+                "description": "Get tasks with optional filters",
+                "operationId": "read_tasks_api_v1_tasks__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by portfolio ID",
+                            "title": "Portfolio Id"
+                        },
+                        "description": "Filter by portfolio ID"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by status",
+                            "title": "Status"
+                        },
+                        "description": "Filter by status"
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by priority",
+                            "title": "Priority"
+                        },
+                        "description": "Filter by priority"
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Skip items",
+                            "default": 0,
+                            "title": "Skip"
+                        },
+                        "description": "Skip items"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "description": "Limit items",
+                            "default": 100,
+                            "title": "Limit"
+                        },
+                        "description": "Limit items"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskListResponse"
+                                    },
+                                    "title": "Response Read Tasks Api V1 Tasks  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tasks/{task_id}": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Read Task",
+                "description": "Get task by ID with details",
+                "operationId": "read_task_api_v1_tasks__task_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Task Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Update Task",
+                "description": "Update task",
+                "operationId": "update_task_api_v1_tasks__task_id__put",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Task Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Delete Task",
+                "description": "Delete task",
+                "operationId": "delete_task_api_v1_tasks__task_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Task Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tasks/portfolio/{portfolio_id}": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Read Tasks By Portfolio",
+                "description": "Get tasks by portfolio ID",
+                "operationId": "read_tasks_by_portfolio_api_v1_tasks_portfolio__portfolio_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskListResponse"
+                                    },
+                                    "title": "Response Read Tasks By Portfolio Api V1 Tasks Portfolio  Portfolio Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tasks/subtasks/{parent_task_id}": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Read Subtasks",
+                "description": "Get subtasks of a parent task",
+                "operationId": "read_subtasks_api_v1_tasks_subtasks__parent_task_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "parent_task_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Parent Task Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskListResponse"
+                                    },
+                                    "title": "Response Read Subtasks Api V1 Tasks Subtasks  Parent Task Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tasks/meeting/{meeting_id}": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Read Tasks By Meeting",
+                "description": "Get tasks created from a specific meeting",
+                "operationId": "read_tasks_by_meeting_api_v1_tasks_meeting__meeting_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "meeting_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Meeting Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskListResponse"
+                                    },
+                                    "title": "Response Read Tasks By Meeting Api V1 Tasks Meeting  Meeting Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tasks/search/": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Search Tasks",
+                "description": "Search tasks by title or description",
+                "operationId": "search_tasks_api_v1_tasks_search__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Search term",
+                            "title": "Q"
+                        },
+                        "description": "Search term"
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by portfolio ID",
+                            "title": "Portfolio Id"
+                        },
+                        "description": "Filter by portfolio ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskListResponse"
+                                    },
+                                    "title": "Response Search Tasks Api V1 Tasks Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/meeting-records/": {
+            "post": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Create Meeting Record",
+                "description": "Create new meeting record",
+                "operationId": "create_meeting_record_api_v1_meeting_records__post",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MeetingRecordCreateRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MeetingRecordResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Read Meeting Records",
+                "description": "Get meeting records with optional filters",
+                "operationId": "read_meeting_records_api_v1_meeting_records__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by portfolio ID",
+                            "title": "Portfolio Id"
+                        },
+                        "description": "Filter by portfolio ID"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by start date",
+                            "title": "Start Date"
+                        },
+                        "description": "Filter by start date"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by end date",
+                            "title": "End Date"
+                        },
+                        "description": "Filter by end date"
+                    },
+                    {
+                        "name": "has_recording",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by recording availability",
+                            "title": "Has Recording"
+                        },
+                        "description": "Filter by recording availability"
+                    },
+                    {
+                        "name": "has_summary",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by summary availability",
+                            "title": "Has Summary"
+                        },
+                        "description": "Filter by summary availability"
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Skip items",
+                            "default": 0,
+                            "title": "Skip"
+                        },
+                        "description": "Skip items"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "description": "Limit items",
+                            "default": 100,
+                            "title": "Limit"
+                        },
+                        "description": "Limit items"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MeetingRecordListResponse"
+                                    },
+                                    "title": "Response Read Meeting Records Api V1 Meeting Records  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/meeting-records/{meeting_id}": {
+            "get": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Read Meeting Record",
+                "description": "Get meeting record by ID with details",
+                "operationId": "read_meeting_record_api_v1_meeting_records__meeting_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "meeting_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Meeting Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MeetingRecordDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Update Meeting Record",
+                "description": "Update meeting record",
+                "operationId": "update_meeting_record_api_v1_meeting_records__meeting_id__put",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "meeting_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Meeting Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MeetingRecordUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MeetingRecordResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Delete Meeting Record",
+                "description": "Delete meeting record",
+                "operationId": "delete_meeting_record_api_v1_meeting_records__meeting_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "meeting_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Meeting Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/meeting-records/portfolio/{portfolio_id}": {
+            "get": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Read Meeting Records By Portfolio",
+                "description": "Get meeting records by portfolio ID",
+                "operationId": "read_meeting_records_by_portfolio_api_v1_meeting_records_portfolio__portfolio_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MeetingRecordListResponse"
+                                    },
+                                    "title": "Response Read Meeting Records By Portfolio Api V1 Meeting Records Portfolio  Portfolio Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/meeting-records/with-recordings/": {
+            "get": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Read Meeting Records With Recordings",
+                "description": "Get meeting records that have recording files",
+                "operationId": "read_meeting_records_with_recordings_api_v1_meeting_records_with_recordings__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MeetingRecordListResponse"
+                                    },
+                                    "title": "Response Read Meeting Records With Recordings Api V1 Meeting Records With Recordings  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/meeting-records/with-summaries/": {
+            "get": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Read Meeting Records With Summaries",
+                "description": "Get meeting records that have summaries",
+                "operationId": "read_meeting_records_with_summaries_api_v1_meeting_records_with_summaries__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MeetingRecordListResponse"
+                                    },
+                                    "title": "Response Read Meeting Records With Summaries Api V1 Meeting Records With Summaries  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/meeting-records/search/": {
+            "get": {
+                "tags": [
+                    "Meeting Records"
+                ],
+                "summary": "Search Meeting Records",
+                "description": "Search meeting records by name, summary, or caption",
+                "operationId": "search_meeting_records_api_v1_meeting_records_search__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Search term",
+                            "title": "Q"
+                        },
+                        "description": "Search term"
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by portfolio ID",
+                            "title": "Portfolio Id"
+                        },
+                        "description": "Filter by portfolio ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MeetingRecordListResponse"
+                                    },
+                                    "title": "Response Search Meeting Records Api V1 Meeting Records Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/": {
+            "post": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Create Task Assignment",
+                "description": "Create new task assignment",
+                "operationId": "create_task_assignment_api_v1_task_assignments__post",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskAssignmentCreateRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskAssignmentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Read Task Assignments",
+                "description": "Get task assignments with optional filters",
+                "operationId": "read_task_assignments_api_v1_task_assignments__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by task ID",
+                            "title": "Task Id"
+                        },
+                        "description": "Filter by task ID"
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by user ID",
+                            "title": "User Id"
+                        },
+                        "description": "Filter by user ID"
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Skip items",
+                            "default": 0,
+                            "title": "Skip"
+                        },
+                        "description": "Skip items"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "description": "Limit items",
+                            "default": 100,
+                            "title": "Limit"
+                        },
+                        "description": "Limit items"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskAssignmentResponse"
+                                    },
+                                    "title": "Response Read Task Assignments Api V1 Task Assignments  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/bulk": {
+            "post": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Create Bulk Task Assignments",
+                "description": "Create multiple task assignments for a single task",
+                "operationId": "create_bulk_task_assignments_api_v1_task_assignments_bulk_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkTaskAssignmentCreate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskAssignmentResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Create Bulk Task Assignments Api V1 Task Assignments Bulk Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/task-assignments/{assignment_id}": {
+            "get": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Read Task Assignment",
+                "description": "Get task assignment by ID with details",
+                "operationId": "read_task_assignment_api_v1_task_assignments__assignment_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "assignment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Assignment Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskAssignmentDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Update Task Assignment",
+                "description": "Update task assignment",
+                "operationId": "update_task_assignment_api_v1_task_assignments__assignment_id__put",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "assignment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Assignment Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskAssignmentUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskAssignmentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Delete Task Assignment",
+                "description": "Delete task assignment",
+                "operationId": "delete_task_assignment_api_v1_task_assignments__assignment_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "assignment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Assignment Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/task/{task_id}/user/{user_id}": {
+            "delete": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Delete Task Assignment By Task And User",
+                "description": "Delete task assignment by task ID and user ID",
+                "operationId": "delete_task_assignment_by_task_and_user_api_v1_task_assignments_task__task_id__user__user_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Task Id"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/task/{task_id}/users": {
+            "get": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Read Task Assigned Users",
+                "description": "Get users assigned to a specific task with details",
+                "operationId": "read_task_assigned_users_api_v1_task_assignments_task__task_id__users_get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Task Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TaskUserAssignmentResponse"
+                                    },
+                                    "title": "Response Read Task Assigned Users Api V1 Task Assignments Task  Task Id  Users Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/user/{user_id}/tasks": {
+            "get": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Read User Assigned Tasks",
+                "description": "Get tasks assigned to a specific user with details",
+                "operationId": "read_user_assigned_tasks_api_v1_task_assignments_user__user_id__tasks_get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserTaskAssignmentResponse"
+                                    },
+                                    "title": "Response Read User Assigned Tasks Api V1 Task Assignments User  User Id  Tasks Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/user/me/tasks": {
+            "get": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Read My Assigned Tasks",
+                "description": "Get tasks assigned to current user with details",
+                "operationId": "read_my_assigned_tasks_api_v1_task_assignments_user_me_tasks_get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 1000,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserTaskAssignmentResponse"
+                                    },
+                                    "title": "Response Read My Assigned Tasks Api V1 Task Assignments User Me Tasks Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/task/{task_id}/all": {
+            "delete": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Delete All Task Assignments",
+                "description": "Delete all assignments for a specific task",
+                "operationId": "delete_all_task_assignments_api_v1_task_assignments_task__task_id__all_delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Task Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task-assignments/user/{user_id}/all": {
+            "delete": {
+                "tags": [
+                    "Task Assignments"
+                ],
+                "summary": "Delete All User Assignments",
+                "description": "Delete all assignments for a specific user",
+                "operationId": "delete_all_user_assignments_api_v1_task_assignments_user__user_id__all_delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Root",
+                "operationId": "root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Body_login_access_token_api_v1_login_access_token_post": {
+                "properties": {
+                    "grant_type": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "pattern": "password"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Grant Type"
+                    },
+                    "username": {
+                        "type": "string",
+                        "title": "Username"
+                    },
+                    "password": {
+                        "type": "string",
+                        "title": "Password"
+                    },
+                    "scope": {
+                        "type": "string",
+                        "title": "Scope",
+                        "default": ""
+                    },
+                    "client_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Client Id"
+                    },
+                    "client_secret": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Client Secret"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "username",
+                    "password"
+                ],
+                "title": "Body_login_access_token_api_v1_login_access_token_post"
+            },
+            "BulkTaskAssignmentCreate": {
+                "properties": {
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "user_ids": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "title": "User Ids"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "task_id",
+                    "user_ids"
+                ],
+                "title": "BulkTaskAssignmentCreate"
+            },
+            "DiscordUserCreateRequestBody": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email"
+                    },
+                    "username": {
+                        "type": "string",
+                        "title": "Username"
+                    },
+                    "discord_id": {
+                        "type": "string",
+                        "title": "Discord Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email",
+                    "username",
+                    "discord_id"
+                ],
+                "title": "DiscordUserCreateRequestBody"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "MeetingRecordCreateRequestBody": {
+                "properties": {
+                    "meeting_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Meeting Date"
+                    },
+                    "meeting_name": {
+                        "type": "string",
+                        "title": "Meeting Name"
+                    },
+                    "recording_file_link": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Recording File Link"
+                    },
+                    "auto_caption": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Auto Caption"
+                    },
+                    "summary": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Summary"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "meeting_date",
+                    "meeting_name",
+                    "portfolio_id"
+                ],
+                "title": "MeetingRecordCreateRequestBody"
+            },
+            "MeetingRecordDetailResponse": {
+                "properties": {
+                    "meeting_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Meeting Date"
+                    },
+                    "meeting_name": {
+                        "type": "string",
+                        "title": "Meeting Name"
+                    },
+                    "recording_file_link": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Recording File Link"
+                    },
+                    "auto_caption": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Auto Caption"
+                    },
+                    "summary": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Summary"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "meeting_id": {
+                        "type": "integer",
+                        "title": "Meeting Id"
+                    },
+                    "related_tasks_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Related Tasks Count"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "meeting_date",
+                    "meeting_name",
+                    "portfolio_id",
+                    "meeting_id"
+                ],
+                "title": "MeetingRecordDetailResponse"
+            },
+            "MeetingRecordListResponse": {
+                "properties": {
+                    "meeting_id": {
+                        "type": "integer",
+                        "title": "Meeting Id"
+                    },
+                    "meeting_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Meeting Date"
+                    },
+                    "meeting_name": {
+                        "type": "string",
+                        "title": "Meeting Name"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "has_recording": {
+                        "type": "boolean",
+                        "title": "Has Recording",
+                        "default": false
+                    },
+                    "has_summary": {
+                        "type": "boolean",
+                        "title": "Has Summary",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "meeting_id",
+                    "meeting_date",
+                    "meeting_name",
+                    "portfolio_id"
+                ],
+                "title": "MeetingRecordListResponse"
+            },
+            "MeetingRecordResponse": {
+                "properties": {
+                    "meeting_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Meeting Date"
+                    },
+                    "meeting_name": {
+                        "type": "string",
+                        "title": "Meeting Name"
+                    },
+                    "recording_file_link": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Recording File Link"
+                    },
+                    "auto_caption": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Auto Caption"
+                    },
+                    "summary": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Summary"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "meeting_id": {
+                        "type": "integer",
+                        "title": "Meeting Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "meeting_date",
+                    "meeting_name",
+                    "portfolio_id",
+                    "meeting_id"
+                ],
+                "title": "MeetingRecordResponse"
+            },
+            "MeetingRecordUpdate": {
+                "properties": {
+                    "meeting_date": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Meeting Date"
+                    },
+                    "meeting_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Meeting Name"
+                    },
+                    "recording_file_link": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Recording File Link"
+                    },
+                    "auto_caption": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Auto Caption"
+                    },
+                    "summary": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Summary"
+                    },
+                    "portfolio_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Portfolio Id"
+                    }
+                },
+                "type": "object",
+                "title": "MeetingRecordUpdate"
+            },
+            "PortfolioCreateRequestBody": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "channel_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Channel Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "PortfolioCreateRequestBody"
+            },
+            "PortfolioDetailResponse": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "channel_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Channel Id"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "user_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Count"
+                    },
+                    "task_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task Count"
+                    },
+                    "meeting_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Meeting Count"
+                    },
+                    "active_task_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Active Task Count"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "portfolio_id"
+                ],
+                "title": "PortfolioDetailResponse"
+            },
+            "PortfolioListResponse": {
+                "properties": {
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "has_channel": {
+                        "type": "boolean",
+                        "title": "Has Channel",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "portfolio_id",
+                    "name"
+                ],
+                "title": "PortfolioListResponse"
+            },
+            "PortfolioResponse": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "channel_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Channel Id"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "portfolio_id"
+                ],
+                "title": "PortfolioResponse"
+            },
+            "PortfolioStatsResponse": {
+                "properties": {
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "user_count": {
+                        "type": "integer",
+                        "title": "User Count"
+                    },
+                    "task_count": {
+                        "type": "integer",
+                        "title": "Task Count"
+                    },
+                    "meeting_count": {
+                        "type": "integer",
+                        "title": "Meeting Count"
+                    },
+                    "active_task_count": {
+                        "type": "integer",
+                        "title": "Active Task Count"
+                    },
+                    "completed_task_count": {
+                        "type": "integer",
+                        "title": "Completed Task Count"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "portfolio_id",
+                    "name",
+                    "user_count",
+                    "task_count",
+                    "meeting_count",
+                    "active_task_count",
+                    "completed_task_count"
+                ],
+                "title": "PortfolioStatsResponse"
+            },
+            "PortfolioUpdate": {
+                "properties": {
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "channel_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Channel Id"
+                    }
+                },
+                "type": "object",
+                "title": "PortfolioUpdate"
+            },
+            "RoleCreateRequestBody": {
+                "properties": {
+                    "role_name": {
+                        "type": "string",
+                        "title": "Role Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role_name"
+                ],
+                "title": "RoleCreateRequestBody"
+            },
+            "RoleDetailResponse": {
+                "properties": {
+                    "role_name": {
+                        "type": "string",
+                        "title": "Role Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "title": "Role Id"
+                    },
+                    "user_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Count"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role_name",
+                    "role_id"
+                ],
+                "title": "RoleDetailResponse"
+            },
+            "RoleListResponse": {
+                "properties": {
+                    "role_name": {
+                        "type": "string",
+                        "title": "Role Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "title": "Role Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role_name",
+                    "role_id"
+                ],
+                "title": "RoleListResponse"
+            },
+            "RoleResponse": {
+                "properties": {
+                    "role_name": {
+                        "type": "string",
+                        "title": "Role Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "title": "Role Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role_name",
+                    "role_id"
+                ],
+                "title": "RoleResponse"
+            },
+            "RoleUpdate": {
+                "properties": {
+                    "role_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Role Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    }
+                },
+                "type": "object",
+                "title": "RoleUpdate"
+            },
+            "TaskAssignmentCreateRequestBody": {
+                "properties": {
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "title": "User Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "task_id",
+                    "user_id"
+                ],
+                "title": "TaskAssignmentCreateRequestBody"
+            },
+            "TaskAssignmentDetailResponse": {
+                "properties": {
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "title": "User Id"
+                    },
+                    "assignment_id": {
+                        "type": "integer",
+                        "title": "Assignment Id"
+                    },
+                    "task_title": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task Title"
+                    },
+                    "user_username": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Username"
+                    },
+                    "user_email": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Email"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "task_id",
+                    "user_id",
+                    "assignment_id"
+                ],
+                "title": "TaskAssignmentDetailResponse"
+            },
+            "TaskAssignmentResponse": {
+                "properties": {
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "title": "User Id"
+                    },
+                    "assignment_id": {
+                        "type": "integer",
+                        "title": "Assignment Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "task_id",
+                    "user_id",
+                    "assignment_id"
+                ],
+                "title": "TaskAssignmentResponse"
+            },
+            "TaskAssignmentUpdate": {
+                "properties": {
+                    "task_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task Id"
+                    },
+                    "user_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Id"
+                    }
+                },
+                "type": "object",
+                "title": "TaskAssignmentUpdate"
+            },
+            "TaskCreateRequestBody": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status",
+                        "default": "Not Started"
+                    },
+                    "priority": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Priority",
+                        "default": "medium"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Deadline"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "parent_task_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Task Id"
+                    },
+                    "source_meeting_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Meeting Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "deadline",
+                    "portfolio_id"
+                ],
+                "title": "TaskCreateRequestBody"
+            },
+            "TaskDetailResponse": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status",
+                        "default": "Not Started"
+                    },
+                    "priority": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Priority",
+                        "default": "medium"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Deadline"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "parent_task_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Task Id"
+                    },
+                    "source_meeting_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Meeting Id"
+                    },
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "created_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At"
+                    },
+                    "subtasks": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/TaskListResponse"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Subtasks"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "deadline",
+                    "portfolio_id",
+                    "task_id"
+                ],
+                "title": "TaskDetailResponse"
+            },
+            "TaskListResponse": {
+                "properties": {
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status"
+                    },
+                    "priority": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Priority"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Deadline"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "task_id",
+                    "title",
+                    "deadline",
+                    "portfolio_id"
+                ],
+                "title": "TaskListResponse"
+            },
+            "TaskResponse": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status",
+                        "default": "Not Started"
+                    },
+                    "priority": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Priority",
+                        "default": "medium"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Deadline"
+                    },
+                    "portfolio_id": {
+                        "type": "integer",
+                        "title": "Portfolio Id"
+                    },
+                    "parent_task_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Task Id"
+                    },
+                    "source_meeting_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Meeting Id"
+                    },
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "created_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "deadline",
+                    "portfolio_id",
+                    "task_id"
+                ],
+                "title": "TaskResponse"
+            },
+            "TaskUpdate": {
+                "properties": {
+                    "title": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Title"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status"
+                    },
+                    "priority": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Priority"
+                    },
+                    "deadline": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Deadline"
+                    },
+                    "portfolio_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Portfolio Id"
+                    },
+                    "parent_task_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Task Id"
+                    },
+                    "source_meeting_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Meeting Id"
+                    }
+                },
+                "type": "object",
+                "title": "TaskUpdate"
+            },
+            "TaskUserAssignmentResponse": {
+                "properties": {
+                    "assignment_id": {
+                        "type": "integer",
+                        "title": "Assignment Id"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "title": "User Id"
+                    },
+                    "user_username": {
+                        "type": "string",
+                        "title": "User Username"
+                    },
+                    "user_email": {
+                        "type": "string",
+                        "title": "User Email"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "assignment_id",
+                    "user_id",
+                    "user_username",
+                    "user_email"
+                ],
+                "title": "TaskUserAssignmentResponse"
+            },
+            "Token": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "title": "Token Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "access_token",
+                    "token_type"
+                ],
+                "title": "Token"
+            },
+            "UserCreateRequestBody": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email"
+                    },
+                    "username": {
+                        "type": "string",
+                        "title": "Username"
+                    },
+                    "password": {
+                        "type": "string",
+                        "title": "Password"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email",
+                    "username",
+                    "password"
+                ],
+                "title": "UserCreateRequestBody"
+            },
+            "UserCreateResponse": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email"
+                    },
+                    "username": {
+                        "type": "string",
+                        "title": "Username"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "title": "User Id"
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "title": "Role Id"
+                    },
+                    "discord_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Discord Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email",
+                    "username",
+                    "user_id",
+                    "role_id"
+                ],
+                "title": "UserCreateResponse"
+            },
+            "UserTaskAssignmentResponse": {
+                "properties": {
+                    "assignment_id": {
+                        "type": "integer",
+                        "title": "Assignment Id"
+                    },
+                    "task_id": {
+                        "type": "integer",
+                        "title": "Task Id"
+                    },
+                    "task_title": {
+                        "type": "string",
+                        "title": "Task Title"
+                    },
+                    "task_status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task Status"
+                    },
+                    "task_priority": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task Priority"
+                    },
+                    "task_deadline": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task Deadline"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "assignment_id",
+                    "task_id",
+                    "task_title"
+                ],
+                "title": "UserTaskAssignmentResponse"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        },
+        "securitySchemes": {
+            "OAuth2PasswordBearer": {
+                "type": "oauth2",
+                "flows": {
+                    "password": {
+                        "scopes": {},
+                        "tokenUrl": "/api/v1/login/access-token"
+                    }
+                }
+            }
+        }
+    }
+}

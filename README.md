@@ -19,7 +19,7 @@ Ctrl(Cmd) + Shift + P
 
 and then search for "Python: Select Interpreter" and select the one in the venv folder.
 
-Also, in .vscode/settings.json, add the following to format the code on save:
+Also, to format the code on save, install the **Black formatter**. Once installed, you can configure your settings in .vscode/settings.json as follows:
 
 ```json
 {
@@ -64,9 +64,16 @@ alembic upgrade head
 python run.py
 ```
 
-The API will run on http://localhost:8000, you can visit http://localhost:8000/docs to view the API documentation.
+The API will run on http://localhost:8000, you can visit http://localhost:8000/docs or http://localhost:8000/redoc to view the API documentation.
 
-5. Start the Next.js development server:
+5. Run the API tests:
+
+```bash
+cd backend
+python test_apis.py
+```
+
+6. Start the Next.js development server:
 
 ```bash
 npm run dev

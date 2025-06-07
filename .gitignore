@@ -40,10 +40,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# python
-__pycache__/
+# Python bytecode
+**/__pycache__/
 *.py[cod]
 *$py.class
 
 # venv
 venv/
+
+# cursor, vscode
+.cursorrules
+.cursor/
+.vscode/

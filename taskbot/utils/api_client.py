@@ -1,7 +1,7 @@
 """
-后端API通信客户端
+Backend API Communication Client
 
-提供与FastAPI后端服务的基础HTTP通信功能
+Provides basic HTTP communication functionality with FastAPI backend service
 """
 
 import aiohttp
@@ -9,39 +9,39 @@ from typing import Any
 
 
 class APIClient:
-    """后端API通信客户端"""
+    """Backend API communication client"""
     
     def __init__(self, base_url: str) -> None:
         """
-        初始化API客户端
+        Initialize API client
         
         Args:
-            base_url: 后端API的基础URL
+            base_url: Base URL of the backend API
         """
         self.base_url = base_url.rstrip('/')
         self.session: aiohttp.ClientSession | None = None
     
     async def __aenter__(self) -> 'APIClient':
-        """异步上下文管理器入口"""
+        """Async context manager entry"""
         self.session = aiohttp.ClientSession()
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        """异步上下文管理器出口"""
+        """Async context manager exit"""
         if self.session:
             await self.session.close()
     
     async def _request(self, method: str, endpoint: str, **kwargs) -> dict[str, Any]:
         """
-        发送HTTP请求的基础方法
+        Base method for sending HTTP requests
         
         Args:
-            method: HTTP方法
-            endpoint: API端点
-            **kwargs: 其他请求参数
+            method: HTTP method
+            endpoint: API endpoint
+            **kwargs: Other request parameters
             
         Returns:
-            响应的JSON数据
+            JSON data from response
         """
         if not self.session:
             raise RuntimeError("APIClient must be used as async context manager")
@@ -54,26 +54,26 @@ class APIClient:
     
     def set_auth_headers(self, headers: dict[str, str]) -> None:
         """
-        设置认证请求头
+        Set authentication headers
         
         Args:
-            headers: 认证请求头
+            headers: Authentication headers
         """
         if self.session:
             self.session.headers.update(headers)
     
     async def get(self, endpoint: str, **kwargs) -> dict[str, Any]:
-        """GET请求"""
+        """GET request"""
         return await self._request("GET", endpoint, **kwargs)
     
     async def post(self, endpoint: str, **kwargs) -> dict[str, Any]:
-        """POST请求"""
+        """POST request"""
         return await self._request("POST", endpoint, **kwargs)
     
     async def put(self, endpoint: str, **kwargs) -> dict[str, Any]:
-        """PUT请求"""
+        """PUT request"""
         return await self._request("PUT", endpoint, **kwargs)
     
     async def delete(self, endpoint: str, **kwargs) -> dict[str, Any]:
-        """DELETE请求"""
+        """DELETE request"""
         return await self._request("DELETE", endpoint, **kwargs) 

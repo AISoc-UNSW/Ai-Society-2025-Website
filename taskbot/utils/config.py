@@ -1,7 +1,7 @@
 """
-配置管理器
+Configuration Manager
 
-负责读取和管理环境变量配置
+Responsible for reading and managing environment variable configurations
 """
 
 import os
@@ -10,14 +10,14 @@ from typing import Optional
 
 
 class Config:
-    """配置管理类"""
+    """Configuration management class"""
     
     def __init__(self) -> None:
-        """初始化配置，加载.env文件"""
+        """Initialize configuration, load .env file"""
         self._load_env_file()
     
     def _load_env_file(self) -> None:
-        """加载.env文件"""
+        """Load .env file"""
         env_path = Path(__file__).parent.parent / ".env"
         
         if env_path.exists():
@@ -38,12 +38,12 @@ class Config:
     
     @property
     def api_base_url(self) -> str:
-        """后端API基础URL"""
+        """Backend API base URL"""
         return os.getenv("API_BASE_URL", "http://localhost:8000")
     
     @property
     def api_username(self) -> str:
-        """后端API用户名"""
+        """Backend API username"""
         username = os.getenv("API_USERNAME")
         if not username:
             raise ValueError("API_USERNAME not found in environment variables")
@@ -51,7 +51,7 @@ class Config:
     
     @property
     def api_password(self) -> str:
-        """后端API密码"""
+        """Backend API password"""
         password = os.getenv("API_PASSWORD")
         if not password:
             raise ValueError("API_PASSWORD not found in environment variables")
@@ -59,15 +59,15 @@ class Config:
     
     @property
     def recording_save_path(self) -> Path:
-        """录音文件保存路径"""
+        """Recording file save path"""
         path_str = os.getenv("RECORDING_SAVE_PATH", "./recordings/")
         path = Path(path_str)
         
-        # 确保目录存在
+        # Ensure directory exists
         path.mkdir(parents=True, exist_ok=True)
         
         return path
 
 
-# 全局配置实例
+# Global configuration instance
 config = Config() 

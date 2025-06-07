@@ -1,7 +1,7 @@
 """
-Utils包
+Utils package
 
-提供taskbot所需的工具类和服务
+Provides utility classes and services required by taskbot
 """
 
 from .config import config

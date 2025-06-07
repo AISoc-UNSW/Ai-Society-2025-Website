@@ -1,7 +1,7 @@
 """
-认证token管理器
+Authentication Token Manager
 
-负责管理与后端API的认证token，包括获取、存储、刷新和验证
+Responsible for managing authentication tokens with backend API, including acquisition, storage, refresh and validation
 """
 
 import asyncio
@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class AuthManager:
-    """认证管理器"""
+    """Authentication manager"""
     
     def __init__(self, base_url: str) -> None:
         """
-        初始化认证管理器
+        Initialize authentication manager
         
         Args:
-            base_url: 后端API的基础URL
+            base_url: Base URL of the backend API
         """
         self.base_url = base_url
         self._token: Optional[str] = None
@@ -31,7 +31,7 @@ class AuthManager:
         
     @property
     def is_authenticated(self) -> bool:
-        """检查是否已认证且token未过期"""
+        """Check if authenticated and token is not expired"""
         if not self._token:
             return False
         
@@ -42,7 +42,7 @@ class AuthManager:
     
     @property
     def auth_headers(self) -> dict[str, str]:
-        """获取认证请求头"""
+        """Get authentication headers"""
         if not self.is_authenticated:
             raise RuntimeError("Not authenticated. Please login first.")
         
@@ -52,36 +52,36 @@ class AuthManager:
     
     async def login(self, username: str, password: str) -> bool:
         """
-        使用用户名密码登录获取token
+        Login with username and password to get token
         
         Args:
-            username: 用户名（邮箱）
-            password: 密码
+            username: Username (email)
+            password: Password
             
         Returns:
-            登录是否成功
+            Whether login was successful
         """
         try:
             async with APIClient(self.base_url) as client:
-                # 准备登录数据
+                # Prepare login data
                 login_data = {
                     "username": username,
                     "password": password,
                     "grant_type": "password"
                 }
                 
-                # 发送登录请求
+                # Send login request
                 response = await client.post(
                     "/api/v1/login/access-token",
                     data=login_data,
                     headers={"Content-Type": "application/x-www-form-urlencoded"}
                 )
                 
-                # 保存token信息
+                # Save token information
                 self._token = response["access_token"]
                 self._token_type = response.get("token_type", "Bearer")
                 
-                # 设置过期时间（假设token有效期为1小时）
+                # Set expiration time (assume token is valid for 1 hour)
                 self._expires_at = datetime.now() + timedelta(hours=1)
                 
                 logger.info("Successfully authenticated")
@@ -93,12 +93,12 @@ class AuthManager:
             return False
     
     def logout(self) -> None:
-        """登出，清除认证信息"""
+        """Logout and clear authentication information"""
         self._clear_auth()
         logger.info("Logged out")
     
     def _clear_auth(self) -> None:
-        """清除认证信息"""
+        """Clear authentication information"""
         self._token = None
         self._token_type = "Bearer"
         self._expires_at = None 

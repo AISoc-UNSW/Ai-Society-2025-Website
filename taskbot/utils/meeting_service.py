@@ -1,7 +1,7 @@
 """
-会议记录服务
+Meeting Record Service
 
-负责处理会议记录相关的API调用
+Responsible for handling meeting record related API calls
 """
 
 import logging
@@ -17,15 +17,15 @@ logger = logging.getLogger(__name__)
 
 
 class MeetingService:
-    """会议记录服务"""
+    """Meeting record service"""
     
     def __init__(self) -> None:
-        """初始化会议记录服务"""
+        """Initialize meeting record service"""
         self.auth_manager = AuthManager(config.api_base_url)
         self._authenticated = False
     
     async def ensure_authenticated(self) -> bool:
-        """确保已认证"""
+        """Ensure authenticated"""
         if not self._authenticated:
             success = await self.auth_manager.login(
                 config.api_username, 
@@ -47,23 +47,23 @@ class MeetingService:
         meeting_date: Optional[date] = None
     ) -> Optional[dict]:
         """
-        创建会议记录
+        Create meeting record
         
         Args:
-            meeting_name: 会议名称
-            portfolio_id: 项目组合ID
-            recording_file_path: 录音文件本地路径
-            meeting_date: 会议日期，默认为今天
+            meeting_name: Meeting name
+            portfolio_id: Portfolio ID
+            recording_file_path: Local path of recording file
+            meeting_date: Meeting date, defaults to today
             
         Returns:
-            创建成功返回会议记录数据，失败返回None
+            Returns meeting record data if successful, None if failed
         """
         if not await self.ensure_authenticated():
             logger.error("Cannot create meeting record: authentication failed")
             return None
         
         try:
-            # 准备会议记录数据
+            # Prepare meeting record data
             if meeting_date is None:
                 meeting_date = date.today()
             
@@ -71,17 +71,17 @@ class MeetingService:
                 "meeting_date": meeting_date.isoformat(),
                 "meeting_name": meeting_name,
                 "recording_file_link": recording_file_path,
-                "auto_caption": None,  # 留空等待后续AI处理
-                "summary": None,       # 留空等待后续AI处理
+                "auto_caption": None,  # Leave empty for subsequent AI processing
+                "summary": None,       # Leave empty for subsequent AI processing
                 "portfolio_id": portfolio_id
             }
             
-            # 发送创建请求
+            # Send create request
             async with APIClient(config.api_base_url) as client:
-                # 设置认证头
+                # Set authentication headers
                 client.set_auth_headers(self.auth_manager.auth_headers)
                 
-                # 创建会议记录
+                # Create meeting record
                 response = await client.post(
                     "/api/v1/meeting-records/",
                     json=meeting_data
@@ -96,24 +96,24 @@ class MeetingService:
     
     def get_recording_file_path(self, meeting_name: str, portfolio_id: int) -> str:
         """
-        生成录音文件保存路径
+        Generate recording file save path
         
         Args:
-            meeting_name: 会议名称
-            portfolio_id: 项目组合ID
+            meeting_name: Meeting name
+            portfolio_id: Portfolio ID
             
         Returns:
-            录音文件的完整路径
+            Complete path of the recording file
         """
-        # 生成安全的文件名
+        # Generate safe filename
         safe_meeting_name = "".join(c for c in meeting_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
         safe_meeting_name = safe_meeting_name.replace(' ', '_')
         
-        # 生成文件名：meeting_{name}_{portfolio_id}_{date}.wav
+        # Generate filename: meeting_{name}_{portfolio_id}_{date}.wav
         today = date.today().strftime("%Y%m%d")
         filename = f"meeting_{safe_meeting_name}_{portfolio_id}_{today}.wav"
         
-        # 完整路径
+        # Complete path
         file_path = config.recording_save_path / filename
         
         return str(file_path.absolute()) 

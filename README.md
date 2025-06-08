@@ -44,7 +44,7 @@ nohup python bot.py > taskbot.log 2>&1 &
 1. Activate the virtual environment and install dependencies:
 
 ```bash
-cd backend (Best option is to directly open the backend folder in your IDE)
+cd backend # Best option is to directly open the backend folder in your IDE
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -86,18 +86,7 @@ Update the `backend/.env` file with your specific settings, especially:
 - `SECRET_KEY`: A secure random string for production
 - Other values as needed
 
-3. Set up the database (If not already done):
-
-- Make sure you have PostgreSQL installed and running.
-- Create a database: `createdb ai_society_2025_website_db` (If not created)
-- Run the following commands to create the initial migration: (If not already done)
-
-```bash
-alembic revision --autogenerate -m "Initial migration"
-alembic upgrade head
-```
-
-4. Start the development server:
+3. Start the development server:
 
 ```bash
 python run.py
@@ -105,16 +94,17 @@ python run.py
 
 The API will run on http://localhost:8000, you can visit http://localhost:8000/docs or http://localhost:8000/redoc to view the API documentation.
 
-5. Run the API tests:
+4. Run the API tests:
 
 ```bash
 cd backend
 python test_apis.py
 ```
 
-6. Start the Next.js development server:
+5. Start the Next.js development server:
 
 ```bash
+cd frontend
 npm run dev
 # or
 yarn dev

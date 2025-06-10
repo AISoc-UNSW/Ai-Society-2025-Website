@@ -1,4 +1,4 @@
-import type { Department, Meeting, Person, Task } from "./types"
+import type { Department, Meeting, Person, Task } from "./types";
 
 export const people: Person[] = [
   { id: "person-1", name: "Jane Smith", avatar: "/placeholder.svg?height=32&width=32" },
@@ -7,7 +7,7 @@ export const people: Person[] = [
   { id: "person-4", name: "David Lee", avatar: "/placeholder.svg?height=32&width=32" },
   { id: "person-5", name: "Emily Chen", avatar: "/placeholder.svg?height=32&width=32" },
   { id: "person-6", name: "Robert Wilson", avatar: "/placeholder.svg?height=32&width=32" },
-]
+];
 
 export const departments: Department[] = [
   "Marketing",
@@ -17,7 +17,7 @@ export const departments: Department[] = [
   "Product",
   "Sales",
   "Customer Support",
-]
+];
 
 export const tasks: Task[] = [
   {
@@ -25,7 +25,8 @@ export const tasks: Task[] = [
     title: "Website Redesign Project",
     department: "Marketing",
     assignees: [people[0], people[4]],
-    description: "Complete redesign of the company website with new branding guidelines and improved user experience.",
+    description:
+      "Complete redesign of the company website with new branding guidelines and improved user experience.",
     source: "Marketing Strategy Meeting",
     createdAt: "2023-03-15T10:30:00Z",
     updatedAt: "2023-03-20T14:45:00Z",
@@ -191,7 +192,8 @@ export const tasks: Task[] = [
     title: "Product Feature Development",
     department: "Engineering",
     assignees: [people[3], people[4]],
-    description: "Develop new features for the product based on customer feedback and market analysis.",
+    description:
+      "Develop new features for the product based on customer feedback and market analysis.",
     source: "Product Roadmap Meeting",
     createdAt: "2023-03-10T09:00:00Z",
     updatedAt: "2023-03-25T16:30:00Z",
@@ -283,7 +285,7 @@ export const tasks: Task[] = [
       },
     ],
   },
-]
+];
 
 export const meetings: Meeting[] = [
   {
@@ -348,7 +350,8 @@ export const meetings: Meeting[] = [
     id: "meeting-3",
     title: "Quarterly Budget Review",
     department: "Finance",
-    summary: "Review of departmental budgets, expense analysis, and financial planning for the upcoming quarter.",
+    summary:
+      "Review of departmental budgets, expense analysis, and financial planning for the upcoming quarter.",
     time: "2023-03-22T09:30:00Z",
     relatedTaskIds: ["task-2"],
     transcript: [
@@ -372,12 +375,12 @@ export const meetings: Meeting[] = [
       },
     ],
   },
-]
+];
 
 // Helper function to get related tasks for a meeting
 export function getRelatedTasksForMeeting(meetingId: string): Task[] {
-  const meeting = meetings.find((m) => m.id === meetingId)
-  if (!meeting) return []
+  const meeting = meetings.find(m => m.id === meetingId);
+  if (!meeting) return [];
 
-  return tasks.filter((task) => meeting.relatedTaskIds.includes(task.id))
+  return tasks.filter(task => meeting.relatedTaskIds.includes(task.id));
 }

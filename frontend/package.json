@@ -11,6 +11,11 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@fontsource/inter": "^5.2.6",
+    "@mui/icons-material": "^7.1.1",
+    "@mui/joy": "^5.0.0-beta.52",
     "next": "15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

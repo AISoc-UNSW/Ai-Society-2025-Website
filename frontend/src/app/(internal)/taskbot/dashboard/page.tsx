@@ -6,69 +6,18 @@ import Typography from "@mui/joy/Typography";
 import Sidebar from "@/components/joyui/Sidebar";
 import MyTasks from "@/components/joyui/MyTasks";
 import { CssBaseline, CssVarsProvider } from "@mui/joy";
-import { Task } from "@/lib/types";
+import { Task, UserTaskAssignment } from "@/lib/types";
 import { getAccessToken } from "@/lib/utils";
+import { taskApi } from "@/lib/api/taskService";
 
-// API response interface based on the documentation
-interface UserTaskAssignment {
-  assignment_id: number;
-  task_id: number;
-  task_title: string;
-  task_status: string;
-  task_priority: string;
-  task_deadline: string;
-}
-
-// API base URL - you may need to set this as an environment variable
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-
-// Simple API service for this specific endpoint
+// Simple API service using our internal API route
 const getUserTasks = async (): Promise<UserTaskAssignment[]> => {
-  const url = `${API_BASE_URL}/api/v1/task-assignments/user/me/tasks`;
-
-  // Get access token from cookie
   const accessToken = getAccessToken();
-
-  try {
-    const headers: HeadersInit = {
-      Accept: "application/json",
-    };
-
-    // Add Authorization header if token exists
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers,
-      credentials: "include", // Include cookies in the request
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-
-      if (response.status === 401) {
-        throw new Error("Authentication failed. Please log in again.");
-      }
-
-      throw new Error(
-        `Failed to fetch tasks: ${response.status} ${response.statusText} - ${errorText}`
-      );
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    // More specific error handling
-    if (error instanceof TypeError && error.message === "Failed to fetch") {
-      throw new Error(
-        "Network error: Unable to connect to the API server. This might be a CORS issue or the server is not running."
-      );
-    }
-
-    throw error;
+  if (!accessToken) {
+    throw new Error("No access token found. Please log in first.");
   }
+
+  return await taskApi.getUserTasks(accessToken);
 };
 
 // Transform API response to our Task interface
@@ -134,13 +83,7 @@ export default function TaskDashboard() {
         setLoading(true);
         setError(null);
 
-        // Check if access token exists
-        const accessToken = getAccessToken();
-        if (!accessToken) {
-          throw new Error("No access token found. Please log in first.");
-        }
-
-        // Fetch user's assigned tasks directly
+        // Fetch user's assigned tasks via our API route
         const apiTasks = await getUserTasks();
 
         // Transform API tasks to our Task interface
@@ -178,7 +121,7 @@ export default function TaskDashboard() {
             <Box sx={{ textAlign: "center" }}>
               <Typography level="h4">Loading tasks...</Typography>
               <Typography level="body-md" sx={{ mt: 1 }}>
-                Connecting to API at: {API_BASE_URL}
+                Fetching your assigned tasks...
               </Typography>
             </Box>
           </Box>
@@ -211,9 +154,6 @@ export default function TaskDashboard() {
               </Typography>
               <Typography level="body-md" sx={{ mt: 2, mb: 2 }}>
                 {error}
-              </Typography>
-              <Typography level="body-sm" color="neutral">
-                API URL: {API_BASE_URL}/api/v1/task-assignments/user/me/tasks
               </Typography>
               {error.includes("No access token") && (
                 <Typography level="body-sm" color="warning" sx={{ mt: 1 }}>

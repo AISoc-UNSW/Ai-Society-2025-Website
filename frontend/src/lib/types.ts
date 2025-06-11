@@ -95,3 +95,12 @@ export interface User {
   created_at: string;
   updated_at: string;
 }
+
+export interface UserTaskAssignment {
+  assignment_id: number;
+  task_id: number;
+  task_title: string;
+  task_status: string;
+  task_priority: string;
+  task_deadline: string;
+}

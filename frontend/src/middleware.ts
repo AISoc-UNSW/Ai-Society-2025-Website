@@ -1,11 +1,10 @@
-import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
 // Public routes
 const publicRoutes = ['/auth/login', '/auth/register']
 
 export function middleware(request: NextRequest) {
-  console.log('Middleware running for:', request.nextUrl.pathname)
   const { pathname } = request.nextUrl
   const token = request.cookies.get('session_token')?.value
 

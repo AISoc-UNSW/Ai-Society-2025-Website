@@ -22,7 +22,7 @@ async function handleRegister(formData: FormData) {
   const password = formData.get('password') as string
   
   try {
-    await createUser(email, username, password)
+    await createUser({ email, username, password })
     redirect('/auth/login')
   } catch (error) {
     console.error('Registration failed:', error)

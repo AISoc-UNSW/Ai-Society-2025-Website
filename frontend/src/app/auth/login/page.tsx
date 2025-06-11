@@ -22,7 +22,7 @@ async function handleLogin(formData: FormData) {
   const password = formData.get('password') as string
   
   try {
-    const response = await loginUser(username, password)
+    const response = await loginUser({ username, password })
     await setAuthToken(response.access_token)
     redirect('/taskbot/dashboard')
   } catch (error) {

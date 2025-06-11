@@ -6,11 +6,11 @@ from app.crud import task
 from app.models.user import User
 from app.schemas.task import (
     TaskCreateRequestBody,
-    TaskUpdate,
-    TaskResponse,
-    TaskListResponse,
     TaskDetailResponse,
+    TaskListResponse,
     TaskReminderResponse,
+    TaskResponse,
+    TaskUpdate,
     TomorrowRemindersResponse,
 )
 
@@ -181,25 +181,22 @@ def get_tomorrow_reminders(
     Includes portfolio channel and assigned users with their Discord IDs
     """
     tasks_data = task.get_tomorrow_reminders(db, portfolio_id=portfolio_id)
-    
+
     # Convert to response model with portfolio and user info
     task_reminders = []
     for task_data in tasks_data:
         reminder = TaskReminderResponse(
-            task_id=task_data['task_id'],
-            title=task_data['title'],
-            description=task_data['description'],
-            deadline=task_data['deadline'],
-            priority=task_data['priority'],
-            status=task_data['status'],
-            portfolio_id=task_data['portfolio_id'],
-            portfolio_name=task_data['portfolio_name'],
-            portfolio_channel=task_data['portfolio_channel'],
-            assigned_users=task_data['assigned_users']
+            task_id=task_data["task_id"],
+            title=task_data["title"],
+            description=task_data["description"],
+            deadline=task_data["deadline"],
+            priority=task_data["priority"],
+            status=task_data["status"],
+            portfolio_id=task_data["portfolio_id"],
+            portfolio_name=task_data["portfolio_name"],
+            portfolio_channel=task_data["portfolio_channel"],
+            assigned_users=task_data["assigned_users"],
         )
         task_reminders.append(reminder)
-    
-    return TomorrowRemindersResponse(
-        tasks=task_reminders,
-        total_count=len(task_reminders)
-    )
+
+    return TomorrowRemindersResponse(tasks=task_reminders, total_count=len(task_reminders))

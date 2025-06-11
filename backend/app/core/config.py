@@ -1,6 +1,7 @@
 import secrets
-import pytz
+from typing import Union
 
+import pytz
 from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
@@ -13,13 +14,13 @@ class Settings(BaseSettings):
     # The expiration time of the access token, 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     # Allow cross-domain requests from the following domain list
-    BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
+    BACKEND_CORS_ORIGINS: Union[str, list[str]] = "http://localhost:3000"
 
     PROJECT_NAME: str = "AI Society Dashboard"
-    
+
     # Timezone configuration
     DEFAULT_TIMEZONE: str = "Australia/Sydney"  # Project default timezone
-    DATABASE_TIMEZONE: str = "UTC"              # Database timezone (recommended to keep UTC)
+    DATABASE_TIMEZONE: str = "UTC"  # Database timezone (recommended to keep UTC)
 
     # Database settings
     POSTGRES_SERVER: str = "localhost"
@@ -51,7 +52,7 @@ class Settings(BaseSettings):
     def get_default_timezone(self) -> pytz.BaseTzInfo:
         """Get project default timezone object"""
         return pytz.timezone(self.DEFAULT_TIMEZONE)
-    
+
     def get_database_timezone(self) -> pytz.BaseTzInfo:
         """Get database timezone object"""
         return pytz.timezone(self.DATABASE_TIMEZONE)

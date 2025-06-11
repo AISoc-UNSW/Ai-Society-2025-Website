@@ -5,13 +5,13 @@ from app.api import deps
 from app.crud import task_assignment
 from app.models.user import User
 from app.schemas.task_assignment import (
-    TaskAssignmentCreateRequestBody,
-    TaskAssignmentUpdate,
-    TaskAssignmentResponse,
-    TaskAssignmentDetailResponse,
     BulkTaskAssignmentCreate,
-    UserTaskAssignmentResponse,
+    TaskAssignmentCreateRequestBody,
+    TaskAssignmentDetailResponse,
+    TaskAssignmentResponse,
+    TaskAssignmentUpdate,
     TaskUserAssignmentResponse,
+    UserTaskAssignmentResponse,
 )
 
 router = APIRouter()
@@ -149,6 +149,22 @@ def read_task_assigned_users(
     user_details = task_assignment.get_task_user_details(db, task_id=task_id)
     return [TaskUserAssignmentResponse(**user_detail) for user_detail in user_details]
 
+@router.get("/user/me/tasks", response_model=list[UserTaskAssignmentResponse])
+def read_my_assigned_tasks(
+    *,
+    db: Session = Depends(deps.get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    current_user: User = Depends(deps.get_current_user),
+) -> list[UserTaskAssignmentResponse]:
+    """
+    Get tasks assigned to current user with details
+    """
+    task_details = task_assignment.get_user_task_details(
+        db, user_id=current_user.user_id, skip=skip, limit=limit
+    )
+    return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
+
 
 @router.get("/user/{user_id}/tasks", response_model=list[UserTaskAssignmentResponse])
 def read_user_assigned_tasks(
@@ -164,23 +180,6 @@ def read_user_assigned_tasks(
     """
     task_details = task_assignment.get_user_task_details(
         db, user_id=user_id, skip=skip, limit=limit
-    )
-    return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
-
-
-@router.get("/user/me/tasks", response_model=list[UserTaskAssignmentResponse])
-def read_my_assigned_tasks(
-    *,
-    db: Session = Depends(deps.get_db),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(deps.get_current_user),
-) -> list[UserTaskAssignmentResponse]:
-    """
-    Get tasks assigned to current user with details
-    """
-    task_details = task_assignment.get_user_task_details(
-        db, user_id=current_user.user_id, skip=skip, limit=limit
     )
     return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 
 export default function Home() {
-  // Redirect to tasks page by default
-  redirect("/taskbot/dashboard")
+  // Redirect to login page by default
+  redirect("/auth/login")
 }

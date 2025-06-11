@@ -105,6 +105,7 @@ python test_apis.py
 
 ```bash
 cd frontend
+npm install
 npm run dev
 # or
 yarn dev

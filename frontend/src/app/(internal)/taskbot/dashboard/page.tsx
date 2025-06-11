@@ -1,11 +1,10 @@
 "use client";
 
-import * as React from "react";
-import Box from "@mui/joy/Box";
-import Sidebar from "@/components/joyui/Sidebar";
 import MyTasks from "@/components/joyui/MyTasks";
+import Sidebar from "@/components/joyui/Sidebar";
 import { tasks } from "@/lib/data";
 import { CssBaseline, CssVarsProvider } from "@mui/joy";
+import Box from "@mui/joy/Box";
 
 export default function TaskDashboard() {
   // Filter tasks to show only current user's tasks (simplified - in real app, filter by user ID)

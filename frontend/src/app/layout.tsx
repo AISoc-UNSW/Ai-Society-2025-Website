@@ -14,7 +14,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <CssVarsProvider>
+        {/* MUI Joy UI Provider - Only for internal dashboard */}
+        <CssVarsProvider
+          // Disable default dark mode to avoid conflicts with Tailwind
+          disableTransitionOnChange
+          // Ensure style isolation
+          defaultMode="light"
+        >
           <CssBaseline />
           {children}
         </CssVarsProvider>

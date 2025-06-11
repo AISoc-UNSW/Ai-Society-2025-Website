@@ -1,4 +1,4 @@
-import { LoginCredentials, LoginResponse, User, UserRegistration } from '../types';
+import { LoginCredentials, LoginResponse, User, UserRegistration } from '@/lib/types';
 import { apiFetch } from './client';
 
 // Login

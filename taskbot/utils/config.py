@@ -66,7 +66,15 @@ class Config:
         path.mkdir(parents=True, exist_ok=True)
         
         return path
+    
+    @property
+    def gemini_api_key(self) -> str:
+        """Gemini API key"""
+        key = os.getenv("GEMINI_API_KEY")
+        if not key:
+            raise ValueError("GEMINI_API_KEY not found in environment variables")
+        return key
 
 
 # Global configuration instance
-config = Config() 
+config = Config()

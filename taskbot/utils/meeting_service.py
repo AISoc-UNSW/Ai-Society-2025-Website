@@ -42,6 +42,8 @@ class MeetingService:
         meeting_name: str,
         portfolio_id: int,
         recording_file_path: str,
+        transcript: str,
+        summary: str,
         meeting_date: date | None = None
     ) -> dict | None:
         """

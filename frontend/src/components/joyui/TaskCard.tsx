@@ -13,7 +13,7 @@ import AvatarGroup from "@mui/joy/AvatarGroup";
 import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import { Task, TaskStatus } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDateSafe, getEmailInitials, getEmailAvatarColor } from "@/lib/utils";
 
 // Status color mapping for Chips
 const getStatusColor = (status: TaskStatus) => {
@@ -54,15 +54,24 @@ const statusOptions: TaskStatus[] = ["Not Started", "In Progress", "Completed", 
 interface TaskCardProps {
   task: Task;
   onStatusUpdate: (task: Task, newStatus: TaskStatus) => void;
+  isUpdating?: boolean;
 }
 
-export default function TaskCard({ task, onStatusUpdate }: TaskCardProps) {
+export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: TaskCardProps) {
+  // Add a mounted state to prevent hydration issues
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <Card
       variant="outlined"
       sx={{
         minHeight: 220,
         transition: "all 0.2s",
+        opacity: isUpdating ? 0.7 : 1,
         "&:hover": {
           boxShadow: "md",
           borderColor: "primary.outlinedBorder",
@@ -78,7 +87,7 @@ export default function TaskCard({ task, onStatusUpdate }: TaskCardProps) {
                 {task.title}
               </Typography>
               <Typography level="body-sm" color="neutral" sx={{ mt: 0.5 }}>
-                {task.department}
+                {task.portfolio}
               </Typography>
             </Box>
             <Chip size="sm" variant="soft" color={getPriorityColor(task.priority)}>
@@ -101,20 +110,35 @@ export default function TaskCard({ task, onStatusUpdate }: TaskCardProps) {
           </Typography>
 
           {/* Assignees */}
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center", gap: 1 }}>
             <Typography level="body-xs" color="neutral">
               Assigned to:
             </Typography>
             <AvatarGroup size="sm" sx={{ "--AvatarGroup-gap": "-8px" }}>
               {task.assignees.map(assignee => (
-                <Avatar key={assignee.id} src={assignee.avatar} size="sm" alt={assignee.name} />
+                <Avatar
+                  key={assignee.id}
+                  src={assignee.avatar}
+                  size="sm"
+                  alt={assignee.name}
+                  sx={{
+                    // If no avatar image, use email initials with custom background
+                    backgroundColor: !assignee.avatar
+                      ? getEmailAvatarColor(assignee.email)
+                      : undefined,
+                    color: !assignee.avatar ? "white" : undefined,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {!assignee.avatar && getEmailInitials(assignee.email)}
+                </Avatar>
               ))}
             </AvatarGroup>
           </Stack>
 
-          {/* Due Date */}
+          {/* Due Date - Fixed to prevent hydration issues */}
           <Typography level="body-xs" color="neutral">
-            Due: {formatDate(task.dueDate)}
+            Due: {mounted ? formatDateSafe(task.deadline) : "Loading..."}
           </Typography>
         </Stack>
       </CardContent>
@@ -128,13 +152,15 @@ export default function TaskCard({ task, onStatusUpdate }: TaskCardProps) {
           <Select
             value={task.status}
             onChange={(_, newValue) => {
-              if (newValue) {
+              if (newValue && !isUpdating) {
                 onStatusUpdate(task, newValue as TaskStatus);
               }
             }}
             size="sm"
+            color={getStatusColor(task.status)}
             variant="outlined"
-            sx={{ minWidth: 120 }}
+            disabled={isUpdating}
+            sx={{ minWidth: { xs: 100, sm: 120 } }}
           >
             {statusOptions.map(status => (
               <Option key={status} value={status}>

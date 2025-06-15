@@ -13,11 +13,16 @@ from pydub import AudioSegment
 import subprocess
 import asyncio
 import tempfile
+import requests
+from dotenv import load_dotenv
 
 from utils import MeetingService
 from ai_generation.speech_to_text import speech_to_text
 from ai_generation.generate_tasks import generate_tasks
 import json
+import aiohttp
+
+load_dotenv()
 
 
 logger = logging.getLogger(__name__)
@@ -224,6 +229,45 @@ class MeetingRecord(commands.Cog):
                         f"**Generated Tasks:**\n```json\n{tasks_preview[:1000]}{'...' if len(tasks_preview) > 1800 else ''}\n```."
                     )
                     await channel.send(f"✅ To make any changes to the tasks, access the taskbot website: https://(aibotwebsite)/meeting/{session['meeting_name']}/confirm")
+
+                    # Addition: using to save tasks to backend
+                    BACKEND_URL = "http://localhost:8000/api/v1/tasks/group" 
+                    
+                    url = "http://localhost:8000/api/v1/login/access-token"
+                    data = {
+                        "username": os.getenv(API_USERNAME),
+                        "password": os.getenv(API_PASSWORD)
+                    }
+                    resp = requests.post(url, data=data)
+                    print(resp.json())
+                    ACCESS_TOKEN = resp.json().get("access_token")
+
+                    if not ACCESS_TOKEN:
+                        await channel.send("❌ Failed to obtain access token for backend API.")
+                        # return
+
+                    payload = {
+                        "tasks": tasks,
+                        "portfolio_id": session["portfolio_id"],
+                        "source_meeting_id": None  
+                    }
+
+                    headers = {
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Content-Type": "application/json"
+                    }
+
+                    async with aiohttp.ClientSession() as http_session:
+                        try:
+                            async with http_session.post(BACKEND_URL, json=payload, headers=headers) as resp:
+                                if resp.status == 200:
+                                    data = await resp.json()
+                                    await channel.send(f"✅ Tasks have been saved to the database! ({data.get('total_created', 0)} tasks created)")
+                                else:
+                                    error = await resp.text()
+                                    await channel.send(f"❌ Failed to save tasks to backend: {resp.status}\n{error}")
+                        except Exception as e:
+                            await channel.send(f"❌ Error while saving tasks to backend: {str(e)}")
 
                 # Creating meeting record now, which should save to database
                 await channel.send("📝 Creating meeting record...")

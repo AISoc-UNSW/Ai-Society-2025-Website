@@ -80,3 +80,15 @@ def authenticate(db: Session, *, email: str, password: str) -> User | None:
 def get_users_by_portfolio(db: Session, portfolio_id: int) -> list[User]:
     """Get all users belonging to a specific portfolio"""
     return db.query(User).filter(User.portfolio_id == portfolio_id).all()
+
+
+def search_users(db: Session, *, search_term: str, limit: int = 10) -> list[User]:
+    """Search users by username or email with fuzzy matching"""
+    from sqlalchemy import or_
+    
+    search_filter = or_(
+        User.username.ilike(f"%{search_term}%"),
+        User.email.ilike(f"%{search_term}%")
+    )
+    
+    return db.query(User).filter(search_filter).limit(limit).all()

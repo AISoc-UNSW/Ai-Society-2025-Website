@@ -46,6 +46,12 @@ class MeetingRecord(commands.Cog):
         
         voice_channel = ctx.author.voice.channel
         guild_id = ctx.guild.id
+
+        # Ensure there is at least one non-bot user in the channel
+        non_bot_members = [m for m in voice_channel.members if not m.bot]
+        if not non_bot_members:
+            await ctx.respond("❌ There must be at least one non-bot user in the voice channel to start recording.", ephemeral=True)
+            return
         
         # Check if already recording
         if guild_id in self.recording_sessions:

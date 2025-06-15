@@ -42,7 +42,9 @@ class MeetingService:
         meeting_name: str,
         portfolio_id: int,
         recording_file_path: str,
-        meeting_date: date | None = None
+        meeting_date: date | None = None,
+        summary: str | None = None,
+        transcript: str | None = None,
     ) -> dict | None:
         """
         Create meeting record
@@ -52,6 +54,8 @@ class MeetingService:
             portfolio_id: Portfolio ID
             recording_file_path: Local path of recording file
             meeting_date: Meeting date, defaults to today
+            summary: Meeting summary (optional)
+            transcript: Meeting transcript (optional, stored as auto_caption)
             
         Returns:
             Returns meeting record data if successful, None if failed
@@ -69,8 +73,8 @@ class MeetingService:
                 "meeting_date": meeting_date.isoformat(),
                 "meeting_name": meeting_name,
                 "recording_file_link": recording_file_path,
-                "auto_caption": None,  # Leave empty for subsequent AI processing
-                "summary": None,       # Leave empty for subsequent AI processing
+                "auto_caption": transcript,  # Use transcript as auto_caption
+                "summary": summary,
                 "portfolio_id": portfolio_id
             }
             
@@ -114,4 +118,4 @@ class MeetingService:
         # Complete path
         file_path = config.recording_save_path / filename
         
-        return str(file_path.absolute()) 
+        return str(file_path.absolute())

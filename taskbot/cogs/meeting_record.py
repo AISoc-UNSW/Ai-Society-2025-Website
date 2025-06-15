@@ -19,6 +19,7 @@ from ai_generation.speech_to_text import speech_to_text
 from ai_generation.generate_tasks import generate_tasks
 import json
 
+
 logger = logging.getLogger(__name__)
 
 

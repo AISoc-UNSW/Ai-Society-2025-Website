@@ -47,6 +47,7 @@ class TaskResponse(TaskBase):
 class TaskListResponse(BaseModel):
     task_id: int
     title: str
+    description: str | None = None
     status: str | None = None
     priority: str | None = None
     deadline: datetime

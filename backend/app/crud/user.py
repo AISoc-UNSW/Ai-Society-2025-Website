@@ -75,3 +75,8 @@ def authenticate(db: Session, *, email: str, password: str) -> User | None:
     if not verify_password(password, user.hashed_password):
         return None
     return user
+
+
+def get_users_by_portfolio(db: Session, portfolio_id: int) -> list[User]:
+    """Get all users belonging to a specific portfolio"""
+    return db.query(User).filter(User.portfolio_id == portfolio_id).all()

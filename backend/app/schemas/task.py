@@ -51,6 +51,8 @@ class TaskListResponse(BaseModel):
     priority: str | None = None
     deadline: datetime
     portfolio_id: int
+    parent_task_id: int | None = None
+    source_meeting_id: int | None = None
     
     class Config:
         from_attributes = True

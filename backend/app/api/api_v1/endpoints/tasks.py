@@ -155,6 +155,20 @@ def read_tasks_by_meeting(
     return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
 
 
+@router.get("/meeting/{meeting_id}/pending", response_model=list[TaskListResponse])
+def get_pending_tasks_by_meeting(
+    *,
+    db: Session = Depends(deps.get_db),
+    meeting_id: int,
+    current_user: User = Depends(deps.get_current_user),
+) -> list[TaskListResponse]:
+    """
+    Get pending tasks created from a specific meeting
+    """
+    tasks = task.get_pending_tasks_by_meeting(db, meeting_id=meeting_id)
+    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+
+
 @router.get("/search/", response_model=list[TaskListResponse])
 def search_tasks(
     *,

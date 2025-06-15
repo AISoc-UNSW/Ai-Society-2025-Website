@@ -42,6 +42,14 @@ def get_by_meeting(db: Session, meeting_id: int) -> list[Task]:
     return db.query(Task).filter(Task.source_meeting_id == meeting_id).all()
 
 
+def get_pending_tasks_by_meeting(db: Session, meeting_id: int) -> list[Task]:
+    """Get pending tasks created from a specific meeting"""
+    return db.query(Task).filter(
+        Task.source_meeting_id == meeting_id,
+        Task.status == "Pending"
+    ).all()
+
+
 def get_multi(
     db: Session,
     *,

@@ -92,14 +92,14 @@ Extracted Tasks (JSON):
         if not api_key:
             print("Error: GEMINI_API_KEY not found in environment variables.")
             return []
-        client = genai.Client(api_key=api_key)
+        genai.configure(api_key=api_key)
 
-        model_name = "gemini-1.5-flash"  # Or try "gemini-pro" if flash isn't found
+        model_name = "gemini-1.5-flash"  # Or "gemini-pro"
+        model = genai.GenerativeModel(model_name)
 
-        response = client.models.generate_content(
-            model=model_name,  # Pass model name here
-            contents=prompt,  # Pass prompt as contents
-            config=types.GenerateContentConfig(
+        response = model.generate_content(
+            prompt,
+            generation_config=types.GenerationConfig(
                 max_output_tokens=8192, temperature=0.1, top_p=0.95, top_k=40
             ),
         )

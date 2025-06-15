@@ -216,7 +216,7 @@ class MeetingRecord(commands.Cog):
                     tasks = []
 
                 if not tasks:
-                    await channel.send("❌ No tasks generated from transcript.")
+                    await channel.send("❌ No tasks generated for this meeting.")
                 else:
                     # Show tasks to user for confirmation
                     tasks_preview = json.dumps(tasks, indent=2)

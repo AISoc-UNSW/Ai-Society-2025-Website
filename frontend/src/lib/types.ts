@@ -161,3 +161,11 @@ export interface HierarchicalTask {
   updated_at?: string;
   subtasks: HierarchicalTask[];
 }
+
+// Portfolio simple interface for dropdown lists
+export interface PortfolioSimple {
+  portfolio_id: number;
+  name: string;
+  description?: string;
+  has_channel: boolean;
+}

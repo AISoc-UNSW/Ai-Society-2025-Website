@@ -11,12 +11,13 @@ import Alert from "@mui/joy/Alert";
 import CircularProgress from "@mui/joy/CircularProgress";
 import Sidebar from "@/components/joyui/Sidebar";
 import TaskConfirmationList from "./TaskConfirmationList";
-import { TaskResponse, TaskUpdateRequest, TaskCreateRequest, HierarchicalTask } from "@/lib/types";
+import { TaskResponse, TaskUpdateRequest, TaskCreateRequest, HierarchicalTask, PortfolioSimple } from "@/lib/types";
 import { useTransition } from "react";
 
 interface TaskConfirmationClientProps {
   meetingId: number;
   initialTasks: TaskResponse[];
+  portfolios: PortfolioSimple[];
   error?: string;
   updateTaskAction: (
     taskId: number,
@@ -79,6 +80,7 @@ function buildTaskHierarchy(tasks: TaskResponse[]): HierarchicalTask[] {
 export default function TaskConfirmationClient({
   meetingId,
   initialTasks,
+  portfolios,
   error,
   updateTaskAction,
   createTaskAction,
@@ -252,6 +254,7 @@ export default function TaskConfirmationClient({
           <TaskConfirmationList
             tasks={hierarchicalTasks}
             meetingId={meetingId}
+            portfolios={portfolios}
             onTaskUpdate={handleTaskUpdate}
             onTaskCreate={handleTaskCreate}
             onTaskDelete={handleTaskDelete}

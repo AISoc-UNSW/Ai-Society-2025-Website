@@ -22,7 +22,7 @@ import Input from "@mui/joy/Input";
 import Textarea from "@mui/joy/Textarea";
 import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
-import { HierarchicalTask, TaskUpdateRequest, TaskCreateRequest } from "@/lib/types";
+import { HierarchicalTask, TaskUpdateRequest, TaskCreateRequest, PortfolioSimple } from "@/lib/types";
 import { formatDateSafe } from "@/lib/utils";
 
 // Priority color mapping
@@ -44,6 +44,7 @@ const getPriorityColor = (priority: string) => {
 interface TaskConfirmationListProps {
   tasks: HierarchicalTask[];
   meetingId: number;
+  portfolios: PortfolioSimple[];
   onTaskUpdate: (taskId: number, updates: TaskUpdateRequest) => Promise<void>;
   onTaskCreate: (taskData: TaskCreateRequest) => Promise<void>;
   onTaskDelete: (taskId: number) => Promise<void>;
@@ -61,6 +62,7 @@ interface TaskFormData {
 export default function TaskConfirmationList({
   tasks,
   meetingId,
+  portfolios,
   onTaskUpdate,
   onTaskCreate,
   onTaskDelete,
@@ -73,6 +75,12 @@ export default function TaskConfirmationList({
   }>({ isOpen: false });
   const [deleteConfirm, setDeleteConfirm] = React.useState<number | null>(null);
   const [mounted, setMounted] = React.useState(false);
+
+  // Helper function to get portfolio name by ID
+  const getPortfolioName = (portfolioId: number): string => {
+    const portfolio = portfolios.find(p => p.portfolio_id === portfolioId);
+    return portfolio ? portfolio.name : `Portfolio ${portfolioId}`;
+  };
 
   React.useEffect(() => {
     setMounted(true);
@@ -160,7 +168,7 @@ export default function TaskConfirmationList({
                   Due: {mounted ? formatDateSafe(task.deadline) : "Loading..."}
                 </Typography>
                 <Typography level="body-xs" color="neutral">
-                  Portfolio ID: {task.portfolio_id}
+                  Portfolio: {getPortfolioName(task.portfolio_id)}
                 </Typography>
               </Stack>
             </Stack>
@@ -242,6 +250,7 @@ export default function TaskConfirmationList({
         open={!!editingTask}
         onClose={() => setEditingTask(null)}
         onSave={handleSaveEdit}
+        portfolios={portfolios}
         initialData={editingTask ? {
           title: editingTask.title,
           description: editingTask.description || "",
@@ -257,6 +266,7 @@ export default function TaskConfirmationList({
         open={creatingTask.isOpen}
         onClose={() => setCreatingTask({ isOpen: false })}
         onSave={(formData) => handleCreateTask(formData, creatingTask.parentId)}
+        portfolios={portfolios}
         title={creatingTask.parentId ? "Add Subtask" : "Add Main Task"}
       />
 
@@ -292,15 +302,16 @@ interface TaskFormModalProps {
   onSave: (formData: TaskFormData) => Promise<void>;
   initialData?: TaskFormData;
   title: string;
+  portfolios: PortfolioSimple[];
 }
 
-function TaskFormModal({ open, onClose, onSave, initialData, title }: TaskFormModalProps) {
+function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }: TaskFormModalProps) {
   const [formData, setFormData] = React.useState<TaskFormData>({
     title: "",
     description: "",
     priority: "Medium",
     deadline: "",
-    portfolio_id: 101, // Default portfolio ID
+    portfolio_id: portfolios.length > 0 ? portfolios[0].portfolio_id : 101, // Default to first portfolio
   });
 
   React.useEffect(() => {
@@ -312,7 +323,7 @@ function TaskFormModal({ open, onClose, onSave, initialData, title }: TaskFormMo
         description: "",
         priority: "Medium",
         deadline: "",
-        portfolio_id: 101,
+        portfolio_id: portfolios.length > 0 ? portfolios[0].portfolio_id : 101,
       });
     }
   }, [initialData, open]);
@@ -374,15 +385,20 @@ function TaskFormModal({ open, onClose, onSave, initialData, title }: TaskFormMo
             </FormControl>
 
             <FormControl required>
-              <FormLabel>Portfolio ID</FormLabel>
-              <Input
-                type="number"
+              <FormLabel>Portfolio</FormLabel>
+              <Select
                 value={formData.portfolio_id}
-                onChange={(e) => setFormData(prev => ({ 
+                onChange={(_, value) => value && setFormData(prev => ({ 
                   ...prev, 
-                  portfolio_id: parseInt(e.target.value) || 101
+                  portfolio_id: value
                 }))}
-              />
+              >
+                {portfolios.map((portfolio) => (
+                  <Option key={portfolio.portfolio_id} value={portfolio.portfolio_id}>
+                    {portfolio.name}
+                  </Option>
+                ))}
+              </Select>
             </FormControl>
           </DialogContent>
 

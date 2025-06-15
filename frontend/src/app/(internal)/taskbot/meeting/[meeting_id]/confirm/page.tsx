@@ -1,6 +1,7 @@
 import { getPendingTasksByMeeting } from "@/lib/api/task";
 import { updateTask, createTask, deleteTask } from "@/lib/api/task";
-import { TaskResponse, TaskUpdateRequest, TaskCreateRequest } from "@/lib/types";
+import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
+import { TaskResponse, TaskUpdateRequest, TaskCreateRequest, PortfolioSimple } from "@/lib/types";
 import TaskConfirmationClient from "@/components/joyui/task/TaskConfirmationClient";
 import { revalidatePath } from "next/cache";
 
@@ -97,12 +98,16 @@ export default async function TaskConfirmationPage({ params }: PageProps) {
   }
 
   try {
-    const pendingTasks = await getPendingTasksByMeeting(meetingId);
+    const [pendingTasks, portfolios] = await Promise.all([
+      getPendingTasksByMeeting(meetingId),
+      getAllPortfoliosSimple()
+    ]);
     
     return (
       <TaskConfirmationClient
         meetingId={meetingId}
         initialTasks={pendingTasks}
+        portfolios={portfolios}
         updateTaskAction={updateTaskAction}
         createTaskAction={createTaskAction}
         deleteTaskAction={deleteTaskAction}
@@ -115,6 +120,7 @@ export default async function TaskConfirmationPage({ params }: PageProps) {
       <TaskConfirmationClient
         meetingId={meetingId}
         initialTasks={[]}
+        portfolios={[]}
         error={errorMessage}
         updateTaskAction={updateTaskAction}
         createTaskAction={createTaskAction}

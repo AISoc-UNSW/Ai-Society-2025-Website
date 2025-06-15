@@ -119,3 +119,40 @@ class TaskReminderResponse(BaseModel):
 class TomorrowRemindersResponse(BaseModel):
     tasks: list[TaskReminderResponse]
     total_count: int 
+
+
+# Task Group schemas for bulk operations
+class TaskGroupItem(BaseModel):
+    """Single task item in a task group"""
+    title: str
+    description: str | None = None
+    priority: str | None = "Medium"
+    deadline: str | None = None  # Date string format (YYYY-MM-DD)
+    subtasks: list["TaskGroupItem"] | None = None  # Self-referencing for nested tasks
+    
+    class Config:
+        from_attributes = True
+
+
+class TaskGroupCreateRequest(BaseModel):
+    """Request body for creating a task group"""
+    tasks: list[TaskGroupItem]
+    portfolio_id: int | None = None
+    source_meeting_id: int | None = None
+    
+    class Config:
+        from_attributes = True
+
+
+class TaskGroupCreateResponse(BaseModel):
+    """Response for task group creation"""
+    created_task_ids: list[int]
+    total_created: int
+    message: str
+    
+    class Config:
+        from_attributes = True
+
+
+# Fix forward reference
+TaskGroupItem.model_rebuild() 

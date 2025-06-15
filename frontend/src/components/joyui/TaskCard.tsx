@@ -14,6 +14,7 @@ import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import { Task, TaskStatus } from "@/lib/types";
 import { formatDateSafe, getEmailInitials, getEmailAvatarColor } from "@/lib/utils";
+import Tooltip from "@mui/joy/Tooltip";
 
 // Status color mapping for Chips
 const getStatusColor = (status: TaskStatus) => {
@@ -116,22 +117,25 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
             </Typography>
             <AvatarGroup size="sm" sx={{ "--AvatarGroup-gap": "-8px" }}>
               {task.assignees.map(assignee => (
-                <Avatar
-                  key={assignee.id}
-                  src={assignee.avatar}
-                  size="sm"
-                  alt={assignee.name}
-                  sx={{
-                    // If no avatar image, use email initials with custom background
-                    backgroundColor: !assignee.avatar
-                      ? getEmailAvatarColor(assignee.email)
-                      : undefined,
-                    color: !assignee.avatar ? "white" : undefined,
-                    fontWeight: "bold",
-                  }}
-                >
-                  {!assignee.avatar && getEmailInitials(assignee.email)}
-                </Avatar>
+                <Tooltip key={assignee.id} title={assignee.name}>
+                  <Avatar
+                    key={assignee.id}
+                    src={assignee.avatar}
+                    size="sm"
+                    alt={assignee.name}
+                    aria-label={assignee.name}
+                    sx={{
+                      // If no avatar image, use email initials with custom background
+                      backgroundColor: !assignee.avatar
+                        ? getEmailAvatarColor(assignee.email)
+                        : undefined,
+                      color: !assignee.avatar ? "white" : undefined,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {!assignee.avatar && getEmailInitials(assignee.email)}
+                  </Avatar>
+                </Tooltip>
               ))}
             </AvatarGroup>
           </Stack>

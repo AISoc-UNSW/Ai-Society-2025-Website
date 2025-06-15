@@ -32,7 +32,7 @@ class MeetingRecordUpdate(BaseModel):
 # Used for API responses
 class MeetingRecordResponse(MeetingRecordBase):
     meeting_id: int
-    
+
     class Config:
         from_attributes = True
 
@@ -44,8 +44,8 @@ class MeetingRecordListResponse(BaseModel):
     meeting_name: str
     portfolio_id: int
     has_recording: bool = False  # Computed field
-    has_summary: bool = False    # Computed field
-    
+    summary: str | None = None
+
     class Config:
         from_attributes = True
 
@@ -54,6 +54,6 @@ class MeetingRecordListResponse(BaseModel):
 class MeetingRecordDetailResponse(MeetingRecordResponse):
     # Include related tasks if needed (imported from task schemas)
     related_tasks_count: int | None = None
-    
+
     class Config:
-        from_attributes = True 
+        from_attributes = True

@@ -242,8 +242,8 @@ def create_task_group(
             db_obj.priority = task_data.get("priority", "Medium")
             
             # Handle deadline - convert string to datetime
-            deadline_str = task_data.get("deadline", "2024-12-31")
-            if isinstance(deadline_str, str):
+            deadline_str = task_data.get("deadline")
+            if deadline_str and isinstance(deadline_str, str):
                 try:
                     # Parse date string and set time to end of day
                     from datetime import datetime
@@ -251,14 +251,20 @@ def create_task_group(
                     deadline_with_time = deadline_date.replace(hour=23, minute=59, second=59)
                     db_obj.deadline = tz.to_utc(deadline_with_time)
                 except ValueError:
-                    # Fallback to default if parsing fails
-                    default_deadline = datetime.strptime("2024-12-31", "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+                    # Fallback to default if parsing fails - use 30 days from now
+                    from datetime import datetime, timedelta
+                    default_deadline = (datetime.now() + timedelta(days=30)).replace(hour=23, minute=59, second=59)
                     db_obj.deadline = tz.to_utc(default_deadline)
-            else:
+            elif deadline_str and isinstance(deadline_str, datetime):
                 # If it's already a datetime object
                 db_obj.deadline = tz.to_utc(deadline_str)
+            else:
+                # No deadline provided - use 30 days from now as default
+                from datetime import datetime, timedelta
+                default_deadline = (datetime.now() + timedelta(days=30)).replace(hour=23, minute=59, second=59)
+                db_obj.deadline = tz.to_utc(default_deadline)
             
-            db_obj.portfolio_id = portfolio_id or task_data.get("portfolio_id", 26)  # Default to IT portfolio
+            db_obj.portfolio_id = portfolio_id  # Default to IT portfolio
             db_obj.parent_task_id = parent_task_id
             db_obj.source_meeting_id = source_meeting_id
             db_obj.created_at = tz.now_utc()

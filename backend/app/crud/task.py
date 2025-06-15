@@ -205,4 +205,98 @@ def get_tomorrow_reminders(db: Session, portfolio_id: int | None = None) -> list
         }
         result.append(task_data)
     
-    return result 
+    return result
+
+
+def create_task_group(
+    db: Session, 
+    *, 
+    tasks_data: list[dict], 
+    portfolio_id: int | None = None, 
+    source_meeting_id: int | None = None
+) -> list[int]:
+    """
+    Create a group of tasks with hierarchical structure (parent-child relationships)
+    
+    Args:
+        db: Database session
+        tasks_data: List of task dictionaries with potential subtasks
+        portfolio_id: Optional portfolio ID for all tasks
+        source_meeting_id: Optional meeting ID these tasks come from
+    
+    Returns:
+        List of created task IDs
+    """
+    created_task_ids = []
+    
+    def create_single_task(task_data: dict, parent_task_id: int | None = None) -> int | None:
+        """
+        Create a single task and its subtasks recursively
+        """
+        try:
+            # Create the main task
+            db_obj = Task()
+            db_obj.title = task_data.get("title", "Untitled Task")
+            db_obj.description = task_data.get("description", "")
+            db_obj.status = "Pending"  # Force status to be Pending as required
+            db_obj.priority = task_data.get("priority", "Medium")
+            
+            # Handle deadline - convert string to datetime
+            deadline_str = task_data.get("deadline", "2024-12-31")
+            if isinstance(deadline_str, str):
+                try:
+                    # Parse date string and set time to end of day
+                    from datetime import datetime
+                    deadline_date = datetime.strptime(deadline_str, "%Y-%m-%d")
+                    deadline_with_time = deadline_date.replace(hour=23, minute=59, second=59)
+                    db_obj.deadline = tz.to_utc(deadline_with_time)
+                except ValueError:
+                    # Fallback to default if parsing fails
+                    default_deadline = datetime.strptime("2024-12-31", "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+                    db_obj.deadline = tz.to_utc(default_deadline)
+            else:
+                # If it's already a datetime object
+                db_obj.deadline = tz.to_utc(deadline_str)
+            
+            db_obj.portfolio_id = portfolio_id or task_data.get("portfolio_id", 26)  # Default to IT portfolio
+            db_obj.parent_task_id = parent_task_id
+            db_obj.source_meeting_id = source_meeting_id
+            db_obj.created_at = tz.now_utc()
+            db_obj.updated_at = tz.now_utc()
+            
+            db.add(db_obj)
+            db.flush()  # Flush to get the ID without committing
+            
+            task_id = db_obj.task_id
+            
+            # Handle subtasks if they exist
+            subtasks = task_data.get("subtasks", [])
+            if subtasks and isinstance(subtasks, list):
+                for subtask_data in subtasks:
+                    if isinstance(subtask_data, dict) and subtask_data.get("title"):
+                        create_single_task(subtask_data, parent_task_id=task_id)
+            
+            return task_id
+            
+        except Exception as e:
+            print(f"Error creating task {task_data.get('title', 'Unknown')}: {e}")
+            db.rollback()
+            return None
+    
+    try:
+        # Create all top-level tasks
+        for task_data in tasks_data:
+            if isinstance(task_data, dict) and task_data.get("title"):
+                task_id = create_single_task(task_data)
+                if task_id:
+                    created_task_ids.append(task_id)
+        
+        # Commit all changes at once
+        db.commit()
+        
+    except Exception as e:
+        print(f"Error in task group creation: {e}")
+        db.rollback()
+        raise
+    
+    return created_task_ids 

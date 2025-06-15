@@ -12,6 +12,8 @@ from app.schemas.task import (
     TaskResponse,
     TaskUpdate,
     TomorrowRemindersResponse,
+    TaskGroupCreateRequest,
+    TaskGroupCreateResponse,
 )
 
 router = APIRouter()
@@ -200,3 +202,76 @@ def get_tomorrow_reminders(
         task_reminders.append(reminder)
 
     return TomorrowRemindersResponse(tasks=task_reminders, total_count=len(task_reminders))
+
+
+@router.post("/group", response_model=TaskGroupCreateResponse)
+def create_task_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    task_group_in: TaskGroupCreateRequest,
+    current_user: User = Depends(deps.get_current_user),
+) -> TaskGroupCreateResponse:
+    """
+    Create a group of tasks with hierarchical structure (supports subtasks)
+    
+    This endpoint allows bulk creation of tasks with parent-child relationships.
+    All tasks will have status set to 'Pending' automatically.
+    
+    Request format:
+    {
+        "tasks": [
+            {
+                "title": "Main Task 1",
+                "description": "Description for main task",
+                "priority": "High",
+                "deadline": "2024-12-31",
+                "subtasks": [
+                    {
+                        "title": "Subtask 1.1",
+                        "description": "Description for subtask",
+                        "priority": "Medium",
+                        "deadline": "2024-12-30"
+                    }
+                ]
+            }
+        ],
+        "portfolio_id": 26,
+        "source_meeting_id": 123
+    }
+    """
+    try:
+        # Convert Pydantic models to dictionaries for processing
+        tasks_data = []
+        for task_item in task_group_in.tasks:
+            task_dict = task_item.model_dump()
+            tasks_data.append(task_dict)
+        
+        # Create the task group using CRUD function
+        created_task_ids = task.create_task_group(
+            db,
+            tasks_data=tasks_data,
+            portfolio_id=task_group_in.portfolio_id,
+            source_meeting_id=task_group_in.source_meeting_id
+        )
+        
+        total_created = len(created_task_ids)
+        
+        if total_created == 0:
+            raise HTTPException(
+                status_code=400, 
+                detail="No tasks were created. Please check your input data."
+            )
+        
+        return TaskGroupCreateResponse(
+            created_task_ids=created_task_ids,
+            total_created=total_created,
+            message=f"Successfully created {total_created} tasks with hierarchical structure"
+        )
+        
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in create_task_group: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create task group: {str(e)}"
+        )

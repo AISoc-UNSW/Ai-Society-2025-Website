@@ -127,7 +127,7 @@ class TaskGroupItem(BaseModel):
     title: str
     description: str | None = None
     priority: str | None = "Medium"
-    deadline: str | None = None  # Date string format (YYYY-MM-DD), defaults to 30 days from creation if not provided
+    deadline: str | None = None  # Date string format (YYYY-MM-DD)
     subtasks: list["TaskGroupItem"] | None = None  # Self-referencing for nested tasks
     
     class Config:

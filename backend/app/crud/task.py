@@ -242,7 +242,7 @@ def create_task_group(
             db_obj.priority = task_data.get("priority", "Medium")
             
             # Handle deadline - convert string to datetime
-            deadline_str = task_data.get("deadline", "2024-12-31")
+            deadline_str = task_data.get("deadline", "2025-12-31")
             if isinstance(deadline_str, str):
                 try:
                     # Parse date string and set time to end of day

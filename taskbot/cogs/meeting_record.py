@@ -12,8 +12,12 @@ from datetime import datetime
 from pydub import AudioSegment
 import subprocess
 import asyncio
+import tempfile
 
 from utils import MeetingService
+from ai_generation.speech_to_text import speech_to_text
+from ai_generation.generate_tasks import generate_tasks
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +46,12 @@ class MeetingRecord(commands.Cog):
         
         voice_channel = ctx.author.voice.channel
         guild_id = ctx.guild.id
+
+        # Ensure there is at least one non-bot user in the channel
+        non_bot_members = [m for m in voice_channel.members if not m.bot]
+        if not non_bot_members:
+            await ctx.respond("❌ There must be at least one non-bot user in the voice channel to start recording.", ephemeral=True)
+            return
         
         # Check if already recording
         if guild_id in self.recording_sessions:
@@ -174,13 +184,56 @@ class MeetingRecord(commands.Cog):
                 
                 await channel.send(f"✅ Audio file saved: `{file_path}`")
                 
-                # Create meeting record
+                # Transcribe audio: using speech-to-text (which was written under older_code)
+                await channel.send("📝 Converting audio to transcript and generating summary...")
+                try:
+                    transcript, summary = speech_to_text(file_path)
+                except Exception as e:
+                    logger.error(f"Transcription failed: {e}")
+                    await channel.send(f"❌ Transcription failed: {str(e)}")
+                    transcript = None
+
+                if not transcript:
+                    await channel.send("❌ No transcript or summary generated. Aborting further processing.")
+                    # Disconnect voice connection
+                    if session["voice_client"].is_connected():
+                        await session["voice_client"].disconnect()
+                    if guild_id in self.recording_sessions:
+                        del self.recording_sessions[guild_id]
+                    return
+
+                await channel.send("✅ Transcript and Summary generated successfully!")
+                
+                # Generate tasks from transcript
+                await channel.send("🤖 Based on the meeting transcript, the tasks are generated as follows...")
+                try:
+                    # generate tasks: put under meeting name and portfolio id desc
+                    tasks = generate_tasks(transcript, source_meeting_id=session["meeting_name"], portfolio_id=session["portfolio_id"])
+                except Exception as e:
+                    logger.error(f"Task generation failed: {e}")
+                    await channel.send(f"❌ Task generation failed: {str(e)}")
+                    tasks = []
+
+                if not tasks:
+                    await channel.send("❌ No tasks generated from transcript.")
+                else:
+                    # Show tasks to user for confirmation
+                    tasks_preview = json.dumps(tasks, indent=2)
+                    await channel.send(
+                        f"**Generated Tasks:**\n```json\n{tasks_preview[:1000]}{'...' if len(tasks_preview) > 1800 else ''}\n```."
+                    )
+                    await channel.send(f"✅ To make any changes to the tasks, access the taskbot website: https://(aibotwebsite)/meeting/{session['meeting_name']}/confirm")
+
+                # Creating meeting record now, which should save to database
                 await channel.send("📝 Creating meeting record...")
                 
+                # Changed: Create meeting record and include transcript + summary info
                 result = await self.meeting_service.create_meeting_record(
                     meeting_name=session["meeting_name"],
                     portfolio_id=session["portfolio_id"],
-                    recording_file_path=file_path
+                    recording_file_path=file_path,
+                    summary=summary,
+                    transcript=transcript,
                 )
                 
                 if result:
@@ -235,4 +288,4 @@ class MeetingRecord(commands.Cog):
 
 def setup(bot):
     """Load Cog"""
-    bot.add_cog(MeetingRecord(bot)) 
+    bot.add_cog(MeetingRecord(bot))

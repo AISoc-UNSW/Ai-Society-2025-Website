@@ -13,7 +13,7 @@ import soundfile as sf
 from scipy.io import wavfile
 import subprocess
 
-
+# Can ignore this for now...
 # Ensure Opus is loaded for voice features
 if not discord.opus.is_loaded():
     try:

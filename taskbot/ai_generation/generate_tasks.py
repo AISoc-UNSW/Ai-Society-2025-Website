@@ -2,22 +2,14 @@ import json
 
 import psycopg2
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+import google.generativeai as genai
+from google.generativeai import types
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from config import (
-    GEMINI_API_KEY,
-    POSTGRES_DB,
-    POSTGRES_HOST,
-    POSTGRES_PASSWORD,
-    POSTGRES_PORT,
-    POSTGRES_USER,
-)
+from utils.config import config
 
-# No global configure needed for the client approach
-
+# No global configure needed for the client approach: since everything is called from config (?) check ts
 
 # Updated function signature to accept context IDs
 def generate_tasks(script: str, source_meeting_id: int, portfolio_id: int | None = None):
@@ -96,7 +88,7 @@ Extracted Tasks (JSON):
     try:
         # Initialize the client inside the function or globally if preferred
         # Ensure the API key is loaded correctly
-        api_key = GEMINI_API_KEY
+        api_key = config.gemini_api_key
         if not api_key:
             print("Error: GEMINI_API_KEY not found in environment variables.")
             return []
@@ -253,11 +245,11 @@ def process_meeting_transcript(script, meeting_id, portfolio_id=None):
         return []
 
     # Get PostgreSQL connection parameters
-    user = POSTGRES_USER
-    password = POSTGRES_PASSWORD
-    host = POSTGRES_HOST
-    port = POSTGRES_PORT
-    dbname = POSTGRES_DB
+    user = config.POSTGRES_USER
+    password = config.POSTGRES_PASSWORD
+    host = config.POSTGRES_HOST
+    port = config.POSTGRES_PORT
+    dbname = config.POSTGRES_DB
 
     if not password:
         print("Error: Database password not found in environment variables.")

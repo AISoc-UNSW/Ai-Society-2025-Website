@@ -54,6 +54,8 @@ class TaskListResponse(BaseModel):
     portfolio_id: int
     parent_task_id: int | None = None
     source_meeting_id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
     
     class Config:
         from_attributes = True

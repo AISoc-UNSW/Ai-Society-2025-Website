@@ -47,10 +47,15 @@ class TaskResponse(TaskBase):
 class TaskListResponse(BaseModel):
     task_id: int
     title: str
+    description: str | None = None
     status: str | None = None
     priority: str | None = None
     deadline: datetime
     portfolio_id: int
+    parent_task_id: int | None = None
+    source_meeting_id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
     
     class Config:
         from_attributes = True

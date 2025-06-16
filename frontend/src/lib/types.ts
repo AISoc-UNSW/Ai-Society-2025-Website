@@ -1,5 +1,5 @@
 // Task related types
-export type TaskStatus = "Not Started" | "In Progress" | "Completed" | "Cancelled";
+export type TaskStatus = "Not Started" | "In Progress" | "Completed" | "Cancelled" | "Pending";
 export type PriorityLevel = "Low" | "Medium" | "High" | "Critical";
 
 export type Portfolio = "EDU" | "IT portfolio" | "Marketing";
@@ -87,6 +87,7 @@ export interface UserTaskAssignment {
   assignment_id: number;
   task_id: number;
   task_title: string;
+  task_description: string;
   task_status: string;
   task_priority: string;
   task_deadline: string;
@@ -117,6 +118,20 @@ export interface TaskResponse {
   updated_at: string;
 }
 
+export interface TaskListResponse {
+  task_id: number;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  deadline: string;
+  portfolio_id: number;
+  created_at: string;
+  updated_at: string;
+  parent_task_id: number;
+  source_meeting_id: number;
+}
+
 export interface TaskUserAssignmentResponse {
   assignment_id: number;
   user_id: number;
@@ -133,4 +148,39 @@ export interface PortfolioDetailResponse {
   task_count: number;
   meeting_count: number;
   active_task_count: number;
+}
+
+// Task creation interface for confirmation page
+export interface TaskCreateRequest {
+  title: string;
+  description?: string;
+  priority?: string;
+  deadline: string;
+  portfolio_id: number;
+  parent_task_id?: number;
+  source_meeting_id?: number;
+}
+
+// Hierarchical task structure for confirmation page
+export interface HierarchicalTask {
+  task_id: number;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  deadline: string;
+  portfolio_id: number;
+  parent_task_id?: number;
+  source_meeting_id?: number;
+  created_at?: string;
+  updated_at?: string;
+  subtasks: HierarchicalTask[];
+}
+
+// Portfolio simple interface for dropdown lists
+export interface PortfolioSimple {
+  portfolio_id: number;
+  name: string;
+  description?: string;
+  has_channel: boolean;
 }

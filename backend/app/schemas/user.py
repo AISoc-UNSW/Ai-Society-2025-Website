@@ -26,6 +26,19 @@ class UserCreateResponse(UserBase):
     discord_id: str | None = None
 
 
+class UserListResponse(BaseModel):
+    """Used for listing users with basic info"""
+    user_id: int
+    email: EmailStr
+    username: str
+    role_id: int
+    portfolio_id: int | None = None
+    discord_id: str | None = None
+    
+    class Config:
+        from_attributes = True
+
+
 # Used when updating a user
 class UserUpdate(UserBase):
     password: str | None = None

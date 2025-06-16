@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.crud import user
 from app.models.user import User
-from app.schemas.user import UserCreateRequestBody, UserCreateResponse
+from app.schemas.user import UserCreateRequestBody, UserCreateResponse, UserListResponse
 
 router = APIRouter()
 
@@ -63,3 +63,32 @@ def read_user_me(
             role_id=user_record.role_id,
         )
     return user_response
+
+
+@router.get("/portfolio/{portfolio_id}", response_model=list[UserListResponse])
+def get_users_by_portfolio(
+    *,
+    db: Session = Depends(deps.get_db),
+    portfolio_id: int,
+    current_user: User = Depends(deps.get_current_user),
+) -> list[UserListResponse]:
+    """
+    Get all users belonging to a specific portfolio
+    """
+    users = user.get_users_by_portfolio(db, portfolio_id=portfolio_id)
+    return [UserListResponse(**user_record.__dict__) for user_record in users]
+
+
+@router.get("/search", response_model=list[UserListResponse])
+def search_users(
+    *,
+    db: Session = Depends(deps.get_db),
+    q: str = Query(..., min_length=1, description="Search term for username or email"),
+    limit: int = Query(10, ge=1, le=50, description="Limit number of results"),
+    current_user: User = Depends(deps.get_current_user),
+) -> list[UserListResponse]:
+    """
+    Search users by username or email with fuzzy matching
+    """
+    users = user.search_users(db, search_term=q, limit=limit)
+    return [UserListResponse(**user_record.__dict__) for user_record in users]

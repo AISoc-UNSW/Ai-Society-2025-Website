@@ -12,8 +12,14 @@ import Avatar from "@mui/joy/Avatar";
 import AvatarGroup from "@mui/joy/AvatarGroup";
 import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
+import Divider from "@mui/joy/Divider";
+import IconButton from "@mui/joy/IconButton";
+import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import { Task, TaskStatus } from "@/lib/types";
 import { formatDateSafe, getEmailInitials, getEmailAvatarColor } from "@/lib/utils";
+import Tooltip from "@mui/joy/Tooltip";
+import Modal from "@mui/joy/Modal";
+import ModalDialog from "@mui/joy/ModalDialog";
 
 // Status color mapping for Chips
 const getStatusColor = (status: TaskStatus) => {
@@ -60,25 +66,42 @@ interface TaskCardProps {
 export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: TaskCardProps) {
   // Add a mounted state to prevent hydration issues
   const [mounted, setMounted] = React.useState(false);
+  const [showDetails, setShowDetails] = React.useState(false);
+  const [expandedSubtask, setExpandedSubtask] = React.useState<Task | null>(null);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Handle toggle details with subtask fetching
+  const handleToggleDetails = () => {
+    setShowDetails(!showDetails);
+  };
+
   return (
     <Card
       variant="outlined"
       sx={{
-        minHeight: 220,
+        minHeight: showDetails ? "auto" : 220,
         transition: "all 0.2s",
         opacity: isUpdating ? 0.7 : 1,
+        width: "100%",
+        maxWidth: "100%",
+        overflow: "hidden",
         "&:hover": {
           boxShadow: "md",
           borderColor: "primary.outlinedBorder",
         },
       }}
     >
-      <CardContent sx={{ flex: 1 }}>
+      <CardContent
+        sx={{
+          flex: 1,
+          width: "100%",
+          maxWidth: "100%",
+          overflow: "hidden",
+        }}
+      >
         <Stack spacing={2}>
           {/* Task Header */}
           <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
@@ -96,18 +119,185 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
           </Stack>
 
           {/* Task Description */}
-          <Typography
-            level="body-sm"
-            sx={{
-              overflow: "hidden",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              lineHeight: 1.4,
-            }}
-          >
-            {task.description}
-          </Typography>
+          <Box>
+            <Typography
+              level="body-sm"
+              sx={{
+                overflow: showDetails ? "visible" : "hidden",
+                display: showDetails ? "block" : "-webkit-box",
+                WebkitLineClamp: showDetails ? "none" : 2,
+                WebkitBoxOrient: "vertical",
+                lineHeight: 1.4,
+              }}
+            >
+              {task.description}
+            </Typography>
+            {task.description.length > 100 && (
+              <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
+                <Typography
+                  level="body-xs"
+                  color="primary"
+                  sx={{ cursor: "pointer", flex: 1 }}
+                  onClick={handleToggleDetails}
+                >
+                  {showDetails ? "Show less details" : "Show more details..."}
+                </Typography>
+                <IconButton
+                  variant="plain"
+                  size="sm"
+                  color="primary"
+                  onClick={handleToggleDetails}
+                  sx={{ ml: 1 }}
+                >
+                  <KeyboardArrowDown
+                    sx={{
+                      transform: showDetails ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                    }}
+                  />
+                </IconButton>
+              </Box>
+            )}
+          </Box>
+
+          {/* Expanded Details */}
+          {showDetails && (
+            <Box
+              sx={{
+                opacity: showDetails ? 1 : 0,
+                maxHeight: showDetails ? "1000px" : "0px",
+                overflow: "hidden",
+                transition: "all 0.3s ease-in-out",
+                maxWidth: "100%",
+              }}
+            >
+              <Stack spacing={2}>
+                <Divider />
+
+                {/* Task Metadata */}
+                <Stack spacing={1}>
+                  <Typography level="body-xs" sx={{ fontWeight: "bold", color: "neutral.700" }}>
+                    Task Details
+                  </Typography>
+                  <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+                    <Typography level="body-xs" color="neutral">
+                      Created: {mounted ? formatDateSafe(task.created_at) : "Loading..."}
+                    </Typography>
+                    <Typography level="body-xs" color="neutral">
+                      Updated: {mounted ? formatDateSafe(task.updated_at) : "Loading..."}
+                    </Typography>
+                  </Stack>
+                </Stack>
+
+                {/* Subtasks */}
+                {task.subtasks && task.subtasks.length > 0 && (
+                  <>
+                    <Stack spacing={1}>
+                      <Typography level="body-xs" sx={{ fontWeight: "bold", color: "neutral.700" }}>
+                        Subtasks ({task.subtasks.length})
+                      </Typography>
+                      <Stack spacing={1}>
+                        {task.subtasks.map(subtask => (
+                          <Box
+                            key={subtask.id}
+                            onClick={() => setExpandedSubtask(subtask)}
+                            sx={{
+                              p: 1.5,
+                              borderRadius: "sm",
+                              backgroundColor: "background.level1",
+                              border: "1px solid",
+                              borderColor: "divider",
+                              cursor: "pointer",
+                              transition: "all 0.2s",
+                              width: "100%",
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              "&:hover": {
+                                backgroundColor: "background.level2",
+                                borderColor: "primary.outlinedBorder",
+                                boxShadow: "sm",
+                              },
+                            }}
+                          >
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              sx={{
+                                alignItems: "center",
+                                width: "100%",
+                                maxWidth: "100%",
+                                overflow: "hidden",
+                              }}
+                            >
+                              <Chip size="sm" variant="soft" color={getStatusColor(subtask.status)}>
+                                {subtask.status}
+                              </Chip>
+                              <Typography
+                                level="body-xs"
+                                sx={{
+                                  flex: 1,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  minWidth: 0,
+                                }}
+                              >
+                                {subtask.title}
+                              </Typography>
+                              <Chip
+                                size="sm"
+                                variant="outlined"
+                                color={getPriorityColor(subtask.priority)}
+                              >
+                                {subtask.priority}
+                              </Chip>
+                            </Stack>
+                            {subtask.description && (
+                              <Typography
+                                level="body-xs"
+                                color="neutral"
+                                sx={{
+                                  mt: 0.5,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {subtask.description}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Stack>
+
+                    {/* subtask details modal */}
+                    <Modal open={!!expandedSubtask} onClose={() => setExpandedSubtask(null)}>
+                      <ModalDialog
+                        variant="outlined"
+                        size="lg"
+                        sx={{
+                          maxWidth: "800px",
+                          width: "95%",
+                          maxHeight: "90vh",
+                          overflow: "auto",
+                          padding: 0,
+                        }}
+                      >
+                        {expandedSubtask && (
+                          <TaskCard
+                            task={expandedSubtask}
+                            onStatusUpdate={onStatusUpdate}
+                            isUpdating={isUpdating}
+                          />
+                        )}
+                      </ModalDialog>
+                    </Modal>
+                  </>
+                )}
+              </Stack>
+            </Box>
+          )}
 
           {/* Assignees */}
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", gap: 1 }}>
@@ -116,22 +306,25 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
             </Typography>
             <AvatarGroup size="sm" sx={{ "--AvatarGroup-gap": "-8px" }}>
               {task.assignees.map(assignee => (
-                <Avatar
-                  key={assignee.id}
-                  src={assignee.avatar}
-                  size="sm"
-                  alt={assignee.name}
-                  sx={{
-                    // If no avatar image, use email initials with custom background
-                    backgroundColor: !assignee.avatar
-                      ? getEmailAvatarColor(assignee.email)
-                      : undefined,
-                    color: !assignee.avatar ? "white" : undefined,
-                    fontWeight: "bold",
-                  }}
-                >
-                  {!assignee.avatar && getEmailInitials(assignee.email)}
-                </Avatar>
+                <Tooltip key={assignee.id} title={assignee.name}>
+                  <Avatar
+                    key={assignee.id}
+                    src={assignee.avatar}
+                    size="sm"
+                    alt={assignee.name}
+                    aria-label={assignee.name}
+                    sx={{
+                      // If no avatar image, use email initials with custom background
+                      backgroundColor: !assignee.avatar
+                        ? getEmailAvatarColor(assignee.email)
+                        : undefined,
+                      color: !assignee.avatar ? "white" : undefined,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {!assignee.avatar && getEmailInitials(assignee.email)}
+                  </Avatar>
+                </Tooltip>
               ))}
             </AvatarGroup>
           </Stack>

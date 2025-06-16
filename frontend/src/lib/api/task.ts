@@ -1,4 +1,10 @@
-import { TaskResponse, TaskUpdateRequest, TaskUserAssignmentResponse, UserTaskAssignment } from "../types";
+import {
+  TaskListResponse,
+  TaskResponse,
+  TaskUpdateRequest,
+  TaskUserAssignmentResponse,
+  UserTaskAssignment,
+} from "../types";
 import { apiFetch } from "./client";
 
 // Server-side API function that works in server components
@@ -16,6 +22,12 @@ export async function getTaskDetails(taskId: number): Promise<TaskResponse> {
 
 export async function getTaskAssignees(taskId: number): Promise<TaskUserAssignmentResponse[]> {
   return await apiFetch(`/api/v1/task-assignments/task/${taskId}/users`, {
+    method: "GET",
+  });
+}
+
+export async function getSubtasks(taskId: number): Promise<TaskListResponse[]> {
+  return await apiFetch(`/api/v1/tasks/subtasks/${taskId}`, {
     method: "GET",
   });
 }

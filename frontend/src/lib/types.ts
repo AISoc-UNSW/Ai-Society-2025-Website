@@ -87,6 +87,7 @@ export interface UserTaskAssignment {
   assignment_id: number;
   task_id: number;
   task_title: string;
+  task_description: string;
   task_status: string;
   task_priority: string;
   task_deadline: string;
@@ -115,6 +116,20 @@ export interface TaskResponse {
   source_meeting_id: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface TaskListResponse {
+  task_id: number;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  deadline: string;
+  portfolio_id: number;
+  created_at: string;
+  updated_at: string;
+  parent_task_id: number;
+  source_meeting_id: number;
 }
 
 export interface TaskUserAssignmentResponse {

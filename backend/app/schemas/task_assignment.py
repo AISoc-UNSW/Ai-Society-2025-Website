@@ -22,7 +22,7 @@ class TaskAssignmentUpdate(BaseModel):
 # Used for API responses
 class TaskAssignmentResponse(TaskAssignmentBase):
     assignment_id: int
-    
+
     class Config:
         from_attributes = True
 
@@ -33,7 +33,7 @@ class TaskAssignmentDetailResponse(TaskAssignmentResponse):
     task_title: str | None = None
     user_username: str | None = None
     user_email: str | None = None
-    
+
     class Config:
         from_attributes = True
 
@@ -49,10 +49,11 @@ class UserTaskAssignmentResponse(BaseModel):
     assignment_id: int
     task_id: int
     task_title: str
+    task_description: str
     task_status: str | None = None
     task_priority: str | None = None
     task_deadline: str | None = None  # Will be datetime as string
-    
+
     class Config:
         from_attributes = True
 
@@ -63,6 +64,6 @@ class TaskUserAssignmentResponse(BaseModel):
     user_id: int
     user_username: str
     user_email: str
-    
+
     class Config:
-        from_attributes = True 
+        from_attributes = True

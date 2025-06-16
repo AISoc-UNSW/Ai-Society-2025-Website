@@ -1,4 +1,10 @@
-import { fetchUserTasks, getTaskAssignees, getTaskDetails, updateTaskStatus } from "@/lib/api/task";
+import {
+  fetchUserTasks,
+  getTaskAssignees,
+  getTaskDetails,
+  updateTaskStatus,
+  getSubtasks,
+} from "@/lib/api/task";
 import { PriorityLevel, Task, TaskStatus, UserTaskAssignment, Portfolio } from "@/lib/types";
 import TaskDashboardClient from "@/components/joyui/task/TaskDashboardClient";
 import { revalidatePath } from "next/cache";
@@ -17,17 +23,33 @@ const transformUserTaskToTask = async (userTask: UserTaskAssignment): Promise<Ta
 
   const portfolioDetails = await getPortfolioDetails(taskDetails.portfolio_id);
 
+  // get subtasks for this task
+  const subtasksData = await getSubtasks(userTask.task_id);
+  const subtasks = subtasksData.map(subtask => ({
+    id: subtask.task_id,
+    title: subtask.title,
+    description: subtask.description,
+    status: subtask.status as TaskStatus,
+    priority: subtask.priority as PriorityLevel,
+    deadline: subtask.deadline,
+    created_at: subtask.created_at,
+    updated_at: subtask.updated_at,
+    portfolio: portfolioDetails.name as Portfolio,
+    assignees: [], // assignees for subtasks
+    subtasks: [], // subtasks of subtasks
+  }));
+
   return {
     id: userTask.task_id,
     title: userTask.task_title,
     portfolio: portfolioDetails.name as Portfolio,
-    description: userTask.task_title,
+    description: userTask.task_description,
     created_at: taskDetails.created_at,
     updated_at: taskDetails.updated_at,
     priority: userTask.task_priority as PriorityLevel,
     deadline: userTask.task_deadline,
     status: userTask.task_status as TaskStatus,
-    subtasks: [],
+    subtasks: subtasks, // subtasks for this task
     assignees: assignees,
   };
 };

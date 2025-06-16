@@ -178,6 +178,7 @@ def get_user_task_details(db: Session, user_id: int, skip: int = 0, limit: int =
             "assignment_id": assignment.assignment_id,
             "task_id": task.task_id,
             "task_title": task.title,
+            "task_description": task.description,
             "task_status": task.status,
             "task_priority": task.priority,
             "task_deadline": task.deadline.isoformat() if task.deadline else None,

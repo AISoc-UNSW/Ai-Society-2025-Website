@@ -118,37 +118,6 @@ def delete_task_assignment(
     return {"message": "Task assignment deleted successfully"}
 
 
-@router.delete("/task/{task_id}/user/{user_id}")
-def delete_task_assignment_by_task_and_user(
-    *,
-    db: Session = Depends(deps.get_db),
-    task_id: int,
-    user_id: int,
-    current_user: User = Depends(deps.get_current_user),
-):
-    """
-    Delete task assignment by task ID and user ID
-    """
-    success = task_assignment.delete_by_task_and_user(db, task_id=task_id, user_id=user_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Task assignment not found")
-
-    return {"message": "Task assignment deleted successfully"}
-
-
-@router.get("/task/{task_id}/users", response_model=list[TaskUserAssignmentResponse])
-def read_task_assigned_users(
-    *,
-    db: Session = Depends(deps.get_db),
-    task_id: int,
-    current_user: User = Depends(deps.get_current_user),
-) -> list[TaskUserAssignmentResponse]:
-    """
-    Get users assigned to a specific task with details
-    """
-    user_details = task_assignment.get_task_user_details(db, task_id=task_id)
-    return [TaskUserAssignmentResponse(**user_detail) for user_detail in user_details]
-
 @router.get("/user/me/tasks", response_model=list[UserTaskAssignmentResponse])
 def read_my_assigned_tasks(
     *,
@@ -164,6 +133,20 @@ def read_my_assigned_tasks(
         db, user_id=current_user.user_id, skip=skip, limit=limit
     )
     return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
+
+
+@router.get("/task/{task_id}/users", response_model=list[TaskUserAssignmentResponse])
+def read_task_assigned_users(
+    *,
+    db: Session = Depends(deps.get_db),
+    task_id: int,
+    current_user: User = Depends(deps.get_current_user),
+) -> list[TaskUserAssignmentResponse]:
+    """
+    Get users assigned to a specific task with details
+    """
+    user_details = task_assignment.get_task_user_details(db, task_id=task_id)
+    return [TaskUserAssignmentResponse(**user_detail) for user_detail in user_details]
 
 
 @router.get("/user/{user_id}/tasks", response_model=list[UserTaskAssignmentResponse])
@@ -210,3 +193,21 @@ def delete_all_user_assignments(
     """
     count = task_assignment.delete_all_user_assignments(db, user_id=user_id)
     return {"message": f"Deleted {count} user assignments"}
+
+
+@router.delete("/task/{task_id}/user/{user_id}")
+def delete_task_assignment_by_task_and_user(
+    *,
+    db: Session = Depends(deps.get_db),
+    task_id: int,
+    user_id: int,
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Delete task assignment by task ID and user ID
+    """
+    success = task_assignment.delete_by_task_and_user(db, task_id=task_id, user_id=user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Task assignment not found")
+
+    return {"message": "Task assignment deleted successfully"}

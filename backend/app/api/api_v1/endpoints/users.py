@@ -36,11 +36,11 @@ def create_user(
     return user_response
 
 
-@router.get("/me", response_model=UserCreateResponse)
+@router.get("/me", response_model=UserListResponse)
 def read_user_me(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> UserCreateResponse:
+) -> UserListResponse:
     """
     Get current user
     """
@@ -48,19 +48,21 @@ def read_user_me(
     if not user_record:
         raise HTTPException(status_code=404, detail="User not found")
     if user_record.discord_id:
-        user_response = UserCreateResponse(
+        user_response = UserListResponse(
             user_id=user_record.user_id,
             email=user_record.email,
             username=user_record.username,
             role_id=user_record.role_id,
             discord_id=user_record.discord_id,
+            portfolio_id=user_record.portfolio_id,
         )
     else:
-        user_response = UserCreateResponse(
+        user_response = UserListResponse(
             user_id=user_record.user_id,
             email=user_record.email,
             username=user_record.username,
             role_id=user_record.role_id,
+            portfolio_id=user_record.portfolio_id,
         )
     return user_response
 

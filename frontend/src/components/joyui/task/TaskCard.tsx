@@ -8,18 +8,16 @@ import CardActions from "@mui/joy/CardActions";
 import Chip from "@mui/joy/Chip";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
-import Avatar from "@mui/joy/Avatar";
-import AvatarGroup from "@mui/joy/AvatarGroup";
 import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import Divider from "@mui/joy/Divider";
 import IconButton from "@mui/joy/IconButton";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import { Task, TaskStatus } from "@/lib/types";
-import { formatDateSafe, getEmailInitials, getEmailAvatarColor } from "@/lib/utils";
-import Tooltip from "@mui/joy/Tooltip";
+import { formatDateSafe } from "@/lib/utils";
 import Modal from "@mui/joy/Modal";
 import ModalDialog from "@mui/joy/ModalDialog";
+import AvatarsList from "../AvatarsList";
 
 // Status color mapping for Chips
 const getStatusColor = (status: TaskStatus) => {
@@ -299,34 +297,36 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
             </Box>
           )}
 
-          {/* Assignees */}
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center", gap: 1 }}>
-            <Typography level="body-xs" color="neutral">
-              Assigned to:
-            </Typography>
-            <AvatarGroup size="sm" sx={{ "--AvatarGroup-gap": "-8px" }}>
-              {task.assignees.map(assignee => (
-                <Tooltip key={assignee.id} title={assignee.name}>
-                  <Avatar
-                    key={assignee.id}
-                    src={assignee.avatar}
-                    size="sm"
-                    alt={assignee.name}
-                    aria-label={assignee.name}
-                    sx={{
-                      // If no avatar image, use email initials with custom background
-                      backgroundColor: !assignee.avatar
-                        ? getEmailAvatarColor(assignee.email)
-                        : undefined,
-                      color: !assignee.avatar ? "white" : undefined,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {!assignee.avatar && getEmailInitials(assignee.email)}
-                  </Avatar>
-                </Tooltip>
-              ))}
-            </AvatarGroup>
+          {/* Assignees and Creator */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={5}
+            sx={{ alignItems: { xs: "flex-start", sm: "center" } }}
+          >
+            {/* Assignees */}
+            <AvatarsList
+              label="Assigned to:"
+              users={task.assignees.map(assignee => ({
+                id: assignee.id,
+                name: assignee.name,
+                email: assignee.email,
+                avatar: assignee.avatar,
+              }))}
+              showGroup={true}
+            />
+
+            {/* Creator */}
+            <AvatarsList
+              label="Created by:"
+              users={[
+                {
+                  id: task.created_by.user_id,
+                  username: task.created_by.username,
+                  email: task.created_by.email,
+                },
+              ]}
+              showGroup={false}
+            />
           </Stack>
 
           {/* Due Date - Fixed to prevent hydration issues */}

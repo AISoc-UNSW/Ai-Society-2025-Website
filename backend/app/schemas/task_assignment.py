@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -53,6 +54,11 @@ class UserTaskAssignmentResponse(BaseModel):
     task_status: str | None = None
     task_priority: str | None = None
     task_deadline: str | None = None  # Will be datetime as string
+    task_portfolio_id: int
+    task_parent_task_id: int | None = None
+    task_source_meeting_id: int | None = None
+    task_created_at: datetime | None = None
+    task_updated_at: datetime | None = None
 
     class Config:
         from_attributes = True

@@ -6,14 +6,15 @@ from app.crud import task
 from app.models.user import User
 from app.schemas.task import (
     TaskCreateRequestBody,
+    TaskCreatedByResponse,
     TaskDetailResponse,
+    TaskGroupCreateRequest,
+    TaskGroupCreateResponse,
     TaskListResponse,
     TaskReminderResponse,
     TaskResponse,
     TaskUpdate,
     TomorrowRemindersResponse,
-    TaskGroupCreateRequest,
-    TaskGroupCreateResponse,
 )
 
 router = APIRouter()
@@ -29,9 +30,43 @@ def create_task(
     """
     Create new task
     """
-    task_record = task.create_task(db, obj_in=task_in)
+    task_record = task.create_task(db, obj_in=task_in, created_by=current_user.user_id)
     return TaskResponse(**task_record.__dict__)
 
+
+@router.get("/", response_model=list[TaskListResponse])
+def read_tasks(
+    db: Session = Depends(deps.get_db),
+    portfolio_id: int | None = Query(None, description="Filter by portfolio ID"),
+    status: str | None = Query(None, description="Filter by status"),
+    priority: str | None = Query(None, description="Filter by priority"),
+    skip: int = Query(0, ge=0, description="Skip items"),
+    limit: int = Query(100, ge=1, le=1000, description="Limit items"),
+    current_user: User = Depends(deps.get_current_user),
+) -> list[TaskListResponse]:
+    """
+    Get tasks with optional filters
+    """
+    tasks = task.get_multi(
+        db, portfolio_id=portfolio_id, status=status, priority=priority, skip=skip, limit=limit
+    )
+    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+
+
+@router.get("/{task_id}/created-by", response_model=TaskCreatedByResponse)
+def read_task_created_by(
+    *,
+    db: Session = Depends(deps.get_db),
+    task_id: int,
+    current_user: User = Depends(deps.get_current_user),
+) -> TaskCreatedByResponse:
+    """
+    Get the user who created the task
+    """
+    task_record = task.get_by_id(db, task_id=task_id)
+    if not task_record:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return TaskCreatedByResponse(**task_record.created_by_user.__dict__)
 
 @router.get("/{task_id}", response_model=TaskDetailResponse)
 def read_task(
@@ -54,25 +89,6 @@ def read_task(
     task_data = TaskDetailResponse(**task_record.__dict__)
     task_data.subtasks = subtasks_data
     return task_data
-
-
-@router.get("/", response_model=list[TaskListResponse])
-def read_tasks(
-    db: Session = Depends(deps.get_db),
-    portfolio_id: int | None = Query(None, description="Filter by portfolio ID"),
-    status: str | None = Query(None, description="Filter by status"),
-    priority: str | None = Query(None, description="Filter by priority"),
-    skip: int = Query(0, ge=0, description="Skip items"),
-    limit: int = Query(100, ge=1, le=1000, description="Limit items"),
-    current_user: User = Depends(deps.get_current_user),
-) -> list[TaskListResponse]:
-    """
-    Get tasks with optional filters
-    """
-    tasks = task.get_multi(
-        db, portfolio_id=portfolio_id, status=status, priority=priority, skip=skip, limit=limit
-    )
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
 
 
 @router.put("/{task_id}", response_model=TaskResponse)
@@ -226,66 +242,36 @@ def create_task_group(
     current_user: User = Depends(deps.get_current_user),
 ) -> TaskGroupCreateResponse:
     """
-    Create a group of tasks with hierarchical structure (supports subtasks)
-    
-    This endpoint allows bulk creation of tasks with parent-child relationships.
-    All tasks will have status set to 'Pending' automatically.
-    
-    Request format:
-    {
-        "tasks": [
-            {
-                "title": "Main Task 1",
-                "description": "Description for main task",
-                "priority": "High",
-                "deadline": "2024-12-31",
-                "subtasks": [
-                    {
-                        "title": "Subtask 1.1",
-                        "description": "Description for subtask",
-                        "priority": "Medium",
-                        "deadline": "2024-12-30"
-                    }
-                ]
-            }
-        ],
-        "portfolio_id": 26,
-        "source_meeting_id": 123
-    }
+    Create a group of related tasks with hierarchical structure
+
+    This endpoint allows creating multiple tasks at once with parent-child relationships.
+    Each task can have subtasks, and subtasks can have their own subtasks (nested structure).
+
+    Args:
+        task_group_in: Request body containing list of tasks and metadata
+        current_user: Current authenticated user
+
+    Returns:
+        Response with created task IDs and summary
     """
     try:
-        # Convert Pydantic models to dictionaries for processing
-        tasks_data = []
-        for task_item in task_group_in.tasks:
-            task_dict = task_item.model_dump()
-            tasks_data.append(task_dict)
-        
-        # Create the task group using CRUD function
+        # Convert pydantic models to dictionaries for processing
+        tasks_data = [task_item.model_dump() for task_item in task_group_in.tasks]
+
+        # Create the task group
         created_task_ids = task.create_task_group(
             db,
             tasks_data=tasks_data,
             portfolio_id=task_group_in.portfolio_id,
-            source_meeting_id=task_group_in.source_meeting_id
+            source_meeting_id=task_group_in.source_meeting_id,
+            created_by=current_user.user_id,
         )
-        
-        total_created = len(created_task_ids)
-        
-        if total_created == 0:
-            raise HTTPException(
-                status_code=400, 
-                detail="No tasks were created. Please check your input data."
-            )
-        
+
         return TaskGroupCreateResponse(
             created_task_ids=created_task_ids,
-            total_created=total_created,
-            message=f"Successfully created {total_created} tasks with hierarchical structure"
+            total_created=len(created_task_ids),
+            message=f"Successfully created {len(created_task_ids)} tasks",
         )
-        
+
     except Exception as e:
-        # Log the error for debugging
-        print(f"Error in create_task_group: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create task group: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create task group: {str(e)}")

@@ -1,6 +1,6 @@
 from typing import Any
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, or_, func
+from sqlalchemy import and_
 
 from app.models.task_assignment import TaskAssignment
 from app.models.task import Task
@@ -182,6 +182,11 @@ def get_user_task_details(db: Session, user_id: int, skip: int = 0, limit: int =
             "task_status": task.status,
             "task_priority": task.priority,
             "task_deadline": task.deadline.isoformat() if task.deadline else None,
+            "task_portfolio_id": task.portfolio_id,
+            "task_parent_task_id": task.parent_task_id,
+            "task_source_meeting_id": task.source_meeting_id,
+            "task_created_at": task.created_at,
+            "task_updated_at": task.updated_at,
         })
     
     return task_details

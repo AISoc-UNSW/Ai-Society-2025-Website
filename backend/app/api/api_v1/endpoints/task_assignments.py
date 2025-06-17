@@ -1,6 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-
 from app.api import deps
 from app.crud import task_assignment
 from app.models.user import User
@@ -11,8 +8,11 @@ from app.schemas.task_assignment import (
     TaskAssignmentResponse,
     TaskAssignmentUpdate,
     TaskUserAssignmentResponse,
+    UpdateTaskUsersRequest,
     UserTaskAssignmentResponse,
 )
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -146,6 +146,20 @@ def read_task_assigned_users(
     Get users assigned to a specific task with details
     """
     user_details = task_assignment.get_task_user_details(db, task_id=task_id)
+    return [TaskUserAssignmentResponse(**user_detail) for user_detail in user_details]
+
+
+@router.put("/task/{task_id}/users", response_model=list[TaskUserAssignmentResponse])
+def update_task_users(
+    *,
+    db: Session = Depends(deps.get_db),
+    task_id: int,
+    request: UpdateTaskUsersRequest,
+) -> list[TaskUserAssignmentResponse]:
+    """
+    Update users assigned to a specific task
+    """
+    user_details = task_assignment.update_task_users_smart(db, task_id=task_id, user_ids=request.user_ids)
     return [TaskUserAssignmentResponse(**user_detail) for user_detail in user_details]
 
 

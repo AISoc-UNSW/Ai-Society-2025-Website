@@ -86,7 +86,7 @@ def search_users(
     *,
     db: Session = Depends(deps.get_db),
     q: str = Query(..., min_length=1, description="Search term for username or email"),
-    limit: int = Query(10, ge=1, le=50, description="Limit number of results"),
+    limit: int = Query(10, ge=1, le=100, description="Limit number of results"),
     current_user: User = Depends(deps.get_current_user),
 ) -> list[UserListResponse]:
     """

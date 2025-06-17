@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -73,3 +74,7 @@ class TaskUserAssignmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UpdateTaskUsersRequest(BaseModel):
+    user_ids: list[int]

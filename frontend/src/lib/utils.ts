@@ -94,8 +94,6 @@ export function getEmailAvatarColor(email: string): string {
 }
 
 export function getDirectorPortfolioId(roleName: RoleName, user: User): number | undefined {
-  console.log("roleName", roleName);
-  console.log("user", user);
   if (roleName === "director") {
     return user.portfolio_id;
   }

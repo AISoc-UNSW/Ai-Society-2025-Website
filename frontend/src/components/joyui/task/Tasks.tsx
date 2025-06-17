@@ -7,7 +7,7 @@ import CardContent from "@mui/joy/CardContent";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
 import { Task, TaskStatus } from "@/lib/types";
-import TaskCard from "../TaskCard";
+import TaskCard from "./TaskCard";
 
 interface TasksProps {
   myTasks?: boolean;
@@ -26,6 +26,7 @@ export default function Tasks({
   onTaskStatusUpdate,
   isUpdating = false,
 }: TasksProps) {
+  console.log("tasks", tasks);
   const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {
       await onTaskStatusUpdate(task.id, newStatus);

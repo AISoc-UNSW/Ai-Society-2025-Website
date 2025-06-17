@@ -147,7 +147,6 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
                   Boolean(child.selected) || Boolean(child.href && currentPath === child.href)
                 }
                 onClick={() => {
-                  console.log("child.href", child.href); // TODO: remove this
                   if (child.onClick) {
                     child.onClick();
                   } else if (child.href) {

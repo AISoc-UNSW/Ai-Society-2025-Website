@@ -33,6 +33,7 @@ export interface Task {
   deadline: string;
   created_at: string;
   updated_at: string;
+  created_by: TaskCreatedByResponse;
   source?: string;
 
   portfolio: Portfolio;
@@ -124,6 +125,7 @@ export interface TaskResponse {
   source_meeting_id: number;
   created_at: string;
   updated_at: string;
+  created_by: number;
 }
 
 export interface TaskUserAssignmentResponse {
@@ -131,6 +133,12 @@ export interface TaskUserAssignmentResponse {
   user_id: number;
   user_username: string;
   user_email: string;
+}
+
+export interface TaskCreatedByResponse {
+  user_id: number;
+  username: string;
+  email: string;
 }
 
 export interface PortfolioDetailResponse {

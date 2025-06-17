@@ -74,15 +74,12 @@ async function TaskData({
   try {
     let tasks: Task[] = [];
     if (directorPortfolioId) {
-      console.log("directorPortfolioId", directorPortfolioId);
       const portfolioTasks = await getTasksByPortfolio(directorPortfolioId);
       tasks = await Promise.all(portfolioTasks.map(transformTaskResponseToTask));
     } else if (userIsAdmin) {
-      console.log("userIsAdmin", userIsAdmin);
       const allTasks = await fetchAllTasks();
       tasks = await Promise.all(allTasks.map(transformTaskResponseToTask));
     } else if (showMyTasks) {
-      console.log("showMyTasks", showMyTasks);
       const currentUserTasks = await fetchUserTasks();
       tasks = await Promise.all(currentUserTasks.map(transformUserTaskToTask));
     }
@@ -131,7 +128,6 @@ export default async function TasksByStatusPage({ params }: PageProps) {
   const role = await getRole(user.role_id);
   const roleName = role.role_name as RoleName;
   const directorPortfolioId = getDirectorPortfolioId(roleName, user);
-  console.log("directorPortfolioId", directorPortfolioId);
   const userIsAdmin = isAdmin(roleName);
 
   // Only show "my tasks" when user is neither director nor admin

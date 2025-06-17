@@ -7,6 +7,7 @@ import {
   TaskUserAssignmentResponse,
   UserTaskAssignment,
   Task,
+  TaskCreatedByResponse,
 } from "../types";
 import { apiFetch } from "./client";
 import { getPortfolioDetails } from "./portfolio";
@@ -38,6 +39,12 @@ export async function getTaskDetails(taskId: number): Promise<TaskResponse> {
 
 export async function getTaskAssignees(taskId: number): Promise<TaskUserAssignmentResponse[]> {
   return await apiFetch(`/api/v1/task-assignments/task/${taskId}/users`, {
+    method: "GET",
+  });
+}
+
+export async function getTaskCreator(taskId: number): Promise<TaskCreatedByResponse> {
+  return await apiFetch(`/api/v1/tasks/${taskId}/created-by`, {
     method: "GET",
   });
 }
@@ -120,24 +127,31 @@ export const transformUserTaskToTask = async (userTask: UserTaskAssignment): Pro
     name: assignee.user_username,
     email: assignee.user_email,
   }));
+  const creator = await getTaskCreator(userTask.task_id);
 
   const portfolioDetails = await getPortfolioDetails(taskDetails.portfolio_id);
 
   // Get subtasks for this task
   const subtasksData = await getSubtasks(userTask.task_id);
-  const subtasks = subtasksData.map(subtask => ({
-    id: subtask.task_id,
-    title: subtask.title,
-    description: subtask.description,
-    status: subtask.status as TaskStatus,
-    priority: subtask.priority as PriorityLevel,
-    deadline: subtask.deadline,
-    created_at: subtask.created_at,
-    updated_at: subtask.updated_at,
-    portfolio: portfolioDetails.name as Portfolio,
-    assignees: [], // assignees for subtasks
-    subtasks: [], // subtasks of subtasks
-  }));
+  const subtasks = await Promise.all(
+    subtasksData.map(async subtask => {
+      const subtaskCreator = await getTaskCreator(subtask.task_id);
+      return {
+        id: subtask.task_id,
+        title: subtask.title,
+        description: subtask.description,
+        status: subtask.status as TaskStatus,
+        priority: subtask.priority as PriorityLevel,
+        deadline: subtask.deadline,
+        created_at: subtask.created_at,
+        updated_at: subtask.updated_at,
+        created_by: subtaskCreator,
+        portfolio: portfolioDetails.name as Portfolio,
+        assignees: [], // assignees for subtasks
+        subtasks: [], // subtasks of subtasks
+      };
+    })
+  );
 
   return {
     id: userTask.task_id,
@@ -151,6 +165,7 @@ export const transformUserTaskToTask = async (userTask: UserTaskAssignment): Pro
     status: userTask.task_status as TaskStatus,
     subtasks: subtasks,
     assignees: assignees,
+    created_by: creator,
   };
 };
 
@@ -162,21 +177,28 @@ export const transformTaskResponseToTask = async (taskResponse: TaskResponse): P
     name: assignee.user_username,
     email: assignee.user_email,
   }));
+  const creator = await getTaskCreator(taskResponse.task_id);
   const portfolioDetails = await getPortfolioDetails(taskResponse.portfolio_id);
   const subtasksData = await getSubtasks(taskResponse.task_id);
-  const subtasks = subtasksData.map(subtask => ({
-    id: subtask.task_id,
-    title: subtask.title,
-    description: subtask.description,
-    status: subtask.status as TaskStatus,
-    priority: subtask.priority as PriorityLevel,
-    deadline: subtask.deadline,
-    created_at: subtask.created_at,
-    updated_at: subtask.updated_at,
-    portfolio: portfolioDetails.name as Portfolio,
-    assignees: [], // assignees for subtasks
-    subtasks: [], // subtasks of subtasks
-  }));
+  const subtasks = await Promise.all(
+    subtasksData.map(async subtask => {
+      const subtaskCreator = await getTaskCreator(subtask.task_id);
+      return {
+        id: subtask.task_id,
+        title: subtask.title,
+        description: subtask.description,
+        status: subtask.status as TaskStatus,
+        priority: subtask.priority as PriorityLevel,
+        deadline: subtask.deadline,
+        created_at: subtask.created_at,
+        updated_at: subtask.updated_at,
+        created_by: subtaskCreator,
+        portfolio: portfolioDetails.name as Portfolio,
+        assignees: [], // assignees for subtasks
+        subtasks: [], // subtasks of subtasks
+      };
+    })
+  );
   return {
     id: taskResponse.task_id,
     title: taskResponse.title,
@@ -186,6 +208,7 @@ export const transformTaskResponseToTask = async (taskResponse: TaskResponse): P
     deadline: taskResponse.deadline,
     created_at: taskDetails.created_at,
     updated_at: taskDetails.updated_at,
+    created_by: creator,
     portfolio: portfolioDetails.name as Portfolio,
     assignees: assignees,
     subtasks: subtasks,

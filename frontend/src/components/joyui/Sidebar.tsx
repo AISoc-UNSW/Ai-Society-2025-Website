@@ -29,6 +29,8 @@ function Toggler({
   defaultExpanded = false,
   renderToggle,
   children,
+  keepOpenWhenChildSelected = false,
+  hasSelectedChild = false,
 }: {
   defaultExpanded?: boolean;
   children: React.ReactNode;
@@ -36,11 +38,34 @@ function Toggler({
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   }) => React.ReactNode;
+  keepOpenWhenChildSelected?: boolean;
+  hasSelectedChild?: boolean;
 }) {
-  const [open, setOpen] = React.useState(defaultExpanded);
+  // Use the child selected state to determine initial expansion, but allow manual control
+  const initialExpanded = defaultExpanded || (keepOpenWhenChildSelected && hasSelectedChild);
+  const [open, setOpen] = React.useState(initialExpanded);
+  const [hasBeenManuallyToggled, setHasBeenManuallyToggled] = React.useState(false);
+
+  // Only auto-open when navigating to a child page if user hasn't manually toggled
+  React.useEffect(() => {
+    if (keepOpenWhenChildSelected && hasSelectedChild && !open && !hasBeenManuallyToggled) {
+      setOpen(true);
+    }
+  }, [hasSelectedChild, keepOpenWhenChildSelected, open, hasBeenManuallyToggled]);
+
+  // Wrap setOpen to track manual toggles
+  const handleSetOpen = React.useCallback((newOpen: boolean | ((prev: boolean) => boolean)) => {
+    setHasBeenManuallyToggled(true);
+    if (typeof newOpen === "function") {
+      setOpen(newOpen);
+    } else {
+      setOpen(newOpen);
+    }
+  }, []);
+
   return (
     <React.Fragment>
-      {renderToggle({ open, setOpen })}
+      {renderToggle({ open, setOpen: handleSetOpen })}
       <Box
         sx={[
           {
@@ -68,7 +93,6 @@ interface SidebarItemProps {
 function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProps) {
   const isSelected = Boolean(item.selected) || Boolean(item.href && currentPath === item.href);
 
-  // Handle click
   const handleClick = () => {
     if (item.onClick) {
       item.onClick();
@@ -91,11 +115,18 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
     );
   }
 
+  // Check if any child is selected
+  const hasSelectedChild = item.children.some(
+    child => Boolean(child.selected) || Boolean(child.href && currentPath === child.href)
+  );
+
   // Nested item with children
   return (
     <ListItem nested>
       <Toggler
         defaultExpanded={item.defaultExpanded}
+        keepOpenWhenChildSelected={true}
+        hasSelectedChild={hasSelectedChild}
         renderToggle={({ open, setOpen }) => (
           <ListItemButton onClick={() => setOpen(!open)}>
             {item.icon}
@@ -116,6 +147,7 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
                   Boolean(child.selected) || Boolean(child.href && currentPath === child.href)
                 }
                 onClick={() => {
+                  console.log("child.href", child.href); // TODO: remove this
                   if (child.onClick) {
                     child.onClick();
                   } else if (child.href) {

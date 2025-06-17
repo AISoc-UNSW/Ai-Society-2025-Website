@@ -1,3 +1,5 @@
+import { RoleName, User } from "./types";
+
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -89,4 +91,21 @@ export function getEmailAvatarColor(email: string): string {
   // Convert hash to HSL color for better visual consistency
   const hue = Math.abs(hash) % 360;
   return `hsl(${hue}, 65%, 50%)`;
+}
+
+export function getDirectorPortfolioId(roleName: RoleName, user: User): number | undefined {
+  console.log("roleName", roleName);
+  console.log("user", user);
+  if (roleName === "director") {
+    return user.portfolio_id;
+  }
+  return undefined;
+}
+
+export function isAdmin(roleName: RoleName): boolean {
+  return roleName === "admin";
+}
+
+export function isUser(roleName: RoleName): boolean {
+  return roleName === "user";
 }

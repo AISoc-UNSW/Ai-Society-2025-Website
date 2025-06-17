@@ -1,15 +1,31 @@
 import {
-  TaskListResponse,
+  Portfolio,
+  PriorityLevel,
+  TaskStatus,
   TaskResponse,
   TaskUpdateRequest,
   TaskUserAssignmentResponse,
   UserTaskAssignment,
+  Task,
 } from "../types";
 import { apiFetch } from "./client";
+import { getPortfolioDetails } from "./portfolio";
 
 // Server-side API function that works in server components
 export async function fetchUserTasks(): Promise<UserTaskAssignment[]> {
   return await apiFetch("/api/v1/task-assignments/user/me/tasks", {
+    method: "GET",
+  });
+}
+
+export async function getTasksByPortfolio(portfolioId: number): Promise<TaskResponse[]> {
+  return await apiFetch(`/api/v1/tasks/portfolio/${portfolioId}`, {
+    method: "GET",
+  });
+}
+
+export async function fetchAllTasks(): Promise<TaskResponse[]> {
+  return await apiFetch("/api/v1/tasks", {
     method: "GET",
   });
 }
@@ -26,7 +42,7 @@ export async function getTaskAssignees(taskId: number): Promise<TaskUserAssignme
   });
 }
 
-export async function getSubtasks(taskId: number): Promise<TaskListResponse[]> {
+export async function getSubtasks(taskId: number): Promise<TaskResponse[]> {
   return await apiFetch(`/api/v1/tasks/subtasks/${taskId}`, {
     method: "GET",
   });
@@ -92,3 +108,86 @@ export async function deleteTask(taskId: number): Promise<void> {
     method: "DELETE",
   });
 }
+
+// Keep the original function as fallback
+export const transformUserTaskToTask = async (userTask: UserTaskAssignment): Promise<Task> => {
+  const taskDetails = await getTaskDetails(userTask.task_id);
+
+  // Get assignees for this task
+  const assigneesData = await getTaskAssignees(userTask.task_id);
+  const assignees = assigneesData.map(assignee => ({
+    id: assignee.user_id,
+    name: assignee.user_username,
+    email: assignee.user_email,
+  }));
+
+  const portfolioDetails = await getPortfolioDetails(taskDetails.portfolio_id);
+
+  // Get subtasks for this task
+  const subtasksData = await getSubtasks(userTask.task_id);
+  const subtasks = subtasksData.map(subtask => ({
+    id: subtask.task_id,
+    title: subtask.title,
+    description: subtask.description,
+    status: subtask.status as TaskStatus,
+    priority: subtask.priority as PriorityLevel,
+    deadline: subtask.deadline,
+    created_at: subtask.created_at,
+    updated_at: subtask.updated_at,
+    portfolio: portfolioDetails.name as Portfolio,
+    assignees: [], // assignees for subtasks
+    subtasks: [], // subtasks of subtasks
+  }));
+
+  return {
+    id: userTask.task_id,
+    title: userTask.task_title,
+    portfolio: portfolioDetails.name as Portfolio,
+    description: userTask.task_description,
+    created_at: taskDetails.created_at,
+    updated_at: taskDetails.updated_at,
+    priority: userTask.task_priority as PriorityLevel,
+    deadline: userTask.task_deadline,
+    status: userTask.task_status as TaskStatus,
+    subtasks: subtasks,
+    assignees: assignees,
+  };
+};
+
+export const transformTaskResponseToTask = async (taskResponse: TaskResponse): Promise<Task> => {
+  const taskDetails = await getTaskDetails(taskResponse.task_id);
+  const assigneesData = await getTaskAssignees(taskResponse.task_id);
+  const assignees = assigneesData.map(assignee => ({
+    id: assignee.user_id,
+    name: assignee.user_username,
+    email: assignee.user_email,
+  }));
+  const portfolioDetails = await getPortfolioDetails(taskResponse.portfolio_id);
+  const subtasksData = await getSubtasks(taskResponse.task_id);
+  const subtasks = subtasksData.map(subtask => ({
+    id: subtask.task_id,
+    title: subtask.title,
+    description: subtask.description,
+    status: subtask.status as TaskStatus,
+    priority: subtask.priority as PriorityLevel,
+    deadline: subtask.deadline,
+    created_at: subtask.created_at,
+    updated_at: subtask.updated_at,
+    portfolio: portfolioDetails.name as Portfolio,
+    assignees: [], // assignees for subtasks
+    subtasks: [], // subtasks of subtasks
+  }));
+  return {
+    id: taskResponse.task_id,
+    title: taskResponse.title,
+    description: taskResponse.description,
+    status: taskResponse.status as TaskStatus,
+    priority: taskResponse.priority as PriorityLevel,
+    deadline: taskResponse.deadline,
+    created_at: taskDetails.created_at,
+    updated_at: taskDetails.updated_at,
+    portfolio: portfolioDetails.name as Portfolio,
+    assignees: assignees,
+    subtasks: subtasks,
+  };
+};

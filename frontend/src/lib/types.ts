@@ -1,6 +1,7 @@
 // Task related types
 export type TaskStatus = "Not Started" | "In Progress" | "Completed" | "Cancelled" | "Pending";
 export type PriorityLevel = "Low" | "Medium" | "High" | "Critical";
+export type RoleName = "director" | "admin" | "user";
 
 export type Portfolio = "EDU" | "IT portfolio" | "Marketing";
 
@@ -78,6 +79,8 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  role_id: number;
+  portfolio_id: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -91,6 +94,11 @@ export interface UserTaskAssignment {
   task_status: string;
   task_priority: string;
   task_deadline: string;
+  task_portfolio_id: number;
+  task_parent_task_id: number;
+  task_source_meeting_id: number;
+  task_created_at: string;
+  task_updated_at: string;
 }
 
 // Task update interface to match backend TaskUpdate
@@ -116,20 +124,6 @@ export interface TaskResponse {
   source_meeting_id: number;
   created_at: string;
   updated_at: string;
-}
-
-export interface TaskListResponse {
-  task_id: number;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  deadline: string;
-  portfolio_id: number;
-  created_at: string;
-  updated_at: string;
-  parent_task_id: number;
-  source_meeting_id: number;
 }
 
 export interface TaskUserAssignmentResponse {
@@ -183,4 +177,11 @@ export interface PortfolioSimple {
   name: string;
   description?: string;
   has_channel: boolean;
+}
+
+export interface Role {
+  role_name: string;
+  role_id: number;
+  description?: string;
+  user_count: number;
 }

@@ -6,7 +6,7 @@ import CssBaseline from "@mui/joy/CssBaseline";
 import Box from "@mui/joy/Box";
 import Sidebar from "@/components/joyui/Sidebar";
 import Tasks from "@/components/joyui/task/Tasks";
-import { Task, TaskStatus } from "@/lib/types";
+import { Task, TaskStatus, User } from "@/lib/types";
 import { useTransition } from "react";
 
 interface TaskDashboardClientProps {
@@ -20,6 +20,11 @@ interface TaskDashboardClientProps {
     taskId: number,
     updates: Partial<Task>
   ) => Promise<{ success: boolean; error?: string }>;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
   myTasks?: boolean;
   directorPortfolioId?: number;
   admin?: boolean;
@@ -30,6 +35,8 @@ export default function TaskDashboardClient({
   error,
   updateTaskStatusAction,
   updateTaskAction,
+  searchUsersAction,
+  updateTaskAssignmentAction,
   myTasks = true,
   directorPortfolioId = undefined,
   admin = false,
@@ -94,6 +101,8 @@ export default function TaskDashboardClient({
             onTaskStatusUpdate={handleTaskStatusUpdate}
             isUpdating={isPending}
             updateTaskAction={updateTaskAction}
+            searchUsersAction={searchUsersAction}
+            updateTaskAssignmentAction={updateTaskAssignmentAction}
           />
         </Box>
       </Box>

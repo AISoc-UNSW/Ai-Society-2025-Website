@@ -30,3 +30,14 @@ export async function getCurrentUser(): Promise<User> {
     method: "GET",
   });
 }
+
+export async function searchUsers(searchTerm: string, limit: number = 100): Promise<User[]> {
+  const params = new URLSearchParams({
+    q: searchTerm,
+    limit: limit.toString(),
+  });
+
+  return apiFetch(`/api/v1/users/search?${params.toString()}`, {
+    method: "GET",
+  });
+}

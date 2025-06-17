@@ -80,6 +80,13 @@ export async function updateTask(taskId: number, updates: Partial<Task>): Promis
   });
 }
 
+export async function updateTaskAssignment(taskId: number, userIds: number[]) {
+  return await apiFetch(`/api/v1/task-assignments/task/${taskId}/users`, {
+    method: "PUT",
+    body: JSON.stringify({ user_ids: userIds }),
+  });
+}
+
 // Get pending tasks for a specific meeting
 export async function getPendingTasksByMeeting(meetingId: number): Promise<TaskResponse[]> {
   return await apiFetch(`/api/v1/tasks/meeting/${meetingId}/pending`, {

@@ -14,7 +14,7 @@ import Divider from "@mui/joy/Divider";
 import IconButton from "@mui/joy/IconButton";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import EditIcon from "@mui/icons-material/Edit";
-import { Task, TaskStatus } from "@/lib/types";
+import { Task, TaskStatus, User } from "@/lib/types";
 import { formatDateWithMinutes } from "@/lib/utils";
 import Modal from "@mui/joy/Modal";
 import ModalDialog from "@mui/joy/ModalDialog";
@@ -66,6 +66,11 @@ interface TaskCardProps {
     taskId: number,
     updates: Partial<Task>
   ) => Promise<{ success: boolean; error?: string }>;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export default function TaskCard({
@@ -73,6 +78,8 @@ export default function TaskCard({
   onStatusUpdate,
   isUpdating = false,
   updateTaskAction,
+  searchUsersAction,
+  updateTaskAssignmentAction,
 }: TaskCardProps) {
   const currentUser = useUser();
 
@@ -429,13 +436,15 @@ export default function TaskCard({
         </Stack>
       </CardActions>
 
-      {/* Add the Edit Modal before the closing tags */}
+      {/* Add the Edit Modal with the new props */}
       <EditTaskModal
         open={editModalOpen}
         task={task}
         onClose={() => setEditModalOpen(false)}
         onSave={handleSaveTask}
         isLoading={isUpdatingTask}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
       />
     </Card>
   );

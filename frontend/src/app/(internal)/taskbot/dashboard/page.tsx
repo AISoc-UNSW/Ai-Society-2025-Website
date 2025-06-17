@@ -3,8 +3,10 @@ import {
   transformUserTaskToTask,
   updateTaskStatus,
   updateTask,
+  updateTaskAssignment,
 } from "@/lib/api/task";
-import { Task, TaskStatus } from "@/lib/types";
+import { searchUsers } from "@/lib/api/user";
+import { Task, TaskStatus, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { Suspense } from "react";
 import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
@@ -44,6 +46,34 @@ async function updateTaskAction(taskId: number, updates: Partial<Task>) {
   }
 }
 
+// Add these new server actions for assignees
+async function searchUsersAction(searchTerm: string): Promise<User[]> {
+  "use server";
+
+  try {
+    return await searchUsers(searchTerm, 10);
+  } catch (error) {
+    console.error("Failed to search users:", error);
+    return [];
+  }
+}
+
+async function updateTaskAssignmentAction(taskId: number, userIds: number[]) {
+  "use server";
+
+  try {
+    await updateTaskAssignment(taskId, userIds);
+    revalidatePath("/taskbot/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update task assignment:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update assignees",
+    };
+  }
+}
+
 // Data fetching component
 async function TaskData() {
   try {
@@ -55,6 +85,8 @@ async function TaskData() {
         tasks={transformedTasks}
         updateTaskStatusAction={updateTaskStatusAction}
         updateTaskAction={updateTaskAction}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
         myTasks={true}
       />
     );
@@ -66,6 +98,8 @@ async function TaskData() {
         error={errorMessage}
         updateTaskStatusAction={updateTaskStatusAction}
         updateTaskAction={updateTaskAction}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
         myTasks={true}
       />
     );

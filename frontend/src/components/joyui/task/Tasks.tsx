@@ -6,7 +6,7 @@ import Card from "@mui/joy/Card";
 import CardContent from "@mui/joy/CardContent";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
-import { Task, TaskStatus } from "@/lib/types";
+import { Task, TaskStatus, User } from "@/lib/types";
 import TaskCard from "./TaskCard";
 
 interface TasksProps {
@@ -16,17 +16,27 @@ interface TasksProps {
   tasks: Task[];
   onTaskStatusUpdate?: (taskId: number, status: TaskStatus) => Promise<void>;
   isUpdating?: boolean;
-  updateTaskAction?: (taskId: number, updates: Partial<Task>) => Promise<{ success: boolean; error?: string }>;
+  updateTaskAction?: (
+    taskId: number,
+    updates: Partial<Task>
+  ) => Promise<{ success: boolean; error?: string }>;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export default function Tasks({
-  myTasks = false,
-  directorPortfolioId = undefined,
+  myTasks = true,
+  directorPortfolioId,
   admin = false,
   tasks,
   onTaskStatusUpdate,
   isUpdating = false,
   updateTaskAction,
+  searchUsersAction,
+  updateTaskAssignmentAction,
 }: TasksProps) {
   const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {
@@ -143,6 +153,8 @@ export default function Tasks({
               onStatusUpdate={handleStatusUpdate}
               isUpdating={isUpdating}
               updateTaskAction={updateTaskAction}
+              searchUsersAction={searchUsersAction}
+              updateTaskAssignmentAction={updateTaskAssignmentAction}
             />
           ))}
         </Box>

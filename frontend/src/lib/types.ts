@@ -77,7 +77,7 @@ export interface LoginResponse {
 }
 
 export interface User {
-  id: string;
+  user_id: number;
   email: string;
   username: string;
   role_id: number;
@@ -85,6 +85,7 @@ export interface User {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  avatar?: string;
 }
 
 export interface UserTaskAssignment {

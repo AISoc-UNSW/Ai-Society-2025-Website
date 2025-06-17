@@ -19,11 +19,12 @@ import ColorSchemeToggle from "@/components/joyui/ColorSchemeToggle";
 import { closeSidebar } from "@/lib/dom-utils";
 import {
   sidebarConfig,
-  currentUser,
   brandConfig,
   type SidebarItem,
   type SidebarSection,
 } from "@/lib/sidebar-config";
+import { useUser, useLogout } from "@/stores/userStore";
+import { getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
 
 function Toggler({
   defaultExpanded = false,
@@ -169,26 +170,30 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
 
 interface SidebarProps {
   config?: SidebarSection[];
-  user?: typeof currentUser;
   brand?: typeof brandConfig;
 }
 
-export default function Sidebar({
-  config = sidebarConfig,
-  user = currentUser,
-  brand = brandConfig,
-}: SidebarProps) {
+export default function Sidebar({ config = sidebarConfig, brand = brandConfig }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const currentUser = useUser();
+  const logout = useLogout();
+
   const handleNavigate = (href: string) => {
     router.push(href);
-    closeSidebar(); // Close sidebar on mobile after navigation
+    closeSidebar();
   };
 
   const handleLogout = () => {
-    // Implement logout logic here
-    console.log("Logout clicked");
+    logout();
+    router.push("/auth/login");
+  };
+
+  const user = currentUser || {
+    username: "Loading...",
+    email: "",
+    avatar: "",
   };
 
   const topSections = config.filter(section => section.position !== "bottom");
@@ -333,9 +338,21 @@ export default function Sidebar({
       {/* User Profile */}
       <Divider />
       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-        <Avatar variant="outlined" size="sm" src={user.avatar} alt={user.name} />
+        <Avatar
+          variant="outlined"
+          size="sm"
+          src={user.avatar}
+          alt={user.username}
+          sx={{
+            backgroundColor: !user.avatar ? getEmailAvatarColor(user.email) : undefined,
+            color: !user.avatar ? "white" : undefined,
+            fontWeight: "bold",
+          }}
+        >
+          {!user.avatar && getEmailInitials(user.email)}
+        </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography level="title-sm">{user.name}</Typography>
+          <Typography level="title-sm">{user.username}</Typography>
           <Typography level="body-xs">{user.email}</Typography>
         </Box>
         <IconButton

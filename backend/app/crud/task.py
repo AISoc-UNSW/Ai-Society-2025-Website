@@ -71,7 +71,7 @@ def get_multi(
     return query.offset(skip).limit(limit).all()
 
 
-def create_task(db: Session, *, obj_in: TaskCreateRequestBody) -> Task:
+def create_task(db: Session, *, obj_in: TaskCreateRequestBody, created_by: int) -> Task:
     """Create new task"""
     db_obj = Task()
     db_obj.title = obj_in.title
@@ -89,6 +89,7 @@ def create_task(db: Session, *, obj_in: TaskCreateRequestBody) -> Task:
     db_obj.portfolio_id = obj_in.portfolio_id
     db_obj.parent_task_id = obj_in.parent_task_id
     db_obj.source_meeting_id = obj_in.source_meeting_id
+    db_obj.created_by = created_by
     db_obj.created_at = tz.now_utc()
     db_obj.updated_at = tz.now_utc()
 
@@ -202,6 +203,7 @@ def get_tomorrow_reminders(db: Session, portfolio_id: int | None = None) -> list
             "portfolio_id": task.portfolio_id,
             "portfolio_name": task.portfolio.name,
             "portfolio_channel": task.portfolio.channel_id,
+            "created_by": task.created_by,
             "assigned_users": [
                 {"user_id": user.user_id, "username": user.username, "discord_id": user.discord_id}
                 for user in assigned_users
@@ -218,6 +220,7 @@ def create_task_group(
     tasks_data: list[dict],
     portfolio_id: int | None = None,
     source_meeting_id: int | None = None,
+    created_by: int,
 ) -> list[int]:
     """
     Create a group of tasks with hierarchical structure (parent-child relationships)
@@ -227,6 +230,7 @@ def create_task_group(
         tasks_data: List of task dictionaries with potential subtasks
         portfolio_id: Optional portfolio ID for all tasks
         source_meeting_id: Optional meeting ID these tasks come from
+        created_by: User ID of the person creating the tasks
 
     Returns:
         List of created task IDs
@@ -263,9 +267,10 @@ def create_task_group(
                 # If it's already a datetime object
                 db_obj.deadline = tz.to_utc(deadline_str)
 
-            db_obj.portfolio_id = portfolio_id  # Default to IT portfolio
+            db_obj.portfolio_id = portfolio_id or 100  # 100 is the No Portfolio ID
             db_obj.parent_task_id = parent_task_id
             db_obj.source_meeting_id = source_meeting_id
+            db_obj.created_by = created_by
             db_obj.created_at = tz.now_utc()
             db_obj.updated_at = tz.now_utc()
 

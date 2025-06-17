@@ -3,14 +3,17 @@ import {
   PriorityLevel,
   TaskStatus,
   TaskResponse,
-  TaskUpdateRequest,
   TaskUserAssignmentResponse,
   UserTaskAssignment,
   Task,
   TaskCreatedByResponse,
+  User,
+  RoleName,
 } from "../types";
 import { apiFetch } from "./client";
 import { getPortfolioDetails } from "./portfolio";
+import { getRole } from "./role";
+import { getDirectorPortfolioId, isAdmin } from "@/lib/utils";
 
 // Server-side API function that works in server components
 export async function fetchUserTasks(): Promise<UserTaskAssignment[]> {
@@ -67,10 +70,7 @@ export async function updateTaskStatus(taskId: number, status: string): Promise<
 }
 
 // General task update function
-export async function updateTask(
-  taskId: number,
-  updates: TaskUpdateRequest
-): Promise<TaskResponse> {
+export async function updateTask(taskId: number, updates: Partial<Task>): Promise<TaskResponse> {
   return await apiFetch(`/api/v1/tasks/${taskId}`, {
     method: "PUT",
     headers: {
@@ -214,3 +214,43 @@ export const transformTaskResponseToTask = async (taskResponse: TaskResponse): P
     subtasks: subtasks,
   };
 };
+
+export async function getUserTasksWithRole(user: User, targetStatus?: TaskStatus | null) {
+  try {
+    // Get user role
+    const role = await getRole(user.role_id);
+    const roleName = role.role_name as RoleName;
+    const directorPortfolioId = getDirectorPortfolioId(roleName, user);
+    const userIsAdmin = isAdmin(roleName);
+    const showMyTasks = !directorPortfolioId && !userIsAdmin;
+
+    // Load tasks based on role
+    let allTasks: Task[] = [];
+    if (directorPortfolioId) {
+      const portfolioTasks = await getTasksByPortfolio(directorPortfolioId);
+      allTasks = await Promise.all(portfolioTasks.map(transformTaskResponseToTask));
+    } else if (userIsAdmin) {
+      const adminTasks = await fetchAllTasks();
+      allTasks = await Promise.all(adminTasks.map(transformTaskResponseToTask));
+    } else {
+      const userTasks = await fetchUserTasks();
+      allTasks = await Promise.all(userTasks.map(transformUserTaskToTask));
+    }
+
+    // Filter by status if specified
+    const filteredTasks = targetStatus
+      ? allTasks.filter(task => task.status === targetStatus)
+      : allTasks;
+
+    return {
+      tasks: filteredTasks,
+      userRole: {
+        showMyTasks,
+        directorPortfolioId,
+        userIsAdmin,
+      },
+    };
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : "Failed to load tasks");
+  }
+}

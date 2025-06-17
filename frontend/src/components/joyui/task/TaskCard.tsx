@@ -13,11 +13,14 @@ import Option from "@mui/joy/Option";
 import Divider from "@mui/joy/Divider";
 import IconButton from "@mui/joy/IconButton";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
+import EditIcon from "@mui/icons-material/Edit";
 import { Task, TaskStatus } from "@/lib/types";
-import { formatDateSafe } from "@/lib/utils";
+import { formatDateWithMinutes } from "@/lib/utils";
 import Modal from "@mui/joy/Modal";
 import ModalDialog from "@mui/joy/ModalDialog";
 import AvatarsList from "../AvatarsList";
+import { useUser } from "@/stores/userStore";
+import EditTaskModal from "./EditTaskModal";
 
 // Status color mapping for Chips
 const getStatusColor = (status: TaskStatus) => {
@@ -59,13 +62,26 @@ interface TaskCardProps {
   task: Task;
   onStatusUpdate: (task: Task, newStatus: TaskStatus) => void;
   isUpdating?: boolean;
+  updateTaskAction?: (
+    taskId: number,
+    updates: Partial<Task>
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
-export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  onStatusUpdate,
+  isUpdating = false,
+  updateTaskAction,
+}: TaskCardProps) {
+  const currentUser = useUser();
+
   // Add a mounted state to prevent hydration issues
   const [mounted, setMounted] = React.useState(false);
   const [showDetails, setShowDetails] = React.useState(false);
   const [expandedSubtask, setExpandedSubtask] = React.useState<Task | null>(null);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [isUpdatingTask, setIsUpdatingTask] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -74,6 +90,32 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
   // Handle toggle details with subtask fetching
   const handleToggleDetails = () => {
     setShowDetails(!showDetails);
+  };
+
+  // Check if current user is the creator of the task
+  const isCreator = currentUser && currentUser.user_id === task.created_by.user_id;
+
+  // Handle edit task
+  const handleEditTask = () => {
+    setEditModalOpen(true);
+  };
+
+  // Handle save task changes
+  const handleSaveTask = async (updates: Partial<Task>) => {
+    setIsUpdatingTask(true);
+    try {
+      const result = await updateTaskAction?.(task.id, updates);
+      if (result?.success) {
+        setEditModalOpen(false);
+      } else {
+        alert(`Failed to update task: ${result?.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      alert("Failed to update task. Please try again.");
+    } finally {
+      setIsUpdatingTask(false);
+    }
   };
 
   return (
@@ -111,9 +153,28 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
                 {task.portfolio}
               </Typography>
             </Box>
-            <Chip size="sm" variant="soft" color={getPriorityColor(task.priority)}>
-              {task.priority}
-            </Chip>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
+              <Chip size="sm" variant="soft" color={getPriorityColor(task.priority)}>
+                {task.priority}
+              </Chip>
+              {/* Edit Button - Only show if current user is the creator */}
+              {isCreator && (
+                <IconButton
+                  variant="soft"
+                  size="sm"
+                  color="primary"
+                  onClick={handleEditTask}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "primary.softHoverBg",
+                    },
+                  }}
+                  aria-label="Edit task"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Stack>
           </Stack>
 
           {/* Task Description */}
@@ -179,10 +240,12 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
                   </Typography>
                   <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
                     <Typography level="body-xs" color="neutral">
-                      Created: {mounted ? formatDateSafe(task.created_at) : "Loading..."}
+                      Created:{" "}
+                      {mounted ? formatDateWithMinutes(task.created_at, true) : "Loading..."}
                     </Typography>
                     <Typography level="body-xs" color="neutral">
-                      Updated: {mounted ? formatDateSafe(task.updated_at) : "Loading..."}
+                      Updated:{" "}
+                      {mounted ? formatDateWithMinutes(task.updated_at, true) : "Loading..."}
                     </Typography>
                   </Stack>
                 </Stack>
@@ -331,7 +394,7 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
 
           {/* Due Date - Fixed to prevent hydration issues */}
           <Typography level="body-xs" color="neutral">
-            Due: {mounted ? formatDateSafe(task.deadline) : "Loading..."}
+            Due: {mounted ? formatDateWithMinutes(task.deadline, true) : "Loading..."}
           </Typography>
         </Stack>
       </CardContent>
@@ -365,6 +428,15 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
           </Select>
         </Stack>
       </CardActions>
+
+      {/* Add the Edit Modal before the closing tags */}
+      <EditTaskModal
+        open={editModalOpen}
+        task={task}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleSaveTask}
+        isLoading={isUpdatingTask}
+      />
     </Card>
   );
 }

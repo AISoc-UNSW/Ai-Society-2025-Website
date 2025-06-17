@@ -16,6 +16,10 @@ interface TaskDashboardClientProps {
     taskId: number,
     status: TaskStatus
   ) => Promise<{ success: boolean; error?: string }>;
+  updateTaskAction?: (
+    taskId: number,
+    updates: Partial<Task>
+  ) => Promise<{ success: boolean; error?: string }>;
   myTasks?: boolean;
   directorPortfolioId?: number;
   admin?: boolean;
@@ -25,6 +29,7 @@ export default function TaskDashboardClient({
   tasks,
   error,
   updateTaskStatusAction,
+  updateTaskAction,
   myTasks = true,
   directorPortfolioId = undefined,
   admin = false,
@@ -88,6 +93,7 @@ export default function TaskDashboardClient({
             tasks={tasks}
             onTaskStatusUpdate={handleTaskStatusUpdate}
             isUpdating={isPending}
+            updateTaskAction={updateTaskAction}
           />
         </Box>
       </Box>

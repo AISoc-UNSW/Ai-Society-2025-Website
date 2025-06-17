@@ -9,23 +9,6 @@ export const formatDate = (dateString: string) => {
   });
 };
 
-// Fix the date formatting to avoid hydration mismatch
-export const formatDateSafe = (dateString: string | undefined): string => {
-  if (!dateString) return "No due date";
-
-  try {
-    const date = new Date(dateString);
-    // Use a simple, consistent format that works on both server and client
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-  } catch {
-    return "Invalid date";
-  }
-};
-
 // Cookie utility functions
 export const getCookie = (name: string): string | null => {
   if (typeof document === "undefined") return null;
@@ -106,4 +89,24 @@ export function isAdmin(roleName: RoleName): boolean {
 
 export function isUser(roleName: RoleName): boolean {
   return roleName === "user";
+}
+
+export function formatDateWithMinutes(dateString: string, forDisplay: boolean = false): string {
+  try {
+    const date = new Date(dateString);
+    // Format to YYYY-MM-DDTHH:MM format for datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    if (forDisplay) {
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (error) {
+    console.error("Error formatting date for input:", error);
+    return "";
+  }
 }

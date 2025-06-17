@@ -16,6 +16,7 @@ interface TasksProps {
   tasks: Task[];
   onTaskStatusUpdate?: (taskId: number, status: TaskStatus) => Promise<void>;
   isUpdating?: boolean;
+  updateTaskAction?: (taskId: number, updates: Partial<Task>) => Promise<{ success: boolean; error?: string }>;
 }
 
 export default function Tasks({
@@ -25,6 +26,7 @@ export default function Tasks({
   tasks,
   onTaskStatusUpdate,
   isUpdating = false,
+  updateTaskAction,
 }: TasksProps) {
   const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {
@@ -140,6 +142,7 @@ export default function Tasks({
               task={task}
               onStatusUpdate={handleStatusUpdate}
               isUpdating={isUpdating}
+              updateTaskAction={updateTaskAction}
             />
           ))}
         </Box>

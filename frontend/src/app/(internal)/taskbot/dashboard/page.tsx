@@ -1,9 +1,14 @@
-import { fetchUserTasks, updateTaskStatus, transformUserTaskToTask } from "@/lib/api/task";
-import { TaskStatus } from "@/lib/types";
-import TaskDashboardClient from "@/components/joyui/task/TaskDashboardClient";
+import {
+  fetchUserTasks,
+  transformUserTaskToTask,
+  updateTaskStatus,
+  updateTask,
+} from "@/lib/api/task";
+import { Task, TaskStatus } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { Suspense } from "react";
 import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
+import TaskDashboardClient from "@/components/joyui/task/TaskDashboardClient";
 
 // Server Action for updating task status
 async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
@@ -11,7 +16,7 @@ async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
 
   try {
     await updateTaskStatus(taskId, status);
-    revalidatePath("/taskbot/dashboard"); // Refresh the page data
+    revalidatePath("/taskbot/dashboard");
     return { success: true };
   } catch (error) {
     console.error("Failed to update task status:", error);
@@ -22,21 +27,48 @@ async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
   }
 }
 
+// Add this server action
+async function updateTaskAction(taskId: number, updates: Partial<Task>) {
+  "use server";
+
+  try {
+    await updateTask(taskId, updates);
+    revalidatePath("/taskbot/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update task:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update task",
+    };
+  }
+}
+
 // Data fetching component
 async function TaskData() {
   try {
-    const currentUserTasks = await fetchUserTasks();
-    const tasks = await Promise.all(currentUserTasks.map(transformUserTaskToTask));
+    const tasks = await fetchUserTasks();
+    const transformedTasks = await Promise.all(tasks.map(transformUserTaskToTask));
+
     return (
       <TaskDashboardClient
-        tasks={tasks}
+        tasks={transformedTasks}
         updateTaskStatusAction={updateTaskStatusAction}
+        updateTaskAction={updateTaskAction}
         myTasks={true}
       />
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Failed to load tasks";
-    return <TaskDashboardClient tasks={[]} error={errorMessage} myTasks={true} />;
+    return (
+      <TaskDashboardClient
+        tasks={[]}
+        error={errorMessage}
+        updateTaskStatusAction={updateTaskStatusAction}
+        updateTaskAction={updateTaskAction}
+        myTasks={true}
+      />
+    );
   }
 }
 

@@ -8,18 +8,19 @@ import CardActions from "@mui/joy/CardActions";
 import Chip from "@mui/joy/Chip";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
-import Avatar from "@mui/joy/Avatar";
-import AvatarGroup from "@mui/joy/AvatarGroup";
 import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import Divider from "@mui/joy/Divider";
 import IconButton from "@mui/joy/IconButton";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
-import { Task, TaskStatus } from "@/lib/types";
-import { formatDateSafe, getEmailInitials, getEmailAvatarColor } from "@/lib/utils";
-import Tooltip from "@mui/joy/Tooltip";
+import EditIcon from "@mui/icons-material/Edit";
+import { Task, TaskStatus, User } from "@/lib/types";
+import { formatDateWithMinutes } from "@/lib/utils";
 import Modal from "@mui/joy/Modal";
 import ModalDialog from "@mui/joy/ModalDialog";
+import AvatarsList from "../AvatarsList";
+import { useUser } from "@/stores/userStore";
+import EditTaskModal from "./EditTaskModal";
 
 // Status color mapping for Chips
 const getStatusColor = (status: TaskStatus) => {
@@ -61,13 +62,33 @@ interface TaskCardProps {
   task: Task;
   onStatusUpdate: (task: Task, newStatus: TaskStatus) => void;
   isUpdating?: boolean;
+  updateTaskAction?: (
+    taskId: number,
+    updates: Partial<Task>
+  ) => Promise<{ success: boolean; error?: string }>;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
-export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  onStatusUpdate,
+  isUpdating = false,
+  updateTaskAction,
+  searchUsersAction,
+  updateTaskAssignmentAction,
+}: TaskCardProps) {
+  const currentUser = useUser();
+
   // Add a mounted state to prevent hydration issues
   const [mounted, setMounted] = React.useState(false);
   const [showDetails, setShowDetails] = React.useState(false);
   const [expandedSubtask, setExpandedSubtask] = React.useState<Task | null>(null);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [isUpdatingTask, setIsUpdatingTask] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -76,6 +97,32 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
   // Handle toggle details with subtask fetching
   const handleToggleDetails = () => {
     setShowDetails(!showDetails);
+  };
+
+  // Check if current user is the creator of the task
+  const isCreator = currentUser && currentUser.user_id === task.created_by.user_id;
+
+  // Handle edit task
+  const handleEditTask = () => {
+    setEditModalOpen(true);
+  };
+
+  // Handle save task changes
+  const handleSaveTask = async (updates: Partial<Task>) => {
+    setIsUpdatingTask(true);
+    try {
+      const result = await updateTaskAction?.(task.id, updates);
+      if (result?.success) {
+        setEditModalOpen(false);
+      } else {
+        alert(`Failed to update task: ${result?.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      alert("Failed to update task. Please try again.");
+    } finally {
+      setIsUpdatingTask(false);
+    }
   };
 
   return (
@@ -113,9 +160,28 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
                 {task.portfolio}
               </Typography>
             </Box>
-            <Chip size="sm" variant="soft" color={getPriorityColor(task.priority)}>
-              {task.priority}
-            </Chip>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
+              <Chip size="sm" variant="soft" color={getPriorityColor(task.priority)}>
+                {task.priority}
+              </Chip>
+              {/* Edit Button - Only show if current user is the creator */}
+              {isCreator && (
+                <IconButton
+                  variant="soft"
+                  size="sm"
+                  color="primary"
+                  onClick={handleEditTask}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "primary.softHoverBg",
+                    },
+                  }}
+                  aria-label="Edit task"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Stack>
           </Stack>
 
           {/* Task Description */}
@@ -181,10 +247,12 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
                   </Typography>
                   <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
                     <Typography level="body-xs" color="neutral">
-                      Created: {mounted ? formatDateSafe(task.created_at) : "Loading..."}
+                      Created:{" "}
+                      {mounted ? formatDateWithMinutes(task.created_at, true) : "Loading..."}
                     </Typography>
                     <Typography level="body-xs" color="neutral">
-                      Updated: {mounted ? formatDateSafe(task.updated_at) : "Loading..."}
+                      Updated:{" "}
+                      {mounted ? formatDateWithMinutes(task.updated_at, true) : "Loading..."}
                     </Typography>
                   </Stack>
                 </Stack>
@@ -299,39 +367,41 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
             </Box>
           )}
 
-          {/* Assignees */}
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center", gap: 1 }}>
-            <Typography level="body-xs" color="neutral">
-              Assigned to:
-            </Typography>
-            <AvatarGroup size="sm" sx={{ "--AvatarGroup-gap": "-8px" }}>
-              {task.assignees.map(assignee => (
-                <Tooltip key={assignee.id} title={assignee.name}>
-                  <Avatar
-                    key={assignee.id}
-                    src={assignee.avatar}
-                    size="sm"
-                    alt={assignee.name}
-                    aria-label={assignee.name}
-                    sx={{
-                      // If no avatar image, use email initials with custom background
-                      backgroundColor: !assignee.avatar
-                        ? getEmailAvatarColor(assignee.email)
-                        : undefined,
-                      color: !assignee.avatar ? "white" : undefined,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {!assignee.avatar && getEmailInitials(assignee.email)}
-                  </Avatar>
-                </Tooltip>
-              ))}
-            </AvatarGroup>
+          {/* Assignees and Creator */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={5}
+            sx={{ alignItems: { xs: "flex-start", sm: "center" } }}
+          >
+            {/* Assignees */}
+            <AvatarsList
+              label="Assigned to:"
+              users={task.assignees.map(assignee => ({
+                id: assignee.id,
+                name: assignee.name,
+                email: assignee.email,
+                avatar: assignee.avatar,
+              }))}
+              showGroup={true}
+            />
+
+            {/* Creator */}
+            <AvatarsList
+              label="Created by:"
+              users={[
+                {
+                  id: task.created_by.user_id,
+                  username: task.created_by.username,
+                  email: task.created_by.email,
+                },
+              ]}
+              showGroup={false}
+            />
           </Stack>
 
           {/* Due Date - Fixed to prevent hydration issues */}
           <Typography level="body-xs" color="neutral">
-            Due: {mounted ? formatDateSafe(task.deadline) : "Loading..."}
+            Due: {mounted ? formatDateWithMinutes(task.deadline, true) : "Loading..."}
           </Typography>
         </Stack>
       </CardContent>
@@ -365,6 +435,17 @@ export default function TaskCard({ task, onStatusUpdate, isUpdating = false }: T
           </Select>
         </Stack>
       </CardActions>
+
+      {/* Add the Edit Modal with the new props */}
+      <EditTaskModal
+        open={editModalOpen}
+        task={task}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleSaveTask}
+        isLoading={isUpdatingTask}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
+      />
     </Card>
   );
 }

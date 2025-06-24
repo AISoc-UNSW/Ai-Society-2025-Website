@@ -6,16 +6,38 @@ import Card from "@mui/joy/Card";
 import CardContent from "@mui/joy/CardContent";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
-import { Task, TaskStatus } from "@/lib/types";
-import TaskCard from "../TaskCard";
+import { Task, TaskStatus, User } from "@/lib/types";
+import TaskCard from "./TaskCard";
 
-interface MyTasksProps {
+interface TasksProps {
+  myTasks?: boolean;
+  directorPortfolioId?: number;
+  admin?: boolean;
   tasks: Task[];
   onTaskStatusUpdate?: (taskId: number, status: TaskStatus) => Promise<void>;
   isUpdating?: boolean;
+  updateTaskAction?: (
+    taskId: number,
+    updates: Partial<Task>
+  ) => Promise<{ success: boolean; error?: string }>;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
-export default function MyTasks({ tasks, onTaskStatusUpdate, isUpdating = false }: MyTasksProps) {
+export default function Tasks({
+  myTasks = true,
+  directorPortfolioId,
+  admin = false,
+  tasks,
+  onTaskStatusUpdate,
+  isUpdating = false,
+  updateTaskAction,
+  searchUsersAction,
+  updateTaskAssignmentAction,
+}: TasksProps) {
   const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {
       await onTaskStatusUpdate(task.id, newStatus);
@@ -29,6 +51,7 @@ export default function MyTasks({ tasks, onTaskStatusUpdate, isUpdating = false 
       "Not Started": 1,
       Completed: 2,
       Cancelled: 3,
+      Pending: 0,
     };
 
     return [...tasks].sort((a, b) => {
@@ -49,15 +72,38 @@ export default function MyTasks({ tasks, onTaskStatusUpdate, isUpdating = false 
   const inProgressTasks = tasks.filter(t => t.status === "In Progress").length;
   const completedTasks = tasks.filter(t => t.status === "Completed").length;
 
+  // Determine the display mode based on role hierarchy
+  const getDisplayTitle = () => {
+    if (directorPortfolioId) return "Your portfolio's Tasks";
+    if (admin) return "All Tasks";
+    if (myTasks) return "My Tasks";
+    return "Tasks";
+  };
+
+  const getDisplayDescription = () => {
+    if (directorPortfolioId) return "View and manage your portfolio's tasks";
+    if (admin) return "View and manage all tasks";
+    if (myTasks) return "View and manage your assigned tasks";
+    return "View and manage tasks";
+  };
+
+  const getEmptyStateMessage = () => {
+    if (directorPortfolioId)
+      return "You don't have any tasks assigned to your portfolio at the moment.";
+    if (admin) return "No tasks found.";
+    if (myTasks) return "You don't have any tasks assigned to you at the moment.";
+    return "No tasks found.";
+  };
+
   return (
     <>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography level="h2" sx={{ mb: 1 }}>
-          My Tasks Dashboard
+          {getDisplayTitle()}
         </Typography>
         <Typography level="body-md" color="neutral">
-          View and manage your assigned tasks
+          {getDisplayDescription()}
         </Typography>
       </Box>
 
@@ -106,6 +152,9 @@ export default function MyTasks({ tasks, onTaskStatusUpdate, isUpdating = false 
               task={task}
               onStatusUpdate={handleStatusUpdate}
               isUpdating={isUpdating}
+              updateTaskAction={updateTaskAction}
+              searchUsersAction={searchUsersAction}
+              updateTaskAssignmentAction={updateTaskAssignmentAction}
             />
           ))}
         </Box>
@@ -116,7 +165,7 @@ export default function MyTasks({ tasks, onTaskStatusUpdate, isUpdating = false 
               No Tasks Assigned
             </Typography>
             <Typography level="body-md" color="neutral">
-              You don&apos;t have any tasks assigned to you at the moment.
+              {getEmptyStateMessage()}
             </Typography>
           </CardContent>
         </Card>

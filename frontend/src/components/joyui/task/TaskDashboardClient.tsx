@@ -5,8 +5,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
 import Box from "@mui/joy/Box";
 import Sidebar from "@/components/joyui/Sidebar";
-import MyTasks from "@/components/joyui/task/MyTasks";
-import { Task, TaskStatus } from "@/lib/types";
+import Tasks from "@/components/joyui/task/Tasks";
+import { Task, TaskStatus, User } from "@/lib/types";
 import { useTransition } from "react";
 
 interface TaskDashboardClientProps {
@@ -16,12 +16,30 @@ interface TaskDashboardClientProps {
     taskId: number,
     status: TaskStatus
   ) => Promise<{ success: boolean; error?: string }>;
+  updateTaskAction?: (
+    taskId: number,
+    updates: Partial<Task>
+  ) => Promise<{ success: boolean; error?: string }>;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
+  myTasks?: boolean;
+  directorPortfolioId?: number;
+  admin?: boolean;
 }
 
 export default function TaskDashboardClient({
   tasks,
   error,
   updateTaskStatusAction,
+  updateTaskAction,
+  searchUsersAction,
+  updateTaskAssignmentAction,
+  myTasks = true,
+  directorPortfolioId = undefined,
+  admin = false,
 }: TaskDashboardClientProps) {
   const [isPending, startTransition] = useTransition();
   const [mounted, setMounted] = React.useState(false);
@@ -55,7 +73,7 @@ export default function TaskDashboardClient({
   if (!mounted) {
     return (
       <div style={{ padding: "16px" }}>
-        <h2>My Tasks Dashboard</h2>
+        <h2>My Tasks</h2>
         <p>Loading tasks...</p>
       </div>
     );
@@ -75,10 +93,16 @@ export default function TaskDashboardClient({
             minHeight: "100vh",
           }}
         >
-          <MyTasks
+          <Tasks
+            myTasks={myTasks}
+            directorPortfolioId={directorPortfolioId}
+            admin={admin}
             tasks={tasks}
             onTaskStatusUpdate={handleTaskStatusUpdate}
             isUpdating={isPending}
+            updateTaskAction={updateTaskAction}
+            searchUsersAction={searchUsersAction}
+            updateTaskAssignmentAction={updateTaskAssignmentAction}
           />
         </Box>
       </Box>

@@ -7,7 +7,6 @@ import CardContent from "@mui/joy/CardContent";
 import CardActions from "@mui/joy/CardActions";
 import Typography from "@mui/joy/Typography";
 import Button from "@mui/joy/Button";
-import IconButton from "@mui/joy/IconButton";
 import Stack from "@mui/joy/Stack";
 import Chip from "@mui/joy/Chip";
 import Modal from "@mui/joy/Modal";
@@ -22,8 +21,13 @@ import Input from "@mui/joy/Input";
 import Textarea from "@mui/joy/Textarea";
 import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
-import { HierarchicalTask, TaskUpdateRequest, TaskCreateRequest, PortfolioSimple } from "@/lib/types";
-import { formatDateSafe } from "@/lib/utils";
+import {
+  HierarchicalTask,
+  TaskUpdateRequest,
+  TaskCreateRequest,
+  PortfolioSimple,
+} from "@/lib/types";
+import { formatDateWithMinutes } from "@/lib/utils";
 
 // Priority color mapping
 const getPriorityColor = (priority: string) => {
@@ -165,7 +169,7 @@ export default function TaskConfirmationList({
               {/* Task Details */}
               <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
                 <Typography level="body-xs" color="neutral">
-                  Due: {mounted ? formatDateSafe(task.deadline) : "Loading..."}
+                  Due: {mounted ? formatDateWithMinutes(task.deadline, true) : "Loading..."}
                 </Typography>
                 <Typography level="body-xs" color="neutral">
                   Portfolio: {getPortfolioName(task.portfolio_id)}
@@ -229,9 +233,7 @@ export default function TaskConfirmationList({
 
       {/* Task List */}
       {tasks.length > 0 ? (
-        <Box>
-          {tasks.map(task => renderTask(task))}
-        </Box>
+        <Box>{tasks.map(task => renderTask(task))}</Box>
       ) : (
         <Card variant="outlined" sx={{ p: 4, textAlign: "center" }}>
           <CardContent>
@@ -239,7 +241,8 @@ export default function TaskConfirmationList({
               No Tasks Found
             </Typography>
             <Typography level="body-md" color="neutral">
-              No pending tasks found for this meeting. Click "Add Main Task" to create a new task.
+              No pending tasks found for this meeting. Click &quot;Add Main Task&quot; to create a
+              new task.
             </Typography>
           </CardContent>
         </Card>
@@ -251,13 +254,17 @@ export default function TaskConfirmationList({
         onClose={() => setEditingTask(null)}
         onSave={handleSaveEdit}
         portfolios={portfolios}
-        initialData={editingTask ? {
-          title: editingTask.title,
-          description: editingTask.description || "",
-          priority: editingTask.priority,
-          deadline: editingTask.deadline,
-          portfolio_id: editingTask.portfolio_id,
-        } : undefined}
+        initialData={
+          editingTask
+            ? {
+                title: editingTask.title,
+                description: editingTask.description || "",
+                priority: editingTask.priority,
+                deadline: editingTask.deadline,
+                portfolio_id: editingTask.portfolio_id,
+              }
+            : undefined
+        }
         title="Edit Task"
       />
 
@@ -265,7 +272,7 @@ export default function TaskConfirmationList({
       <TaskFormModal
         open={creatingTask.isOpen}
         onClose={() => setCreatingTask({ isOpen: false })}
-        onSave={(formData) => handleCreateTask(formData, creatingTask.parentId)}
+        onSave={formData => handleCreateTask(formData, creatingTask.parentId)}
         portfolios={portfolios}
         title={creatingTask.parentId ? "Add Subtask" : "Add Main Task"}
       />
@@ -275,7 +282,8 @@ export default function TaskConfirmationList({
         <ModalDialog variant="outlined" role="alertdialog">
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
-            Are you sure you want to delete this task? This action will also delete all subtasks and cannot be undone.
+            Are you sure you want to delete this task? This action will also delete all subtasks and
+            cannot be undone.
           </DialogContent>
           <DialogActions>
             <Button
@@ -305,7 +313,14 @@ interface TaskFormModalProps {
   portfolios: PortfolioSimple[];
 }
 
-function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }: TaskFormModalProps) {
+function TaskFormModal({
+  open,
+  onClose,
+  onSave,
+  initialData,
+  title,
+  portfolios,
+}: TaskFormModalProps) {
   const [formData, setFormData] = React.useState<TaskFormData>({
     title: "",
     description: "",
@@ -344,7 +359,7 @@ function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }
               <FormLabel>Title</FormLabel>
               <Input
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter task title"
               />
             </FormControl>
@@ -353,7 +368,7 @@ function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }
               <FormLabel>Description</FormLabel>
               <Textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Enter task description"
                 minRows={3}
               />
@@ -363,7 +378,9 @@ function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }
               <FormLabel>Priority</FormLabel>
               <Select
                 value={formData.priority}
-                onChange={(_, value) => value && setFormData(prev => ({ ...prev, priority: value }))}
+                onChange={(_, value) =>
+                  value && setFormData(prev => ({ ...prev, priority: value }))
+                }
               >
                 <Option value="Low">Low</Option>
                 <Option value="Medium">Medium</Option>
@@ -377,10 +394,12 @@ function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }
               <Input
                 type="datetime-local"
                 value={formData.deadline.slice(0, 16)} // Format for datetime-local input
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  deadline: e.target.value + ":00Z" // Add seconds and timezone
-                }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    deadline: e.target.value + ":00Z", // Add seconds and timezone
+                  }))
+                }
               />
             </FormControl>
 
@@ -388,12 +407,15 @@ function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }
               <FormLabel>Portfolio</FormLabel>
               <Select
                 value={formData.portfolio_id}
-                onChange={(_, value) => value && setFormData(prev => ({ 
-                  ...prev, 
-                  portfolio_id: value
-                }))}
+                onChange={(_, value) =>
+                  value &&
+                  setFormData(prev => ({
+                    ...prev,
+                    portfolio_id: value,
+                  }))
+                }
               >
-                {portfolios.map((portfolio) => (
+                {portfolios.map(portfolio => (
                   <Option key={portfolio.portfolio_id} value={portfolio.portfolio_id}>
                     {portfolio.name}
                   </Option>
@@ -414,4 +436,4 @@ function TaskFormModal({ open, onClose, onSave, initialData, title, portfolios }
       </ModalDialog>
     </Modal>
   );
-} 
+}

@@ -39,7 +39,6 @@ export const sidebarConfig: SidebarSection[] = [
         label: "Dashboard",
         icon: <DashboardRoundedIcon />,
         href: "/taskbot/dashboard",
-        selected: true, // current page
       },
       {
         id: "tasks",
@@ -101,24 +100,24 @@ export const sidebarConfig: SidebarSection[] = [
       },
     ],
   },
-//   {
-//     id: "footer",
-//     position: "bottom",
-//     items: [
-//       {
-//         id: "support",
-//         label: "Support",
-//         icon: <SupportRoundedIcon />,
-//         href: "/support",
-//       },
-//       {
-//         id: "settings",
-//         label: "Settings",
-//         icon: <SettingsRoundedIcon />,
-//         href: "/settings",
-//       },
-//     ],
-//   },
+  //   {
+  //     id: "footer",
+  //     position: "bottom",
+  //     items: [
+  //       {
+  //         id: "support",
+  //         label: "Support",
+  //         icon: <SupportRoundedIcon />,
+  //         href: "/support",
+  //       },
+  //       {
+  //         id: "settings",
+  //         label: "Settings",
+  //         icon: <SettingsRoundedIcon />,
+  //         href: "/settings",
+  //       },
+  //     ],
+  //   },
 ];
 
 export const currentUser: UserProfile = {

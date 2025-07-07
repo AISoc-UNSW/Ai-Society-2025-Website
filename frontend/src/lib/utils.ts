@@ -1,3 +1,5 @@
+import { RoleName, User } from "./types";
+
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -5,23 +7,6 @@ export const formatDate = (dateString: string) => {
     month: "2-digit",
     day: "2-digit",
   });
-};
-
-// Fix the date formatting to avoid hydration mismatch
-export const formatDateSafe = (dateString: string | undefined): string => {
-  if (!dateString) return "No due date";
-
-  try {
-    const date = new Date(dateString);
-    // Use a simple, consistent format that works on both server and client
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-  } catch {
-    return "Invalid date";
-  }
 };
 
 // Cookie utility functions
@@ -89,4 +74,39 @@ export function getEmailAvatarColor(email: string): string {
   // Convert hash to HSL color for better visual consistency
   const hue = Math.abs(hash) % 360;
   return `hsl(${hue}, 65%, 50%)`;
+}
+
+export function getDirectorPortfolioId(roleName: RoleName, user: User): number | undefined {
+  if (roleName === "director") {
+    return user.portfolio_id;
+  }
+  return undefined;
+}
+
+export function isAdmin(roleName: RoleName): boolean {
+  return roleName === "admin";
+}
+
+export function isUser(roleName: RoleName): boolean {
+  return roleName === "user";
+}
+
+export function formatDateWithMinutes(dateString: string, forDisplay: boolean = false): string {
+  try {
+    const date = new Date(dateString);
+    // Format to YYYY-MM-DDTHH:MM format for datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    if (forDisplay) {
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (error) {
+    console.error("Error formatting date for input:", error);
+    return "";
+  }
 }

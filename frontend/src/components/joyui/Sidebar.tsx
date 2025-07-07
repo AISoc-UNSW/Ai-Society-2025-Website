@@ -19,16 +19,19 @@ import ColorSchemeToggle from "@/components/joyui/ColorSchemeToggle";
 import { closeSidebar } from "@/lib/dom-utils";
 import {
   sidebarConfig,
-  currentUser,
   brandConfig,
   type SidebarItem,
   type SidebarSection,
 } from "@/lib/sidebar-config";
+import { useUser, useLogout } from "@/stores/userStore";
+import { getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
 
 function Toggler({
   defaultExpanded = false,
   renderToggle,
   children,
+  keepOpenWhenChildSelected = false,
+  hasSelectedChild = false,
 }: {
   defaultExpanded?: boolean;
   children: React.ReactNode;
@@ -36,11 +39,34 @@ function Toggler({
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   }) => React.ReactNode;
+  keepOpenWhenChildSelected?: boolean;
+  hasSelectedChild?: boolean;
 }) {
-  const [open, setOpen] = React.useState(defaultExpanded);
+  // Use the child selected state to determine initial expansion, but allow manual control
+  const initialExpanded = defaultExpanded || (keepOpenWhenChildSelected && hasSelectedChild);
+  const [open, setOpen] = React.useState(initialExpanded);
+  const [hasBeenManuallyToggled, setHasBeenManuallyToggled] = React.useState(false);
+
+  // Only auto-open when navigating to a child page if user hasn't manually toggled
+  React.useEffect(() => {
+    if (keepOpenWhenChildSelected && hasSelectedChild && !open && !hasBeenManuallyToggled) {
+      setOpen(true);
+    }
+  }, [hasSelectedChild, keepOpenWhenChildSelected, open, hasBeenManuallyToggled]);
+
+  // Wrap setOpen to track manual toggles
+  const handleSetOpen = React.useCallback((newOpen: boolean | ((prev: boolean) => boolean)) => {
+    setHasBeenManuallyToggled(true);
+    if (typeof newOpen === "function") {
+      setOpen(newOpen);
+    } else {
+      setOpen(newOpen);
+    }
+  }, []);
+
   return (
     <React.Fragment>
-      {renderToggle({ open, setOpen })}
+      {renderToggle({ open, setOpen: handleSetOpen })}
       <Box
         sx={[
           {
@@ -68,7 +94,6 @@ interface SidebarItemProps {
 function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProps) {
   const isSelected = Boolean(item.selected) || Boolean(item.href && currentPath === item.href);
 
-  // Handle click
   const handleClick = () => {
     if (item.onClick) {
       item.onClick();
@@ -91,11 +116,18 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
     );
   }
 
+  // Check if any child is selected
+  const hasSelectedChild = item.children.some(
+    child => Boolean(child.selected) || Boolean(child.href && currentPath === child.href)
+  );
+
   // Nested item with children
   return (
     <ListItem nested>
       <Toggler
         defaultExpanded={item.defaultExpanded}
+        keepOpenWhenChildSelected={true}
+        hasSelectedChild={hasSelectedChild}
         renderToggle={({ open, setOpen }) => (
           <ListItemButton onClick={() => setOpen(!open)}>
             {item.icon}
@@ -138,26 +170,30 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
 
 interface SidebarProps {
   config?: SidebarSection[];
-  user?: typeof currentUser;
   brand?: typeof brandConfig;
 }
 
-export default function Sidebar({
-  config = sidebarConfig,
-  user = currentUser,
-  brand = brandConfig,
-}: SidebarProps) {
+export default function Sidebar({ config = sidebarConfig, brand = brandConfig }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const currentUser = useUser();
+  const logout = useLogout();
+
   const handleNavigate = (href: string) => {
     router.push(href);
-    closeSidebar(); // Close sidebar on mobile after navigation
+    closeSidebar();
   };
 
   const handleLogout = () => {
-    // Implement logout logic here
-    console.log("Logout clicked");
+    logout();
+    router.push("/auth/login");
+  };
+
+  const user = currentUser || {
+    username: "Loading...",
+    email: "",
+    avatar: "",
   };
 
   const topSections = config.filter(section => section.position !== "bottom");
@@ -302,9 +338,21 @@ export default function Sidebar({
       {/* User Profile */}
       <Divider />
       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-        <Avatar variant="outlined" size="sm" src={user.avatar} alt={user.name} />
+        <Avatar
+          variant="outlined"
+          size="sm"
+          src={user.avatar}
+          alt={user.username}
+          sx={{
+            backgroundColor: !user.avatar ? getEmailAvatarColor(user.email) : undefined,
+            color: !user.avatar ? "white" : undefined,
+            fontWeight: "bold",
+          }}
+        >
+          {!user.avatar && getEmailInitials(user.email)}
+        </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography level="title-sm">{user.name}</Typography>
+          <Typography level="title-sm">{user.username}</Typography>
           <Typography level="body-xs">{user.email}</Typography>
         </Box>
         <IconButton

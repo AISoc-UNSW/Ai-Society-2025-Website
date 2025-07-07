@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -85,10 +85,9 @@ def get_users_by_portfolio(db: Session, portfolio_id: int) -> list[User]:
 def search_users(db: Session, *, search_term: str, limit: int = 10) -> list[User]:
     """Search users by username or email with fuzzy matching"""
     from sqlalchemy import or_
-    
+
     search_filter = or_(
-        User.username.ilike(f"%{search_term}%"),
-        User.email.ilike(f"%{search_term}%")
+        User.username.ilike(f"%{search_term}%"), User.email.ilike(f"%{search_term}%")
     )
-    
+
     return db.query(User).filter(search_filter).limit(limit).all()

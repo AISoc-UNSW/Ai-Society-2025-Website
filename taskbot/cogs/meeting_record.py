@@ -12,8 +12,21 @@ from datetime import datetime
 from pydub import AudioSegment
 import subprocess
 import asyncio
+import tempfile
+import requests
+from dotenv import load_dotenv
 
 from utils import MeetingService
+from ai_generation.speech_to_text import speech_to_text
+from ai_generation.generate_tasks import generate_tasks
+import json
+
+from utils.config import config
+from utils.auth_manager import AuthManager
+import aiohttp
+
+load_dotenv()
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +37,39 @@ class MeetingRecord(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.meeting_service = MeetingService()
+        self.session = None
+        self.auth_manager = AuthManager(config.api_base_url)
+        self._authenticated = False
         # Store ongoing recording session information
         self.recording_sessions = {}
+
+    # Ensure aiohttp session is closed when cog is unloaded (avoided duplicating session creation, as it is handled in ensure_session)
+    async def cog_unload(self):
+        """Called when the cog is unloaded"""
+        # Close aiohttp session
+        if self.session:
+            await self.session.close()
+
+    async def ensure_session(self):
+        """Ensure HTTP session is initialized"""
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+            logger.info("Created new HTTP session")
+
+    async def ensure_authenticated(self) -> bool:
+        """Ensure authentication with backend API"""
+        if not self._authenticated:
+            success = await self.auth_manager.login(
+                config.api_username, 
+                config.api_password
+            )
+            if success:
+                self._authenticated = True
+                logger.info("Successfully authenticated with backend API")
+            else:
+                logger.error("Failed to authenticate with backend API")
+            return success
+        return True
     
     @discord.slash_command(name="record_voice", description="Start recording voice meeting")
     async def start_recording(
@@ -42,6 +86,12 @@ class MeetingRecord(commands.Cog):
         
         voice_channel = ctx.author.voice.channel
         guild_id = ctx.guild.id
+
+        # Ensure there is at least one non-bot user in the channel
+        non_bot_members = [m for m in voice_channel.members if not m.bot]
+        if not non_bot_members:
+            await ctx.respond("❌ There must be at least one non-bot user in the voice channel to start recording.", ephemeral=True)
+            return
         
         # Check if already recording
         if guild_id in self.recording_sessions:
@@ -112,8 +162,136 @@ class MeetingRecord(commands.Cog):
             logger.error(f"Failed to stop recording: {e}")
             await ctx.respond(f"❌ Failed to stop recording: {str(e)}", ephemeral=True)
     
+    async def process_audio_files(self, sink, session, channel):
+        """Process and merge audio files, return file_path or None"""
+        await channel.send("🔄 Processing audio files...")
+        segments = []
+        temp_files = []
+        for user_id, audio in sink.audio_data.items():
+            raw_path = f"temp_{user_id}_raw.wav"
+            fixed_path = f"temp_{user_id}_fixed.wav"
+            temp_files.extend([raw_path, fixed_path])
+            with open(raw_path, "wb") as f:
+                f.write(audio.file.getbuffer())
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", raw_path, fixed_path], 
+                check=True,
+                capture_output=True
+            )
+            seg = AudioSegment.from_wav(fixed_path)
+            segments.append(seg)
+        for temp_file in temp_files:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+        if not segments:
+            await channel.send("❌ No audio recorded!")
+            return None
+        combined = segments[0]
+        for seg in segments[1:]:
+            combined = combined.overlay(seg)
+        file_path = self.meeting_service.get_recording_file_path(
+            session["meeting_name"],
+            session["portfolio_id"]
+        )
+        combined.export(file_path, format="wav")
+        await channel.send(f"✅ Audio file saved: `{file_path}`")
+        return file_path
+
+    async def transcribe_audio(self, file_path, channel):
+        """Transcribe audio file and return (transcript, summary) or (None, None)"""
+        await channel.send("📝 Converting audio to transcript and generating summary...")
+        try:
+            transcript, summary = speech_to_text(file_path)
+            await channel.send("✅ Transcript and Summary generated successfully!")
+            return transcript, summary
+        except Exception as e:
+            logger.error(f"Transcription failed: {e}")
+            await channel.send(f"❌ Transcription failed: {str(e)}")
+            return None, None
+
+    async def generate_and_save_tasks(self, transcript, session, channel):
+        """Generate tasks from transcript, show preview, and save to backend"""
+        await channel.send("🤖 Based on the meeting transcript, the tasks are generated as follows...")
+        try:
+            tasks = generate_tasks(transcript, source_meeting_id=session["meeting_name"], portfolio_id=session["portfolio_id"])
+        except Exception as e:
+            logger.error(f"Task generation failed: {e}")
+            await channel.send(f"❌ Task generation failed: {str(e)}")
+            return
+        if not tasks:
+            await channel.send("❌ No tasks generated for this meeting.")
+            return
+        tasks_preview = json.dumps(tasks, indent=2)
+        await channel.send(
+            f"**Generated Tasks:**\n```json\n{tasks_preview[:1000]}{'...' if len(tasks_preview) > 1800 else ''}\n```."
+        )
+        await self.ensure_session()
+        if not await self.ensure_authenticated():
+            await channel.send("❌ Could not authenticate with backend API. Tasks not saved.")
+            return
+        
+        await channel.send(f"✅ To make any changes to the tasks, access the taskbot website: https://{config.api_base_url}/meeting/{session['meeting_name']}/confirm")
+        url = f"{config.api_base_url}/api/v1/tasks/group"
+        payload = {
+            "tasks": tasks,
+            "portfolio_id": session["portfolio_id"],
+            "source_meeting_id": session["meeting_name"]
+        }
+        headers = self.auth_manager.auth_headers
+        try:
+            async with self.session.post(url, json=payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    await channel.send(f"✅ Tasks have been saved to the database! ({data.get('total_created', 0)} tasks created)")
+                else:
+                    error = await resp.text()
+                    await channel.send(f"❌ Failed to save tasks to backend: {resp.status}\n{error}")
+        except Exception as e:
+            await channel.send(f"❌ Error while saving tasks to backend: {str(e)}")
+
+    async def create_meeting_record_and_notify(self, session, file_path, summary, transcript, channel):
+        """Create meeting record and notify channel"""
+        await channel.send("📝 Creating meeting record...")
+        result = await self.meeting_service.create_meeting_record(
+            meeting_name=session["meeting_name"],
+            portfolio_id=session["portfolio_id"],
+            recording_file_path=file_path,
+            summary=summary,
+            transcript=transcript,
+        )
+        if result:
+            duration = datetime.now() - session["start_time"]
+            await channel.send(
+                f"✅ **Meeting recording completed!**\n"
+                f"**Meeting ID**: {result.get('meeting_id')}\n"
+                f"**Meeting name**: {session['meeting_name']}\n"
+                f"**Recording duration**: {duration.seconds // 60}min {duration.seconds % 60}sec\n"
+                f"**File path**: `{file_path}`"
+            )
+        else:
+            error_data = {
+                "meeting_name": session["meeting_name"],
+                "portfolio_id": session["portfolio_id"],
+                "recording_file_path": file_path,
+                "meeting_date": datetime.now().date().isoformat()
+            }
+            await channel.send(
+                f"❌ **Failed to create meeting record!**\n"
+                f"Audio file saved, but unable to create database record.\n"
+                f"Please save the following information for manual retry:\n"
+                f"```json\n{error_data}\n```"
+            )
+
     def _create_recording_callback(self, guild_id: int):
-        """Create recording completion callback function"""
+        """Create recording completion callback function
+        # Modified the functions by breaking into smaller functions (for more clarity)
+        # Now, functionality is as follows:
+        # 1. Finish disconnecting the voice client
+        # 2. Clean up the voice files and process them appropriately
+        # 3. Get transcript and summary from audio files
+        # 4. Generate tasks from the transcript and save it to backend (which can then redirect to website url)
+        # 5. Finally, create a meeting record and save the meeting information, viewed later on the website 
+        """
         async def recording_finished_callback(sink: discord.sinks.WaveSink, channel: discord.TextChannel):
             """Processing after recording completion"""
             try:
@@ -121,105 +299,35 @@ class MeetingRecord(commands.Cog):
                 if not session:
                     await channel.send("❌ Recording session information lost!")
                     return
-                
-                # Process audio files
-                await channel.send("🔄 Processing audio files...")
-                
-                # Merge all users' audio
-                segments = []
-                temp_files = []
-                
-                for user_id, audio in sink.audio_data.items():
-                    # Save temporary files
-                    raw_path = f"temp_{user_id}_raw.wav"
-                    fixed_path = f"temp_{user_id}_fixed.wav"
-                    temp_files.extend([raw_path, fixed_path])
-                    
-                    with open(raw_path, "wb") as f:
-                        f.write(audio.file.getbuffer())
-                    
-                    # Use ffmpeg to fix audio format
-                    subprocess.run(
-                        ["ffmpeg", "-y", "-i", raw_path, fixed_path], 
-                        check=True,
-                        capture_output=True
-                    )
-                    
-                    # Load audio segment
-                    seg = AudioSegment.from_wav(fixed_path)
-                    segments.append(seg)
-                
-                if not segments:
-                    await channel.send("❌ No audio recorded!")
+
+                file_path = await self.process_audio_files(sink, session, channel)
+                if not file_path:
+                    # Clean up and disconnect
+                    if session["voice_client"].is_connected():
+                        await session["voice_client"].disconnect()
+                    if guild_id in self.recording_sessions:
+                        del self.recording_sessions[guild_id]
                     return
-                
-                # Merge audio
-                combined = segments[0]
-                for seg in segments[1:]:
-                    combined = combined.overlay(seg)
-                
-                # Generate final file path
-                file_path = self.meeting_service.get_recording_file_path(
-                    session["meeting_name"],
-                    session["portfolio_id"]
-                )
-                
-                # Export audio file
-                combined.export(file_path, format="wav")
-                
-                # Clean up temporary files
-                for temp_file in temp_files:
-                    if os.path.exists(temp_file):
-                        os.remove(temp_file)
-                
-                await channel.send(f"✅ Audio file saved: `{file_path}`")
-                
-                # Create meeting record
-                await channel.send("📝 Creating meeting record...")
-                
-                result = await self.meeting_service.create_meeting_record(
-                    meeting_name=session["meeting_name"],
-                    portfolio_id=session["portfolio_id"],
-                    recording_file_path=file_path
-                )
-                
-                if result:
-                    duration = datetime.now() - session["start_time"]
-                    await channel.send(
-                        f"✅ **Meeting recording completed!**\n"
-                        f"**Meeting ID**: {result.get('meeting_id')}\n"
-                        f"**Meeting name**: {session['meeting_name']}\n"
-                        f"**Recording duration**: {duration.seconds // 60}min {duration.seconds % 60}sec\n"
-                        f"**File path**: `{file_path}`"
-                    )
-                else:
-                    # Send failure information and raw data
-                    error_data = {
-                        "meeting_name": session["meeting_name"],
-                        "portfolio_id": session["portfolio_id"],
-                        "recording_file_path": file_path,
-                        "meeting_date": datetime.now().date().isoformat()
-                    }
-                    await channel.send(
-                        f"❌ **Failed to create meeting record!**\n"
-                        f"Audio file saved, but unable to create database record.\n"
-                        f"Please save the following information for manual retry:\n"
-                        f"```json\n{error_data}\n```"
-                    )
-                
-                # Disconnect voice connection
+
+                transcript, summary = await self.transcribe_audio(file_path, channel)
+                if not transcript:
+                    if session["voice_client"].is_connected():
+                        await session["voice_client"].disconnect()
+                    if guild_id in self.recording_sessions:
+                        del self.recording_sessions[guild_id]
+                    return
+
+                await self.generate_and_save_tasks(transcript, session, channel)
+                await self.create_meeting_record_and_notify(session, file_path, summary, transcript, channel)
+
                 if session["voice_client"].is_connected():
                     await session["voice_client"].disconnect()
-                
             except Exception as e:
                 logger.error(f"Error in recording callback: {e}")
                 await channel.send(f"❌ Error occurred while processing recording: {str(e)}")
-            
             finally:
-                # Clean up session information
                 if guild_id in self.recording_sessions:
                     del self.recording_sessions[guild_id]
-        
         return recording_finished_callback
     
     @commands.Cog.listener()
@@ -235,4 +343,4 @@ class MeetingRecord(commands.Cog):
 
 def setup(bot):
     """Load Cog"""
-    bot.add_cog(MeetingRecord(bot)) 
+    bot.add_cog(MeetingRecord(bot))

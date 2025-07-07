@@ -66,6 +66,22 @@ class Config:
         path.mkdir(parents=True, exist_ok=True)
         
         return path
+    
+    @property
+    def openai_api_key(self) -> str:
+        """OpenAI API key for speech-to-text and summarization"""
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
+        return api_key
+    
+    @property
+    def gemini_api_key(self) -> str:
+        """Google Gemini API key for task generation"""
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not found in environment variables")
+        return api_key
 
 
 # Global configuration instance

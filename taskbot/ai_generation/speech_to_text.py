@@ -76,8 +76,5 @@ def summary(transcript):
 
     return response.choices[0].message.content.strip()
 
-# if __name__ == "__main__":
-#     print(speech_to_text("harvard.wav"))
-
 
 

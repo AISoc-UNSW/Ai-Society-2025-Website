@@ -42,6 +42,8 @@ class MeetingService:
         meeting_name: str,
         portfolio_id: int,
         recording_file_path: str,
+        summary: str | None = None,
+        transcript: str | None = None,
         meeting_date: date | None = None
     ) -> dict | None:
         """
@@ -51,6 +53,8 @@ class MeetingService:
             meeting_name: Meeting name
             portfolio_id: Portfolio ID
             recording_file_path: Local path of recording file
+            summary: Meeting summary text
+            transcript: Meeting transcript text
             meeting_date: Meeting date, defaults to today
             
         Returns:
@@ -69,8 +73,8 @@ class MeetingService:
                 "meeting_date": meeting_date.isoformat(),
                 "meeting_name": meeting_name,
                 "recording_file_link": recording_file_path,
-                "auto_caption": None,  # Leave empty for subsequent AI processing
-                "summary": None,       # Leave empty for subsequent AI processing
+                "auto_caption": transcript,
+                "summary": summary,
                 "portfolio_id": portfolio_id
             }
             

@@ -1,12 +1,7 @@
 import json
 
-import psycopg2
-from dotenv import load_dotenv
 import google.generativeai as genai
 from google.generativeai import types
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from utils.config import config
 
 # No global configure needed for the client approach: since everything is called from config (?) check ts
@@ -201,100 +196,4 @@ Extracted Tasks (JSON):
         # Log the type of exception for better debugging
         print(f"Exception type: {type(e)}")
         return []
-
-
-# Example Usage which generates tasks and saves them to a file
-
-# if __name__ == '__main__':
-#   # Replace with actual script content and IDs
-#   example_script = open('./sample_script.txt', 'r').read()
-#   meeting_id = 1
-#   portfolio_id = 101
-#   generated_tasks = generate_tasks(example_script, meeting_id, portfolio_id)
-#   print("Generated Tasks:")
-#   import pprint
-#   pprint.pprint(generated_tasks)
-
-#   with open('tasks_output_5.json', 'w') as f:
-#       json.dump(generated_tasks, f, indent=2)
-
-
-def process_meeting_transcript(script, meeting_id, portfolio_id=None):
-    """
-    Process a meeting transcript to generate tasks and insert them into the database.
-
-    Args:
-        script (str): The meeting transcript text
-        meeting_id (int): The ID of the meeting this script is from
-        portfolio_id (int, optional): The ID of the portfolio these tasks belong to
-
-    Returns:
-        list: List of top-level task IDs that were created
-    """
-    # Import here to avoid circular imports
-    from utils.insert_tasks_to_db import insert_tasks_to_db_direct
-
-    # Load environment variables
-    load_dotenv()
-
-    # Generate tasks from the transcript
-    tasks = generate_tasks(script, meeting_id, portfolio_id)
-
-    if not tasks:
-        print("No tasks were generated from the transcript.")
-        return []
-
-    # Get PostgreSQL connection parameters
-    user = config.POSTGRES_USER
-    password = config.POSTGRES_PASSWORD
-    host = config.POSTGRES_HOST
-    port = config.POSTGRES_PORT
-    dbname = config.POSTGRES_DB
-
-    if not password:
-        print("Error: Database password not found in environment variables.")
-        return []
-
-    try:
-        # Connect to PostgreSQL database
-        conn = psycopg2.connect(user=user, password=password, host=host, port=port, dbname=dbname)
-        print("Database connection successful!")
-
-        # Create an SQLAlchemy engine from your connection
-        engine = create_engine("postgresql+psycopg2://", creator=lambda: conn)
-
-        # Create a sessionmaker
-        Session = sessionmaker(bind=engine)
-
-        # Create a session
-        session = Session()
-
-        try:
-            # Now use the session instead of the connection
-            task_ids = insert_tasks_to_db_direct(tasks, session)
-
-            # Close the session when done
-            session.close()
-            print("Database connection closed.")
-
-            print(f"Successfully processed transcript and created {len(task_ids)} top-level tasks.")
-            return task_ids
-
-        except Exception as e:
-            print(f"Error processing meeting transcript: {e}")
-            return []
-
-    except Exception as e:
-        print(f"Error processing meeting transcript: {e}")
-        return []
-
-
-# Example Usage which generates tasks and saves them to the database
-
-if __name__ == "__main__":
-    # Replace with actual script content and IDs
-    example_script = open("./sample_script.txt", "r").read()
-    meeting_id = 1
-    portfolio_id = 101
-    process_meeting_transcript(example_script, meeting_id, portfolio_id)
 

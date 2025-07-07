@@ -1,137 +1,352 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🤖 AI Society 2025 Website
 
-## Getting Started
+A comprehensive task management system with Discord integration, featuring automated meeting transcription, task generation, and real-time collaboration tools.
 
-### Taskbot
+## 🌟 Features
 
-1. Activate the virtual environment and install dependencies:
+### 🎯 Task Management
+
+- **Hierarchical Task System**: Parent tasks with subtasks
+- **Portfolio Organization**: Tasks organized by departments (EDU, IT Portfolio, Marketing)
+- **Role-Based Access**: Director, Admin, and User permissions
+- **Real-time Updates**: Live task status synchronization
+- **Assignment Management**: Multi-user task assignments with notifications
+
+### 🤖 Discord Bot Integration
+
+- **Voice Meeting Recording**: Automatic transcription of Discord voice channels
+- **Task Automation**: Generate tasks from meeting transcripts
+- **Smart Reminders**: Deadline notifications and progress updates
+- **Slash Commands**: Interactive task management directly in Discord
+
+### 📊 Dashboard & Analytics
+
+- **Task Dashboard**: Comprehensive view of all tasks and assignments
+- **Progress Tracking**: Visual indicators for task completion
+- **Portfolio Overview**: Department-specific task insights
+- **User Management**: Role assignments and user search functionality
+
+## 🏗️ Architecture
+
+```mermaid
+graph TB
+    A[Discord Bot] --> B[FastAPI Backend]
+    C[Next.js Frontend] --> B
+    B --> D[PostgreSQL Database]
+    A --> E[Voice Recording]
+    A --> F[Task Notifications]
+    C --> G[Task Dashboard]
+    C --> H[User Management]
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Python 3.9+**
+- **Node.js 18+**
+- **PostgreSQL 14+**
+- **Discord Bot Token** (for bot functionality)
+
+### 🤖 Discord Bot Setup
+
+1. **Create and configure the bot environment:**
 
 ```bash
 cd taskbot
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-2. Configure environment variables:
-
-Copy the example environment file and update it with your settings:
+2. **Configure Discord bot settings:**
 
 ```bash
-cd taskbot
-cp .env.example .env  # On Windows: copy .env.example .env
+cp .env.example .env
 ```
 
-Update the `taskbot/.env` file with your specific settings, especially:
+Update `taskbot/.env` with your Discord bot configuration:
 
-DISCORD_TOKEN=token
-API_USERNAME=username
-API_PASSWORD=password
+```env
+DISCORD_TOKEN=your_discord_bot_token
+API_USERNAME=your_api_username
+API_PASSWORD=your_api_password
+API_BASE_URL=http://localhost:8000
+```
 
-3. Run the taskbot:
+3. **Start the Discord bot:**
 
 ```bash
 python bot.py
 ```
 
-Or run the taskbot in the background (Recommended):
+For background operation (recommended):
 
 ```bash
 nohup python bot.py > taskbot.log 2>&1 &
 ```
 
-### Backend and Frontend
-1. Activate the virtual environment and install dependencies:
+### 🔧 Backend API Setup
 
-```bash
-cd backend # Best option is to directly open the backend folder in your IDE
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-If you are using Code Editor like VSCode, choose the python interpreter to be the one in the venv folder by:
-
-```bash
-Ctrl(Cmd) + Shift + P
-```
-
-and then search for "Python: Select Interpreter" and select the one in the venv folder.
-
-Also, to format the code on save, install the **Black formatter**. Once installed, you can configure your settings in .vscode/settings.json as follows:
-
-```json
-{
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit"
-    }
-}
-```
-
-The file backend/pyproject.toml is already configured to format the code
-
-2. Configure environment variables:
-
-Copy the example environment file and update it with your settings:
+1. **Prepare the backend environment:**
 
 ```bash
 cd backend
-cp .env.example .env  # On Windows: copy .env.example .env
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-Update the `backend/.env` file with your specific settings, especially:
+2. **Configure backend settings:**
 
-- `POSTGRES_PASSWORD`: Your PostgreSQL password
-- `SECRET_KEY`: A secure random string for production
-- Other values as needed
+```bash
+cp .env.example .env
+```
 
-3. Start the development server:
+Update `backend/.env` with your configuration:
+
+```env
+POSTGRES_PASSWORD=your_database_password
+SECRET_KEY=your_secure_random_string
+DATABASE_URL=postgresql://user:password@localhost/ai_society_db
+```
+
+3. **Run database migrations:**
+
+```bash
+alembic upgrade head
+```
+
+4. **Start the FastAPI server:**
 
 ```bash
 python run.py
 ```
 
-The API will run on http://localhost:8000, you can visit http://localhost:8000/docs or http://localhost:8000/redoc to view the API documentation.
+🔗 **API Documentation**: http://localhost:8000/docs
 
-4. Run the API tests:
+5. **Run API tests (optional):**
+
+```bash
+python test_apis.py
+```
+
+### 🎨 Frontend Dashboard Setup
+
+1. **Install frontend dependencies:**
+
+```bash
+cd frontend
+npm install
+```
+
+2. **Start the development server:**
+
+```bash
+npm run dev
+```
+
+🌐 **Frontend Dashboard**: http://localhost:3000
+
+## 🛠️ Development Environment
+
+### 🎯 VS Code Configuration
+
+For optimal development experience, configure your VS Code settings:
+
+1. **Select Python interpreter** from the virtual environment:
+
+   - `Ctrl/Cmd + Shift + P`
+   - Search "Python: Select Interpreter"
+   - Choose the interpreter from your `venv` folder
+
+2. **Auto-formatting setup** (`.vscode/settings.json`):
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "python.defaultInterpreterPath": "./backend/venv/bin/python"
+}
+```
+
+3. **Install recommended extensions:**
+   - **Black Formatter** (Python formatting)
+   - **Prettier** (TypeScript/React formatting)
+   - **Python** (Python language support)
+   - **ES7+ React/Redux/React-Native snippets**
+
+## 📁 Project Structure
+
+```
+Ai-Society-2025-Website/
+├── 🤖 taskbot/              # Discord bot with voice recording
+│   ├── cogs/                # Bot command modules
+│   │   ├── meeting_record.py    # Voice recording & transcription
+│   │   ├── reminder.py          # Task reminders & notifications
+│   │   └── task_cog.py          # Task management commands
+│   ├── utils/               # Bot utilities and configuration
+│   └── bot.py              # Main bot entry point
+│
+├── 🔧 backend/              # FastAPI backend server
+│   ├── app/
+│   │   ├── api/v1/endpoints/    # API route handlers
+│   │   │   ├── tasks.py         # Task CRUD operations
+│   │   │   ├── users.py         # User management
+│   │   │   ├── portfolios.py    # Portfolio management
+│   │   │   ├── task_assignments.py # Assignment operations
+│   │   │   └── meeting_records.py  # Meeting data
+│   │   ├── core/            # Configuration & security
+│   │   ├── models/          # SQLAlchemy database models
+│   │   ├── schemas/         # Pydantic validation schemas
+│   │   └── crud/            # Database operations
+│   ├── alembic/             # Database migrations
+│   └── run.py              # Server entry point
+│
+└── 🎨 frontend/             # Next.js React dashboard
+    ├── src/
+    │   ├── app/             # Next.js App Router pages
+    │   │   ├── (internal)/taskbot/  # Protected task dashboard
+    │   │   └── auth/        # Authentication pages
+    │   ├── components/joyui/    # MUI Joy UI components
+    │   ├── lib/
+    │   │   ├── api/         # API client functions
+    │   │   └── types.ts     # Shared TypeScript types
+    │   └── styles/          # Global styling
+    └── public/              # Static assets
+```
+
+## 🔧 Technology Stack
+
+### Frontend
+
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **UI Library**: MUI Joy UI
+- **Styling**: TailwindCSS
+- **State Management**: Zustand
+- **HTTP Client**: Fetch API with custom wrapper
+
+### Backend
+
+- **Framework**: FastAPI
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Migrations**: Alembic
+- **Authentication**: JWT tokens
+- **Validation**: Pydantic schemas
+- **Formatting**: Black + isort
+
+### Discord Bot
+
+- **Library**: discord.py
+- **Architecture**: Cogs (modular commands)
+- **Features**: Voice recording, slash commands, task automation
+- **Audio Processing**: FFmpeg for voice transcription
+
+## 🔑 Key Features Deep Dive
+
+### 📋 Task Management System
+
+- **Hierarchical Structure**: Support for parent tasks and subtasks
+- **Portfolio-based Organization**: Tasks categorized by department
+- **Multi-user Assignments**: Tasks can be assigned to multiple users
+- **Status Tracking**: Not Started → In Progress → Completed → Cancelled
+- **Priority Levels**: Low, Medium, High, Critical
+
+### 🎙️ Meeting Integration
+
+- **Automatic Recording**: Discord voice channel recording
+- **AI Transcription**: Convert speech to text
+- **Task Generation**: Create actionable tasks from meeting discussions
+- **Meeting History**: Searchable archive of all recorded sessions
+
+### 👥 User & Role Management
+
+- **Role-based Access Control**: Director, Admin, User roles
+- **Portfolio Assignments**: Users belong to specific portfolios
+- **User Search**: Quick user lookup for task assignments
+- **Profile Management**: Avatar, email, and preference settings
+
+## 🔒 Security Features
+
+- **JWT Authentication**: Secure token-based authentication
+- **Role-based Permissions**: Different access levels per user role
+- **Environment Variables**: Sensitive data stored securely
+- **CORS Configuration**: Proper cross-origin request handling
+- **SQL Injection Protection**: Parameterized queries with SQLAlchemy
+
+## 🧪 Testing
+
+### Backend API Testing
 
 ```bash
 cd backend
 python test_apis.py
 ```
 
-5. Start the Next.js development server:
+### Frontend Development
 
 ```bash
 cd frontend
-npm install
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint          # ESLint checking
+npm run format        # Prettier formatting
+npm run format:check  # Check formatting
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📚 API Documentation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Once the backend is running, comprehensive API documentation is available at:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
-## Learn More
+### Key API Endpoints
 
-To learn more about Next.js, take a look at the following resources:
+- `POST /api/v1/login/access-token` - User authentication
+- `GET /api/v1/tasks/` - Retrieve tasks with filtering
+- `POST /api/v1/tasks/` - Create new tasks
+- `GET /api/v1/portfolios/` - List portfolios
+- `GET /api/v1/users/search` - Search users
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Production Considerations
 
-## Deploy on Vercel
+1. **Environment Variables**: Ensure all sensitive data is properly configured
+2. **Database**: Use production PostgreSQL instance
+3. **Discord Bot**: Deploy on reliable server for 24/7 availability
+4. **SSL/TLS**: Configure HTTPS for all web endpoints
+5. **Load Balancing**: Consider multiple backend instances for scale
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Recommended Deployment Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend**: Vercel or Netlify
+- **Backend**: DigitalOcean, AWS, or similar VPS
+- **Database**: Managed PostgreSQL (AWS RDS, DigitalOcean)
+- **Bot**: VPS with tmux/screen for persistence
+
+## 🤝 Contributing
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Follow the coding standards** defined in `.cursorrules`
+4. **Test your changes** thoroughly
+5. **Submit a pull request**
+
+### Development Guidelines
+
+- Use the established TypeScript types system
+- Follow MUI Joy UI component patterns
+- Maintain API consistency between backend and frontend
+- Test Discord bot features in a development server
+- Document any new features or API changes
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Built with ❤️ by the AI Society Team**

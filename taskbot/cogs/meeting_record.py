@@ -11,9 +11,6 @@ import os
 from datetime import datetime
 from pydub import AudioSegment
 import subprocess
-import asyncio
-import tempfile
-import requests
 from dotenv import load_dotenv
 
 from utils import MeetingService
@@ -132,9 +129,9 @@ class MeetingRecord(commands.Cog):
             
             logger.info(f"Started recording in {voice_channel.name} for meeting: {meeting_name}")
             
-        except Exception as e:
-            logger.error(f"Failed to start recording: {e}")
-            await ctx.respond(f"❌ Failed to start recording: {str(e)}", ephemeral=True)
+        except Exception:
+            logger.exception("Failed to start recording")  # 打完整回溯
+            await ctx.respond("❌ Failed to start recording, check logs for details.", ephemeral=True)
             # Clean up session information
             if guild_id in self.recording_sessions:
                 del self.recording_sessions[guild_id]
@@ -209,11 +206,11 @@ class MeetingRecord(commands.Cog):
             await channel.send(f"❌ Transcription failed: {str(e)}")
             return None, None
 
-    async def generate_and_save_tasks(self, transcript, session, channel):
+    async def generate_and_save_tasks(self, meeting_id, transcript, session, channel):
         """Generate tasks from transcript, show preview, and save to backend"""
         await channel.send("🤖 Based on the meeting transcript, the tasks are generated as follows...")
         try:
-            tasks = generate_tasks(transcript, source_meeting_id=session["meeting_name"], portfolio_id=session["portfolio_id"])
+            tasks = generate_tasks(transcript, source_meeting_id=meeting_id, portfolio_id=session["portfolio_id"])
         except Exception as e:
             logger.error(f"Task generation failed: {e}")
             await channel.send(f"❌ Task generation failed: {str(e)}")
@@ -230,12 +227,12 @@ class MeetingRecord(commands.Cog):
             await channel.send("❌ Could not authenticate with backend API. Tasks not saved.")
             return
         
-        await channel.send(f"✅ To make any changes to the tasks, access the taskbot website: https://{config.api_base_url}/meeting/{session['meeting_name']}/confirm")
+        await channel.send(f"✅ To make any changes to the tasks, access the taskbot website: {config.frontend_base_url}/taskbot/meeting/{meeting_id}/confirm")
         url = f"{config.api_base_url}/api/v1/tasks/group"
         payload = {
             "tasks": tasks,
             "portfolio_id": session["portfolio_id"],
-            "source_meeting_id": session["meeting_name"]
+            "source_meeting_id": meeting_id
         }
         headers = self.auth_manager.auth_headers
         try:
@@ -268,6 +265,7 @@ class MeetingRecord(commands.Cog):
                 f"**Recording duration**: {duration.seconds // 60}min {duration.seconds % 60}sec\n"
                 f"**File path**: `{file_path}`"
             )
+            return result
         else:
             error_data = {
                 "meeting_name": session["meeting_name"],
@@ -281,16 +279,31 @@ class MeetingRecord(commands.Cog):
                 f"Please save the following information for manual retry:\n"
                 f"```json\n{error_data}\n```"
             )
+            return None
+
+    async def _cleanup_recording_session(self, guild_id: int):
+        """Helper method to clean up voice client and recording session"""
+        session = self.recording_sessions.get(guild_id)
+        if session and session["voice_client"].is_connected():
+            try:
+                await session["voice_client"].disconnect()
+                logger.info(f"Disconnected voice client for guild {guild_id}")
+            except Exception as e:
+                logger.error(f"Error disconnecting voice client for guild {guild_id}: {e}")
+        
+        if guild_id in self.recording_sessions:
+            del self.recording_sessions[guild_id]
+            logger.info(f"Cleaned up recording session for guild {guild_id}")
 
     def _create_recording_callback(self, guild_id: int):
         """Create recording completion callback function
         # Modified the functions by breaking into smaller functions (for more clarity)
         # Now, functionality is as follows:
-        # 1. Finish disconnecting the voice client
-        # 2. Clean up the voice files and process them appropriately
-        # 3. Get transcript and summary from audio files
-        # 4. Generate tasks from the transcript and save it to backend (which can then redirect to website url)
-        # 5. Finally, create a meeting record and save the meeting information, viewed later on the website 
+        # 1. Process and merge audio files from all participants
+        # 2. Get transcript and summary from the audio files using AI
+        # 3. Create meeting record in backend database to get meeting_id
+        # 4. Generate tasks from the transcript and save to backend using the correct meeting_id
+        # 5. Finally, disconnect the voice client and clean up session data
         """
         async def recording_finished_callback(sink: discord.sinks.WaveSink, channel: discord.TextChannel):
             """Processing after recording completion"""
@@ -303,31 +316,34 @@ class MeetingRecord(commands.Cog):
                 file_path = await self.process_audio_files(sink, session, channel)
                 if not file_path:
                     # Clean up and disconnect
-                    if session["voice_client"].is_connected():
-                        await session["voice_client"].disconnect()
-                    if guild_id in self.recording_sessions:
-                        del self.recording_sessions[guild_id]
+                    await self._cleanup_recording_session(guild_id)
                     return
 
                 transcript, summary = await self.transcribe_audio(file_path, channel)
                 if not transcript:
-                    if session["voice_client"].is_connected():
-                        await session["voice_client"].disconnect()
-                    if guild_id in self.recording_sessions:
-                        del self.recording_sessions[guild_id]
+                    await self._cleanup_recording_session(guild_id)
                     return
 
-                await self.generate_and_save_tasks(transcript, session, channel)
-                await self.create_meeting_record_and_notify(session, file_path, summary, transcript, channel)
+                # First create meeting record to get meeting_id
+                meeting_record = await self.create_meeting_record_and_notify(session, file_path, summary, transcript, channel)
+                if not meeting_record:
+                    await self._cleanup_recording_session(guild_id)
+                    return
+                
+                meeting_id = meeting_record.get("meeting_id")
+                if meeting_id:
+                    # Then generate and save tasks with the correct meeting_id
+                    await self.generate_and_save_tasks(meeting_id, transcript, session, channel)
+                else:
+                    await channel.send("❌ Failed to get meeting_id, tasks will not be generated.")
 
-                if session["voice_client"].is_connected():
-                    await session["voice_client"].disconnect()
+                # Clean up and disconnect after successful completion
+                await self._cleanup_recording_session(guild_id)
             except Exception as e:
                 logger.error(f"Error in recording callback: {e}")
                 await channel.send(f"❌ Error occurred while processing recording: {str(e)}")
-            finally:
-                if guild_id in self.recording_sessions:
-                    del self.recording_sessions[guild_id]
+                # Clean up on exception
+                await self._cleanup_recording_session(guild_id)
         return recording_finished_callback
     
     @commands.Cog.listener()

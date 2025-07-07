@@ -227,7 +227,7 @@ class MeetingRecord(commands.Cog):
             await channel.send("❌ Could not authenticate with backend API. Tasks not saved.")
             return
         
-        await channel.send(f"✅ To make any changes to the tasks, access the taskbot website: {config.api_base_url}/taskbot/meeting/{meeting_id}/confirm")
+        await channel.send(f"✅ To make any changes to the tasks, access the taskbot website: {config.frontend_base_url}/taskbot/meeting/{meeting_id}/confirm")
         url = f"{config.api_base_url}/api/v1/tasks/group"
         payload = {
             "tasks": tasks,
@@ -281,6 +281,20 @@ class MeetingRecord(commands.Cog):
             )
             return None
 
+    async def _cleanup_recording_session(self, guild_id: int):
+        """Helper method to clean up voice client and recording session"""
+        session = self.recording_sessions.get(guild_id)
+        if session and session["voice_client"].is_connected():
+            try:
+                await session["voice_client"].disconnect()
+                logger.info(f"Disconnected voice client for guild {guild_id}")
+            except Exception as e:
+                logger.error(f"Error disconnecting voice client for guild {guild_id}: {e}")
+        
+        if guild_id in self.recording_sessions:
+            del self.recording_sessions[guild_id]
+            logger.info(f"Cleaned up recording session for guild {guild_id}")
+
     def _create_recording_callback(self, guild_id: int):
         """Create recording completion callback function
         # Modified the functions by breaking into smaller functions (for more clarity)
@@ -302,27 +316,18 @@ class MeetingRecord(commands.Cog):
                 file_path = await self.process_audio_files(sink, session, channel)
                 if not file_path:
                     # Clean up and disconnect
-                    if session["voice_client"].is_connected():
-                        await session["voice_client"].disconnect()
-                    if guild_id in self.recording_sessions:
-                        del self.recording_sessions[guild_id]
+                    await self._cleanup_recording_session(guild_id)
                     return
 
                 transcript, summary = await self.transcribe_audio(file_path, channel)
                 if not transcript:
-                    if session["voice_client"].is_connected():
-                        await session["voice_client"].disconnect()
-                    if guild_id in self.recording_sessions:
-                        del self.recording_sessions[guild_id]
+                    await self._cleanup_recording_session(guild_id)
                     return
 
                 # First create meeting record to get meeting_id
                 meeting_record = await self.create_meeting_record_and_notify(session, file_path, summary, transcript, channel)
                 if not meeting_record:
-                    if session["voice_client"].is_connected():
-                        await session["voice_client"].disconnect()
-                    if guild_id in self.recording_sessions:
-                        del self.recording_sessions[guild_id]
+                    await self._cleanup_recording_session(guild_id)
                     return
                 
                 meeting_id = meeting_record.get("meeting_id")
@@ -332,14 +337,13 @@ class MeetingRecord(commands.Cog):
                 else:
                     await channel.send("❌ Failed to get meeting_id, tasks will not be generated.")
 
-                if session["voice_client"].is_connected():
-                    await session["voice_client"].disconnect()
+                # Clean up and disconnect after successful completion
+                await self._cleanup_recording_session(guild_id)
             except Exception as e:
                 logger.error(f"Error in recording callback: {e}")
                 await channel.send(f"❌ Error occurred while processing recording: {str(e)}")
-            finally:
-                if guild_id in self.recording_sessions:
-                    del self.recording_sessions[guild_id]
+                # Clean up on exception
+                await self._cleanup_recording_session(guild_id)
         return recording_finished_callback
     
     @commands.Cog.listener()

@@ -41,6 +41,11 @@ class Config:
         return os.getenv("API_BASE_URL", "http://localhost:8000")
     
     @property
+    def frontend_base_url(self) -> str:
+        """Frontend base URL"""
+        return os.getenv("FRONTEND_BASE_URL", "http://localhost:3000")
+    
+    @property
     def api_username(self) -> str:
         """Backend API username"""
         username = os.getenv("API_USERNAME")

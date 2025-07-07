@@ -22,9 +22,6 @@ google-generativeai>=0.3.0
 # Database connectivity
 psycopg2-binary>=2.9.10
 
-# SQLAlchemy for database ORM
-SQLAlchemy>=2.0.0
-
 # Audio processing libraries
 numpy>=1.24.0
 soundfile>=0.12.1

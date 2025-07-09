@@ -1,9 +1,9 @@
-import React from "react";
-import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import { VideoChatRounded } from "@mui/icons-material";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import React from "react";
 import { UserProfile } from "./types";
 
 export interface SidebarItem {
@@ -94,7 +94,7 @@ export const sidebarConfig: SidebarSection[] = [
           {
             id: "roles",
             label: "Roles & permission",
-            href: "/users/roles",
+            href: "/taskbot/admin/permissions",
           },
         ],
       },

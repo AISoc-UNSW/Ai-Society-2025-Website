@@ -194,3 +194,37 @@ export interface Role {
   description?: string;
   user_count: number;
 }
+
+// Permissions management types
+export interface UserListResponse {
+  user_id: number;
+  email: string;
+  username: string;
+  role_id: number;
+  portfolio_id?: number;
+  discord_id?: string;
+}
+
+export interface RoleListResponse {
+  role_name: string;
+  role_id: number;
+  description?: string;
+}
+
+export interface PortfolioListResponse {
+  portfolio_id: number;
+  name: string;
+  description?: string;
+  has_channel: boolean;
+}
+
+export interface UserAdminUpdate {
+  role_id?: number;
+  portfolio_id?: number;
+}
+
+export interface PermissionsSearchFilters {
+  searchQuery: string;
+  roleFilter?: number;
+  portfolioFilter?: number;
+}

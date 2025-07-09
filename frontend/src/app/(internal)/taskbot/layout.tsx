@@ -1,5 +1,5 @@
-import { getCurrentUser } from "@/lib/api/user";
 import { UserProvider } from "@/components/providers/UserProvider";
+import { getCurrentUser } from "@/lib/api/user";
 
 export default async function TaskbotLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser().catch(() => null);

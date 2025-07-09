@@ -16,6 +16,8 @@ class UserCreateRequestBody(UserBase):
 
 class DiscordUserCreateRequestBody(UserBase):
     discord_id: str
+    avatar: str | None = None
+    full_name: str | None = None
 
 
 class UserCreateResponse(UserBase):
@@ -28,13 +30,14 @@ class UserCreateResponse(UserBase):
 
 class UserListResponse(BaseModel):
     """Used for listing users with basic info"""
+
     user_id: int
     email: EmailStr
     username: str
     role_id: int
     portfolio_id: int | None = None
     discord_id: str | None = None
-    
+
     class Config:
         from_attributes = True
 

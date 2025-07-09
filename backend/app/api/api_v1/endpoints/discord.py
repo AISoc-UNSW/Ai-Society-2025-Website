@@ -1,4 +1,5 @@
 from urllib.parse import urlencode
+from datetime import timedelta
 
 import requests
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core.config import settings
+from app.core.security import create_access_token
 from app.crud import user
 from app.schemas.user import (
     DiscordUser,
@@ -112,6 +114,85 @@ def discord_callback(db: Session = Depends(deps.get_db), code: str | None = None
                 "global_name": discord_user.global_name,
             }
         )
+
+
+@router.post("/sync")
+async def discord_sync(
+    db: Session = Depends(deps.get_db),
+    discord_user_data: dict = Body(...),
+):
+    """
+    Sync Discord user from Supabase Auth and return JWT token
+    """
+    try:
+        discord_id = discord_user_data.get("discord_id")
+        email = discord_user_data.get("email")
+        username = discord_user_data.get("username")
+        avatar_url = discord_user_data.get("avatar_url")
+        full_name = discord_user_data.get("full_name")
+
+        if not discord_id or not email:
+            raise HTTPException(status_code=400, detail="Discord ID and email are required")
+
+        # Check if user exists by discord_id
+        user_record = user.get_by_discord_id(db, discord_id=discord_id)
+
+        if user_record:
+            # User exists, update if needed and return token
+            print(f"Discord user {discord_id} found, logging in...")
+
+            # Optionally update user profile with latest Discord data
+            if avatar_url and avatar_url != user_record.avatar:
+                user.update(db, db_obj=user_record, obj_in={"avatar": avatar_url})
+
+        else:
+            # User doesn't exist, create new user
+            print(f"Creating new Discord user: {discord_id}")
+
+            # Check if email already exists (different Discord account)
+            existing_email_user = user.get_by_email(db, email=email)
+            if existing_email_user:
+                # Link Discord to existing email account
+                user.update(db, db_obj=existing_email_user, obj_in={"discord_id": discord_id})
+                user_record = existing_email_user
+            else:
+                # Create completely new user
+                user_in = DiscordUserCreateRequestBody(
+                    email=email,
+                    username=username or email.split("@")[0],
+                    discord_id=discord_id,
+                    avatar=avatar_url,
+                    full_name=full_name,
+                )
+                user_record = user.create_discord_user(db, obj_in=user_in)
+
+        if not user_record:
+            raise HTTPException(status_code=500, detail="Failed to create or retrieve user")
+
+        # Create JWT token for the user
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": str(user_record.user_id)}, expires_delta=access_token_expires
+        )
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "user_id": user_record.user_id,
+                "email": user_record.email,
+                "username": user_record.username,
+                "role_id": user_record.role_id,
+                "discord_id": user_record.discord_id,
+                "avatar": user_record.avatar,
+            },
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Discord sync error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync Discord user: {str(e)}")
 
 
 @router.post("/register", response_model=UserCreateResponse)

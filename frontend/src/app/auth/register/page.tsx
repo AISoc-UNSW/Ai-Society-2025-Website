@@ -1,3 +1,4 @@
+import DiscordLogin from "@/components/auth/DiscordLogin"
 import { createUser } from "@/lib/api/user"
 import {
   Box,
@@ -106,15 +107,7 @@ export default function RegisterPage() {
 
             <Divider>Or continue with</Divider>
 
-            <Button
-              variant="outlined"
-              size="lg"
-              fullWidth
-              component="a"
-              href="/taskbot/dashboard"
-            >
-              🔗 Register with Discord
-            </Button>
+            <DiscordLogin />
 
             <Typography level="body-sm" textAlign="center">
               Already have an account?{" "}

@@ -1,6 +1,9 @@
+import AuthDebugger from "@/components/auth/AuthDebugger"
+import DiscordLogin from "@/components/auth/DiscordLogin"
 import { loginUser } from "@/lib/api/user"
 import { setAuthToken } from "@/lib/session"
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -33,90 +36,107 @@ async function handleLogin(formData: FormData) {
   }
 }
 
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string; message?: string }
+}) {
+  const errorMessage = searchParams?.error
+  const errorDetails = searchParams?.message
+
   return (
-    <CssVarsProvider disableTransitionOnChange>
-      <CssBaseline />
-      <Box
-        sx={{
-          display: 'flex',
-          minHeight: '100vh',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'background.surface',
-          p: 2,
-        }}
-      >
-        <Card
-          variant="outlined"
+    <>
+      <CssVarsProvider disableTransitionOnChange>
+        <CssBaseline />
+        <Box
           sx={{
-            maxWidth: 400,
-            width: '100%',
-            p: 3,
+            display: 'flex',
+            minHeight: '100vh',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'background.surface',
+            p: 2,
           }}
         >
-          <Stack spacing={3}>
-            <Stack spacing={1}>
-              <Typography level="h3" textAlign="center">
-                Login
-              </Typography>
-              <Typography level="body-sm" textAlign="center" color="neutral">
-                Enter your credentials to access your account
+          <Card
+            variant="outlined"
+            sx={{
+              maxWidth: 400,
+              width: '100%',
+              p: 3,
+            }}
+          >
+            <Stack spacing={3}>
+              <Stack spacing={1}>
+                <Typography level="h3" textAlign="center">
+                  Login
+                </Typography>
+                <Typography level="body-sm" textAlign="center" color="neutral">
+                  Enter your credentials to access your account
+                </Typography>
+              </Stack>
+
+              {errorMessage && (
+                <Alert color="danger" variant="soft">
+                  <Typography level="body-sm">
+                    <strong>Authentication Error:</strong> {errorMessage}
+                    {errorDetails && (
+                      <div style={{ marginTop: 4 }}>
+                        {errorDetails}
+                      </div>
+                    )}
+                  </Typography>
+                </Alert>
+              )}
+
+              <form action={handleLogin}>
+                <Stack spacing={2}>
+                  <FormControl required>
+                    <FormLabel>Username</FormLabel>
+                    <Input
+                      name="username"
+                      placeholder="Enter your username"
+                      type="text"
+                    />
+                  </FormControl>
+
+                  <FormControl required>
+                    <FormLabel>Password</FormLabel>
+                    <Input
+                      name="password"
+                      placeholder="Enter your password"
+                      type="password"
+                    />
+                  </FormControl>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    Login
+                  </Button>
+                </Stack>
+              </form>
+
+              <Divider>Or continue with</Divider>
+
+              <DiscordLogin />
+
+              <Typography level="body-sm" textAlign="center">
+                Don&apos;t have an account?{" "}
+                <Link component={NextLink} href="/auth/register">
+                  Sign Up
+                </Link>
               </Typography>
             </Stack>
+          </Card>
+        </Box>
+      </CssVarsProvider>
 
-            <form action={handleLogin}>
-              <Stack spacing={2}>
-                <FormControl required>
-                  <FormLabel>Username</FormLabel>
-                  <Input
-                    name="username"
-                    placeholder="Enter your username"
-                    type="text"
-                  />
-                </FormControl>
-
-                <FormControl required>
-                  <FormLabel>Password</FormLabel>
-                  <Input
-                    name="password"
-                    placeholder="Enter your password"
-                    type="password"
-                  />
-                </FormControl>
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                >
-                  Login
-                </Button>
-              </Stack>
-            </form>
-
-            <Divider>Or continue with</Divider>
-
-            <Button
-              variant="outlined"
-              size="lg"
-              fullWidth
-              component="a"
-              href="/taskbot/dashboard"
-            >
-              🔗 Login with Discord
-            </Button>
-
-            <Typography level="body-sm" textAlign="center">
-              Don&apos;t have an account?{" "}
-              <Link component={NextLink} href="/auth/register">
-                Sign Up
-              </Link>
-            </Typography>
-          </Stack>
-        </Card>
-      </Box>
-    </CssVarsProvider>
+      {/* Debug component - only shows in development */}
+      <AuthDebugger />
+    </>
   )
 } 

@@ -8,6 +8,7 @@ import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
 import { Task, TaskStatus, User } from "@/lib/types";
 import TaskCard from "./TaskCard";
+import { Tab, TabList, Tabs } from "@mui/joy";
 
 interface TasksProps {
   myTasks?: boolean;
@@ -25,6 +26,12 @@ interface TasksProps {
     taskId: number,
     userIds: number[]
   ) => Promise<{ success: boolean; error?: string }>;
+  headerActions?: React.ReactNode;
+  currentStatus?: string;
+  handleStatusChange?: (
+    event: React.SyntheticEvent | null,
+    newValue: string | number | null
+  ) => void;
 }
 
 export default function Tasks({
@@ -37,6 +44,9 @@ export default function Tasks({
   updateTaskAction,
   searchUsersAction,
   updateTaskAssignmentAction,
+  headerActions,
+  currentStatus,
+  handleStatusChange,
 }: TasksProps) {
   const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {
@@ -74,6 +84,7 @@ export default function Tasks({
 
   // Determine the display mode based on role hierarchy
   const getDisplayTitle = () => {
+    if (currentStatus === "created-tasks") return "Tasks Created by Me";
     if (directorPortfolioId) return "Your portfolio's Tasks";
     if (admin) return "All Tasks";
     if (myTasks) return "My Tasks";
@@ -81,6 +92,7 @@ export default function Tasks({
   };
 
   const getDisplayDescription = () => {
+    if (currentStatus === "created-tasks") return "View and manage tasks you have created";
     if (directorPortfolioId) return "View and manage your portfolio's tasks";
     if (admin) return "View and manage all tasks";
     if (myTasks) return "View and manage your assigned tasks";
@@ -88,6 +100,7 @@ export default function Tasks({
   };
 
   const getEmptyStateMessage = () => {
+    if (currentStatus === "created-tasks") return "You haven't created any tasks yet.";
     if (directorPortfolioId)
       return "You don't have any tasks assigned to your portfolio at the moment.";
     if (admin) return "No tasks found.";
@@ -98,13 +111,16 @@ export default function Tasks({
   return (
     <>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography level="h2" sx={{ mb: 1 }}>
-          {getDisplayTitle()}
-        </Typography>
-        <Typography level="body-md" color="neutral">
-          {getDisplayDescription()}
-        </Typography>
+      <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between" }}>
+        <Box>
+          <Typography level="h2" sx={{ mb: 1 }}>
+            {getDisplayTitle()}
+          </Typography>
+          <Typography level="body-md" color="neutral">
+            {getDisplayDescription()}
+          </Typography>
+        </Box>
+        {headerActions && <Box sx={{ display: "flex", alignItems: "center" }}>{headerActions}</Box>}
       </Box>
 
       {/* Task Stats */}
@@ -132,6 +148,18 @@ export default function Tasks({
           </CardContent>
         </Card>
       </Stack>
+
+      <Box sx={{ mb: 2 }}>
+        <Tabs value={currentStatus} onChange={handleStatusChange}>
+          <TabList>
+            <Tab value="all">All Tasks</Tab>
+            <Tab value="in-progress">In Progress</Tab>
+            <Tab value="completed">Completed</Tab>
+            <Tab value="cancelled">Cancelled</Tab>
+            <Tab value="created-tasks">Created Tasks</Tab>
+          </TabList>
+        </Tabs>
+      </Box>
 
       {/* Tasks Grid or Empty State */}
       {totalTasks > 0 ? (

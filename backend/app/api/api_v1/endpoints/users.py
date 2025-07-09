@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.crud import user
 from app.models.user import User
-from app.schemas.user import UserCreateRequestBody, UserCreateResponse, UserListResponse, UserAdminUpdate
+from app.schemas.user import UserCreateRequestBody, UserCreateResponse, UserListResponse, UserAdminUpdate, UserSelfUpdate
 
 router = APIRouter()
 
@@ -65,6 +65,30 @@ def read_user_me(
             portfolio_id=user_record.portfolio_id,
         )
     return user_response
+
+
+@router.put("/me", response_model=UserListResponse)
+def update_user_me(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_in: UserSelfUpdate,
+    current_user: User = Depends(deps.get_current_user),
+) -> UserListResponse:
+    """
+    Update current user's information
+    
+    Business rule: portfolio_id can only be modified once.
+    If the user already has a portfolio_id set, it cannot be changed.
+    """
+    user_record = user.update_user_self(db, db_obj=current_user, obj_in=user_in)
+    return UserListResponse(
+        user_id=user_record.user_id,
+        email=user_record.email,
+        username=user_record.username,
+        role_id=user_record.role_id,
+        discord_id=user_record.discord_id,
+        portfolio_id=user_record.portfolio_id,
+    )
 
 
 @router.get("/portfolio/{portfolio_id}", response_model=list[UserListResponse])

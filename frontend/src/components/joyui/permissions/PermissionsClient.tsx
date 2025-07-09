@@ -1,35 +1,35 @@
 'use client';
 
+import EditUserPermissionsModal from '@/components/joyui/permissions/EditUserPermissionsModal';
 import Sidebar from '@/components/joyui/Sidebar';
 import type {
-    PortfolioListResponse,
-    RoleListResponse,
-    UserAdminUpdate,
-    UserListResponse,
+  PortfolioListResponse,
+  RoleListResponse,
+  UserAdminUpdate,
+  UserListResponse,
 } from '@/lib/types';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    CircularProgress,
-    FormControl,
-    FormLabel,
-    IconButton,
-    Input,
-    Option,
-    Select,
-    Sheet,
-    Table,
-    Typography,
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  FormControl,
+  FormLabel,
+  IconButton,
+  Input,
+  Option,
+  Select,
+  Sheet,
+  Table,
+  Typography,
 } from '@mui/joy';
 import CssBaseline from '@mui/joy/CssBaseline';
 import { CssVarsProvider } from '@mui/joy/styles';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import EditUserPermissionsModal from './EditUserPermissionsModal';
 
 interface PermissionsClientProps {
   initialUsers: UserListResponse[];

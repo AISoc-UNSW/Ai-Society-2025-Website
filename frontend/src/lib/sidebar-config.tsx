@@ -15,6 +15,7 @@ export interface SidebarItem {
   selected?: boolean;
   children?: SidebarItem[];
   defaultExpanded?: boolean;
+  requiresRoles?: string[]; // Required roles to access this item (any of these roles)
 }
 
 export interface SidebarSection {
@@ -95,6 +96,7 @@ export const sidebarConfig: SidebarSection[] = [
             id: "roles",
             label: "Roles & permission",
             href: "/taskbot/admin/permissions",
+            requiresRoles: ["admin"], // Allow both director and admin
           },
         ],
       },

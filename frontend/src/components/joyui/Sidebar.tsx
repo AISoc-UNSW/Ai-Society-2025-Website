@@ -1,30 +1,30 @@
-import * as React from "react";
-import { useRouter, usePathname } from "next/navigation";
-import GlobalStyles from "@mui/joy/GlobalStyles";
+import BrightnessAutoRoundedIcon from "@mui/icons-material/BrightnessAutoRounded";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
 import Divider from "@mui/joy/Divider";
+import GlobalStyles from "@mui/joy/GlobalStyles";
 import IconButton from "@mui/joy/IconButton";
 import List from "@mui/joy/List";
 import ListItem from "@mui/joy/ListItem";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
 import ListItemContent from "@mui/joy/ListItemContent";
-import Typography from "@mui/joy/Typography";
 import Sheet from "@mui/joy/Sheet";
-import BrightnessAutoRoundedIcon from "@mui/icons-material/BrightnessAutoRounded";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import Typography from "@mui/joy/Typography";
+import { usePathname, useRouter } from "next/navigation";
+import * as React from "react";
 
 import ColorSchemeToggle from "@/components/joyui/ColorSchemeToggle";
 import { closeSidebar } from "@/lib/dom-utils";
 import {
-  sidebarConfig,
   brandConfig,
+  sidebarConfig,
   type SidebarItem,
   type SidebarSection,
 } from "@/lib/sidebar-config";
-import { useUser, useLogout } from "@/stores/userStore";
 import { getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
+import { useLogout, useUser } from "@/stores/userStore";
 
 function Toggler({
   defaultExpanded = false,
@@ -89,10 +89,16 @@ interface SidebarItemProps {
   item: SidebarItem;
   currentPath: string;
   onNavigate: (href: string) => void;
+  userRole?: string;
 }
 
-function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProps) {
+function SidebarItemComponent({ item, currentPath, onNavigate, userRole }: SidebarItemProps) {
   const isSelected = Boolean(item.selected) || Boolean(item.href && currentPath === item.href);
+  
+  // Check if user has required roles
+  if (item.requiresRoles && !item.requiresRoles.includes(userRole || '')) {
+    return null; // Don't render item if user doesn't have required role
+  }
 
   const handleClick = () => {
     if (item.onClick) {
@@ -116,10 +122,19 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
     );
   }
 
-  // Check if any child is selected
-  const hasSelectedChild = item.children.some(
+  // Filter children based on user role and check if any are selected
+  const visibleChildren = item.children?.filter(child => 
+    !child.requiresRoles || child.requiresRoles.includes(userRole || '')
+  ) || [];
+  
+  const hasSelectedChild = visibleChildren.some(
     child => Boolean(child.selected) || Boolean(child.href && currentPath === child.href)
   );
+  
+  // If no children are visible, don't render the parent item
+  if (item.children && visibleChildren.length === 0) {
+    return null;
+  }
 
   // Nested item with children
   return (
@@ -141,7 +156,7 @@ function SidebarItemComponent({ item, currentPath, onNavigate }: SidebarItemProp
         )}
       >
         <List sx={{ gap: 0.5 }}>
-          {item.children.map((child, index) => (
+          {visibleChildren.map((child, index) => (
             <ListItem key={child.id} sx={index === 0 ? { mt: 0.5 } : {}}>
               <ListItemButton
                 selected={
@@ -195,6 +210,18 @@ export default function Sidebar({ config = sidebarConfig, brand = brandConfig }:
     email: "",
     avatar: "",
   };
+
+  // Convert role_id to role name for permission checking
+  const getUserRoleName = (roleId?: number): string => {
+    switch (roleId) {
+      case 1: return "user";
+      case 2: return "admin"; 
+      case 3: return "director";
+      default: return "user";
+    }
+  };
+
+  const userRole = getUserRoleName(currentUser?.role_id);
 
   const topSections = config.filter(section => section.position !== "bottom");
   const bottomSections = config.filter(section => section.position === "bottom");
@@ -291,6 +318,7 @@ export default function Sidebar({ config = sidebarConfig, brand = brandConfig }:
                 item={item}
                 currentPath={pathname}
                 onNavigate={handleNavigate}
+                userRole={userRole}
               />
             ))}
           </List>

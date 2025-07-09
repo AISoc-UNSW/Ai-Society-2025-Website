@@ -75,8 +75,8 @@ export default async function PermissionsPage() {
     redirect('/auth/login');
   }
 
-  // Check if user has admin role (assuming role_id 1 or 2 for director/admin)
-  if (![1, 2].includes(user.role_id)) {
+  // Check if user has admin role (assuming role_id 2 for admin)
+  if (![2].includes(user.role_id)) {
     redirect('/taskbot/dashboard');
   }
 

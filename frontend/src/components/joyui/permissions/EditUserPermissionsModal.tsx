@@ -1,26 +1,26 @@
 'use client';
 
 import type {
-    PortfolioListResponse,
-    RoleListResponse,
-    UserAdminUpdate,
-    UserListResponse,
+  PortfolioListResponse,
+  RoleListResponse,
+  UserAdminUpdate,
+  UserListResponse,
 } from '@/lib/types';
 import PersonIcon from '@mui/icons-material/Person';
 import {
-    Box,
-    Button,
-    Chip,
-    Divider,
-    FormControl,
-    FormLabel,
-    Modal,
-    ModalClose,
-    ModalDialog,
-    Option,
-    Select,
-    Stack,
-    Typography,
+  Box,
+  Button,
+  Chip,
+  Divider,
+  FormControl,
+  FormLabel,
+  Modal,
+  ModalClose,
+  ModalDialog,
+  Option,
+  Select,
+  Stack,
+  Typography,
 } from '@mui/joy';
 import { useState } from 'react';
 
@@ -167,6 +167,13 @@ export default function EditUserPermissionsModal({
                 <Select
                   value={selectedRoleId}
                   onChange={(_, value) => setSelectedRoleId(value as number)}
+                  renderValue={(option) => {
+                    if (option) {
+                      const role = roles.find(r => r.role_id === option.value);
+                      return role?.role_name || 'Unknown';
+                    }
+                    return '';
+                  }}
                 >
                   {roles.map(role => (
                     <Option key={role.role_id} value={role.role_id}>
@@ -186,16 +193,40 @@ export default function EditUserPermissionsModal({
                 <Select
                   value={selectedPortfolioId}
                   onChange={(_, value) => setSelectedPortfolioId(value as number | null)}
+                  renderValue={(option) => {
+                    if (option) {
+                      if (option.value === null) {
+                        return 'Unassigned';
+                      }
+                      const portfolio = portfolios.find(p => p.portfolio_id === option.value);
+                      return portfolio?.name || 'Unknown';
+                    }
+                    return '';
+                  }}
                 >
                   <Option value={null}>Unassigned</Option>
                   {portfolios.map(portfolio => (
                     <Option key={portfolio.portfolio_id} value={portfolio.portfolio_id}>
-                      {portfolio.name}
-                      {portfolio.description && (
-                        <Typography level="body-xs" sx={{ color: 'neutral.500', display: 'block' }}>
-                          {portfolio.description}
+                      <Box>
+                        <Typography level="body-sm" component="span">
+                          {portfolio.name}
                         </Typography>
-                      )}
+                        {portfolio.description && (
+                          <>
+                            <Typography
+                              level="body-xs"
+                              sx={{
+                                color: 'neutral.400',
+                                display: 'block',
+                                mt: 0.5,
+                                pl: 1,
+                              }}
+                            >
+                              {portfolio.description}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
                     </Option>
                   ))}
                 </Select>

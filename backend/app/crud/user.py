@@ -91,3 +91,8 @@ def search_users(db: Session, *, search_term: str, limit: int = 10) -> list[User
     )
 
     return db.query(User).filter(search_filter).limit(limit).all()
+
+
+def get_all_users(db: Session, *, skip: int = 0, limit: int = 100) -> list[User]:
+    """Get all users with pagination support"""
+    return db.query(User).offset(skip).limit(limit).all()

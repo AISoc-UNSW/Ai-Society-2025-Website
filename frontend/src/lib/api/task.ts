@@ -22,7 +22,7 @@ export async function fetchUserTasks(): Promise<UserTaskAssignment[]> {
   });
 }
 
-export async function getTasksByPortfolio(portfolioId: number): Promise<TaskResponse[]> {
+export async function fetchTasksByPortfolio(portfolioId: number): Promise<TaskResponse[]> {
   return await apiFetch(`/api/v1/tasks/portfolio/${portfolioId}`, {
     method: "GET",
   });
@@ -30,6 +30,12 @@ export async function getTasksByPortfolio(portfolioId: number): Promise<TaskResp
 
 export async function fetchAllTasks(): Promise<TaskResponse[]> {
   return await apiFetch("/api/v1/tasks", {
+    method: "GET",
+  });
+}
+
+export async function fetchTasksCreatedByMe(userId: number): Promise<TaskResponse[]> {
+  return await apiFetch(`/api/v1/tasks/created-by/${userId}`, {
     method: "GET",
   });
 }
@@ -234,7 +240,7 @@ export async function getUserTasksWithRole(user: User, targetStatus?: TaskStatus
     // Load tasks based on role
     let allTasks: Task[] = [];
     if (directorPortfolioId) {
-      const portfolioTasks = await getTasksByPortfolio(directorPortfolioId);
+      const portfolioTasks = await fetchTasksByPortfolio(directorPortfolioId);
       allTasks = await Promise.all(portfolioTasks.map(transformTaskResponseToTask));
     } else if (userIsAdmin) {
       const adminTasks = await fetchAllTasks();

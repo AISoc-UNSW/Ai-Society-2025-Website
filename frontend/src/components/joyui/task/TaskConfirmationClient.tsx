@@ -1,7 +1,15 @@
 "use client";
 
 import Sidebar from "@/components/joyui/Sidebar";
-import { HierarchicalTask, PortfolioSimple, Task, TaskCreateRequest, TaskResponse, TaskUserAssignmentResponse, User } from "@/lib/types";
+import {
+  HierarchicalTask,
+  PortfolioSimple,
+  Task,
+  TaskCreateRequest,
+  TaskResponse,
+  TaskUserAssignmentResponse,
+  User,
+} from "@/lib/types";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
@@ -26,9 +34,7 @@ interface TaskConfirmationClientProps {
   createTaskAction: (
     taskData: TaskCreateRequest
   ) => Promise<{ success: boolean; task?: TaskResponse; error?: string }>;
-  deleteTaskAction: (
-    taskId: number
-  ) => Promise<{ success: boolean; error?: string }>;
+  deleteTaskAction: (taskId: number) => Promise<{ success: boolean; error?: string }>;
   confirmAllTasksAction: (
     meetingId: number
   ) => Promise<{ success: boolean; confirmedCount?: number; error?: string }>;
@@ -66,7 +72,7 @@ function buildTaskHierarchy(tasks: TaskResponse[]): HierarchicalTask[] {
   // Second pass: build hierarchy
   tasks.forEach(task => {
     const hierarchicalTask = taskMap.get(task.task_id)!;
-    
+
     if (task.parent_task_id) {
       const parentTask = taskMap.get(task.parent_task_id);
       if (parentTask) {
@@ -127,18 +133,20 @@ export default function TaskConfirmationClient({
       if (result.success) {
         showAlert("success", "Task updated successfully");
         // Update local state - only update fields that exist in TaskResponse
-        setTasks(prev => prev.map(task => 
-          task.task_id === taskId 
-            ? { 
-                ...task, 
-                ...(updates.title !== undefined && { title: updates.title }),
-                ...(updates.description !== undefined && { description: updates.description }),
-                ...(updates.status !== undefined && { status: updates.status }),
-                ...(updates.priority !== undefined && { priority: updates.priority }),
-                ...(updates.deadline !== undefined && { deadline: updates.deadline })
-              }
-            : task
-        ));
+        setTasks(prev =>
+          prev.map(task =>
+            task.task_id === taskId
+              ? {
+                  ...task,
+                  ...(updates.title !== undefined && { title: updates.title }),
+                  ...(updates.description !== undefined && { description: updates.description }),
+                  ...(updates.status !== undefined && { status: updates.status }),
+                  ...(updates.priority !== undefined && { priority: updates.priority }),
+                  ...(updates.deadline !== undefined && { deadline: updates.deadline }),
+                }
+              : task
+          )
+        );
       } else {
         showAlert("danger", result.error || "Failed to update task");
       }
@@ -167,16 +175,18 @@ export default function TaskConfirmationClient({
         setTasks(prev => {
           const taskToDelete = prev.find(t => t.task_id === taskId);
           if (!taskToDelete) return prev;
-          
+
           // Remove the task and all its subtasks
           const tasksToRemove = new Set<number>();
           const addTaskAndSubtasks = (id: number) => {
             tasksToRemove.add(id);
-            prev.filter(t => t.parent_task_id === id).forEach(subtask => {
-              addTaskAndSubtasks(subtask.task_id);
-            });
+            prev
+              .filter(t => t.parent_task_id === id)
+              .forEach(subtask => {
+                addTaskAndSubtasks(subtask.task_id);
+              });
           };
-          
+
           addTaskAndSubtasks(taskId);
           return prev.filter(task => !tasksToRemove.has(task.task_id));
         });
@@ -253,11 +263,7 @@ export default function TaskConfirmationClient({
               color={alertMessage.type}
               sx={{ mb: 3 }}
               endDecorator={
-                <Button
-                  variant="plain"
-                  size="sm"
-                  onClick={() => setAlertMessage(null)}
-                >
+                <Button variant="plain" size="sm" onClick={() => setAlertMessage(null)}>
                   ✕
                 </Button>
               }
@@ -299,4 +305,4 @@ export default function TaskConfirmationClient({
       </Box>
     </CssVarsProvider>
   );
-} 
+}

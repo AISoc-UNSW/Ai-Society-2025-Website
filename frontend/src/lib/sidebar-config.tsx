@@ -4,7 +4,6 @@ import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import { VideoChatRounded } from "@mui/icons-material";
-import { UserProfile } from "./types";
 
 export interface SidebarItem {
   id: string;
@@ -66,6 +65,11 @@ export const sidebarConfig: SidebarSection[] = [
             label: "Cancelled",
             href: "/taskbot/tasks/cancelled",
           },
+          {
+            id: "created-tasks",
+            label: "Created tasks",
+            href: "/taskbot/tasks/created-tasks",
+          },
         ],
       },
       {
@@ -119,12 +123,6 @@ export const sidebarConfig: SidebarSection[] = [
   //     ],
   //   },
 ];
-
-export const currentUser: UserProfile = {
-  name: "AISoc IT",
-  email: "ai.soc.it@gmail.com",
-  avatar: "https://unswaisoc.com/static/media/logo.e6e71831c6d3fb4f7f84.webp",
-};
 
 export interface BrandConfig {
   name: string;

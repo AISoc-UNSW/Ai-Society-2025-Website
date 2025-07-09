@@ -1,24 +1,24 @@
 "use client";
 
-import * as React from "react";
-import Modal from "@mui/joy/Modal";
-import ModalDialog from "@mui/joy/ModalDialog";
-import ModalClose from "@mui/joy/ModalClose";
-import Typography from "@mui/joy/Typography";
+import { Assignee, PriorityLevel, Task, TaskStatus, User } from "@/lib/types";
+import { formatDateWithMinutes, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
+import Avatar from "@mui/joy/Avatar";
+import Box from "@mui/joy/Box";
+import Button from "@mui/joy/Button";
+import Chip from "@mui/joy/Chip";
+import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
-import Textarea from "@mui/joy/Textarea";
-import Select from "@mui/joy/Select";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
 import Option from "@mui/joy/Option";
-import Button from "@mui/joy/Button";
+import Select from "@mui/joy/Select";
 import Stack from "@mui/joy/Stack";
-import Divider from "@mui/joy/Divider";
-import { Task, TaskStatus, PriorityLevel, User, Assignee } from "@/lib/types";
-import { formatDateWithMinutes, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
-import Avatar from "@mui/joy/Avatar";
-import Chip from "@mui/joy/Chip";
-import Box from "@mui/joy/Box";
+import Textarea from "@mui/joy/Textarea";
+import Typography from "@mui/joy/Typography";
+import * as React from "react";
 
 interface EditTaskModalProps {
   open: boolean;
@@ -31,6 +31,7 @@ interface EditTaskModalProps {
     taskId: number,
     userIds: number[]
   ) => Promise<{ success: boolean; error?: string }>;
+  disableStatusChange?: boolean; // New prop to disable status changes
 }
 
 const statusOptions: TaskStatus[] = ["Not Started", "In Progress", "Completed", "Cancelled"];
@@ -44,6 +45,7 @@ export default function EditTaskModal({
   isLoading = false,
   searchUsersAction,
   updateTaskAssignmentAction,
+  disableStatusChange = false,
 }: EditTaskModalProps) {
   // Form state
   const [formData, setFormData] = React.useState({
@@ -259,7 +261,7 @@ export default function EditTaskModal({
                 <Select
                   value={formData.status}
                   onChange={(_, value) => value && handleInputChange("status", value)}
-                  disabled={isLoading}
+                  disabled={isLoading || disableStatusChange}
                 >
                   {statusOptions.map(status => (
                     <Option key={status} value={status}>
@@ -267,6 +269,11 @@ export default function EditTaskModal({
                     </Option>
                   ))}
                 </Select>
+                {disableStatusChange && (
+                  <Typography level="body-xs" color="neutral">
+                    Status cannot be changed for pending tasks
+                  </Typography>
+                )}
               </FormControl>
 
               <FormControl sx={{ flex: 1 }}>

@@ -1,33 +1,41 @@
 "use client";
 
-import * as React from "react";
+import {
+  HierarchicalTask,
+  Portfolio,
+  PortfolioSimple,
+  PriorityLevel,
+  Task,
+  TaskCreateRequest,
+  TaskStatus,
+  TaskUserAssignmentResponse,
+  User
+} from "@/lib/types";
+import { formatDateWithMinutes, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
+import Avatar from "@mui/joy/Avatar";
+import AvatarGroup from "@mui/joy/AvatarGroup";
 import Box from "@mui/joy/Box";
-import Card from "@mui/joy/Card";
-import CardContent from "@mui/joy/CardContent";
-import CardActions from "@mui/joy/CardActions";
-import Typography from "@mui/joy/Typography";
 import Button from "@mui/joy/Button";
-import Stack from "@mui/joy/Stack";
+import Card from "@mui/joy/Card";
+import CardActions from "@mui/joy/CardActions";
+import CardContent from "@mui/joy/CardContent";
 import Chip from "@mui/joy/Chip";
-import Modal from "@mui/joy/Modal";
-import ModalDialog from "@mui/joy/ModalDialog";
-import ModalClose from "@mui/joy/ModalClose";
-import DialogTitle from "@mui/joy/DialogTitle";
-import DialogContent from "@mui/joy/DialogContent";
 import DialogActions from "@mui/joy/DialogActions";
+import DialogContent from "@mui/joy/DialogContent";
+import DialogTitle from "@mui/joy/DialogTitle";
 import FormControl from "@mui/joy/FormControl";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
-import Textarea from "@mui/joy/Textarea";
-import Select from "@mui/joy/Select";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
 import Option from "@mui/joy/Option";
-import {
-  HierarchicalTask,
-  TaskUpdateRequest,
-  TaskCreateRequest,
-  PortfolioSimple,
-} from "@/lib/types";
-import { formatDateWithMinutes } from "@/lib/utils";
+import Select from "@mui/joy/Select";
+import Stack from "@mui/joy/Stack";
+import Textarea from "@mui/joy/Textarea";
+import Typography from "@mui/joy/Typography";
+import * as React from "react";
+import EditTaskModal from "./EditTaskModal";
 
 // Priority color mapping
 const getPriorityColor = (priority: string) => {
@@ -49,16 +57,22 @@ interface TaskConfirmationListProps {
   tasks: HierarchicalTask[];
   meetingId: number;
   portfolios: PortfolioSimple[];
-  onTaskUpdate: (taskId: number, updates: TaskUpdateRequest) => Promise<void>;
+  onTaskUpdate: (taskId: number, updates: Partial<Task>) => Promise<void>;
   onTaskCreate: (taskData: TaskCreateRequest) => Promise<void>;
   onTaskDelete: (taskId: number) => Promise<void>;
   isLoading: boolean;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
+  getTaskAssigneesAction?: (taskId: number) => Promise<TaskUserAssignmentResponse[]>;
 }
 
 interface TaskFormData {
   title: string;
   description: string;
-  priority: string;
+  priority: PriorityLevel;
   deadline: string;
   portfolio_id: number;
 }
@@ -71,6 +85,9 @@ export default function TaskConfirmationList({
   onTaskCreate,
   onTaskDelete,
   isLoading,
+  searchUsersAction,
+  updateTaskAssignmentAction,
+  getTaskAssigneesAction,
 }: TaskConfirmationListProps) {
   const [editingTask, setEditingTask] = React.useState<HierarchicalTask | null>(null);
   const [creatingTask, setCreatingTask] = React.useState<{
@@ -79,6 +96,8 @@ export default function TaskConfirmationList({
   }>({ isOpen: false });
   const [deleteConfirm, setDeleteConfirm] = React.useState<number | null>(null);
   const [mounted, setMounted] = React.useState(false);
+  const [taskToEdit, setTaskToEdit] = React.useState<Task | null>(null);
+  const [taskAssignees, setTaskAssignees] = React.useState<Map<number, TaskUserAssignmentResponse[]>>(new Map());
 
   // Helper function to get portfolio name by ID
   const getPortfolioName = (portfolioId: number): string => {
@@ -86,25 +105,91 @@ export default function TaskConfirmationList({
     return portfolio ? portfolio.name : `Portfolio ${portfolioId}`;
   };
 
+  // Function to load assignees for a task
+  const loadTaskAssignees = React.useCallback(async (taskId: number) => {
+    if (getTaskAssigneesAction) {
+      try {
+        const assignees = await getTaskAssigneesAction(taskId);
+        setTaskAssignees(prev => new Map(prev).set(taskId, assignees));
+      } catch (error) {
+        console.error("Failed to load task assignees:", error);
+      }
+    }
+  }, [getTaskAssigneesAction]);
+
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleEditTask = (task: HierarchicalTask) => {
-    setEditingTask(task);
+  // Load assignees for all tasks when tasks change
+  React.useEffect(() => {
+    if (getTaskAssigneesAction) {
+      tasks.forEach(task => {
+        loadTaskAssignees(task.task_id);
+        // Also load for subtasks
+        const loadSubtaskAssignees = (subtasks: HierarchicalTask[]) => {
+          subtasks.forEach(subtask => {
+            loadTaskAssignees(subtask.task_id);
+            if (subtask.subtasks.length > 0) {
+              loadSubtaskAssignees(subtask.subtasks);
+            }
+          });
+        };
+        loadSubtaskAssignees(task.subtasks);
+      });
+    }
+  }, [tasks, getTaskAssigneesAction, loadTaskAssignees]);
+
+  const handleEditTask = async (task: HierarchicalTask) => {
+    // Get current assignees for this task
+    const currentAssignees = taskAssignees.get(task.task_id) || [];
+    
+    // Convert HierarchicalTask to Task for EditTaskModal
+    const taskForEdit: Task = {
+      id: task.task_id,
+      title: task.title,
+      description: task.description || "",
+      status: task.status as TaskStatus,
+      priority: task.priority as PriorityLevel,
+      deadline: task.deadline,
+      created_at: task.created_at || "",
+      updated_at: task.updated_at || "",
+      created_by: { user_id: 0, username: "", email: "" }, // Placeholder
+      portfolio: getPortfolioName(task.portfolio_id) as Portfolio,
+      assignees: currentAssignees.map(assignee => ({
+        id: assignee.user_id,
+        name: assignee.user_username,
+        email: assignee.user_email,
+      })),
+      subtasks: [], // Not needed for editing
+    };
+    setTaskToEdit(taskForEdit);
   };
 
-  const handleSaveEdit = async (formData: TaskFormData) => {
-    if (!editingTask) return;
+  const handleSaveEdit = async (updates: Partial<Task>) => {
+    if (!taskToEdit) return;
 
-    await onTaskUpdate(editingTask.task_id, {
-      title: formData.title,
-      description: formData.description,
-      priority: formData.priority,
-      deadline: formData.deadline,
-      portfolio_id: formData.portfolio_id,
-    });
-    setEditingTask(null);
+    // Convert Task updates back to backend format
+    const backendUpdates: any = {
+      title: updates.title,
+      description: updates.description,
+      status: updates.status,
+      priority: updates.priority,
+      deadline: updates.deadline,
+    };
+
+    // If portfolio was changed, find the portfolio_id
+    if (updates.portfolio) {
+      const portfolio = portfolios.find(p => p.name === updates.portfolio);
+      if (portfolio) {
+        backendUpdates.portfolio_id = portfolio.portfolio_id;
+      }
+    }
+
+    await onTaskUpdate(taskToEdit.id, backendUpdates);
+    // Reload assignees for the updated task
+    await loadTaskAssignees(taskToEdit.id);
+    setTaskToEdit(null);
   };
 
   const handleCreateTask = async (formData: TaskFormData, parentId?: number) => {
@@ -126,6 +211,8 @@ export default function TaskConfirmationList({
   };
 
   const renderTask = (task: HierarchicalTask, level: number = 0) => {
+    const assignees = taskAssignees.get(task.task_id) || [];
+    
     return (
       <Box key={task.task_id} sx={{ ml: level * 3 }}>
         <Card
@@ -167,7 +254,7 @@ export default function TaskConfirmationList({
               )}
 
               {/* Task Details */}
-              <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+              <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap" }}>
                 <Typography level="body-xs" color="neutral">
                   Due: {mounted ? formatDateWithMinutes(task.deadline, true) : "Loading..."}
                 </Typography>
@@ -175,6 +262,36 @@ export default function TaskConfirmationList({
                   Portfolio: {getPortfolioName(task.portfolio_id)}
                 </Typography>
               </Stack>
+
+              {/* Assignees Section */}
+              {assignees.length > 0 && (
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                  <Typography level="body-xs" color="neutral" sx={{ mr: 1 }}>
+                    Assigned to:
+                  </Typography>
+                  <AvatarGroup size="sm" sx={{ "--AvatarGroup-gap": "-8px" }}>
+                    {assignees.slice(0, 3).map((assignee) => (
+                      <Avatar
+                        key={assignee.user_id}
+                        size="sm"
+                        sx={{
+                          backgroundColor: getEmailAvatarColor(assignee.user_email),
+                          color: "white",
+                          fontSize: "0.75rem",
+                        }}
+                        title={`${assignee.user_username} (${assignee.user_email})`}
+                      >
+                        {getEmailInitials(assignee.user_email)}
+                      </Avatar>
+                    ))}
+                    {assignees.length > 3 && (
+                      <Avatar size="sm" sx={{ fontSize: "0.75rem" }}>
+                        +{assignees.length - 3}
+                      </Avatar>
+                    )}
+                  </AvatarGroup>
+                </Stack>
+              )}
             </Stack>
           </CardContent>
 
@@ -248,25 +365,19 @@ export default function TaskConfirmationList({
         </Card>
       )}
 
-      {/* Edit Task Modal */}
-      <TaskFormModal
-        open={!!editingTask}
-        onClose={() => setEditingTask(null)}
-        onSave={handleSaveEdit}
-        portfolios={portfolios}
-        initialData={
-          editingTask
-            ? {
-                title: editingTask.title,
-                description: editingTask.description || "",
-                priority: editingTask.priority,
-                deadline: editingTask.deadline,
-                portfolio_id: editingTask.portfolio_id,
-              }
-            : undefined
-        }
-        title="Edit Task"
-      />
+      {/* Edit Task Modal - Use EditTaskModal for assignment functionality */}
+      {taskToEdit && (
+        <EditTaskModal
+          open={!!taskToEdit}
+          task={taskToEdit}
+          onClose={() => setTaskToEdit(null)}
+          onSave={handleSaveEdit}
+          isLoading={isLoading}
+          searchUsersAction={searchUsersAction}
+          updateTaskAssignmentAction={updateTaskAssignmentAction}
+          disableStatusChange={true}
+        />
+      )}
 
       {/* Create Task Modal */}
       <TaskFormModal

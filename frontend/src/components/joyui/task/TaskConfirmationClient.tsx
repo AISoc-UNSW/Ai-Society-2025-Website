@@ -1,18 +1,18 @@
 "use client";
 
-import * as React from "react";
-import { CssVarsProvider } from "@mui/joy/styles";
-import CssBaseline from "@mui/joy/CssBaseline";
-import Box from "@mui/joy/Box";
-import Typography from "@mui/joy/Typography";
-import Button from "@mui/joy/Button";
-import Stack from "@mui/joy/Stack";
-import Alert from "@mui/joy/Alert";
-import CircularProgress from "@mui/joy/CircularProgress";
 import Sidebar from "@/components/joyui/Sidebar";
-import TaskConfirmationList from "./TaskConfirmationList";
-import { TaskResponse, TaskUpdateRequest, TaskCreateRequest, HierarchicalTask, PortfolioSimple } from "@/lib/types";
+import { HierarchicalTask, PortfolioSimple, Task, TaskCreateRequest, TaskResponse, TaskUserAssignmentResponse, User } from "@/lib/types";
+import Alert from "@mui/joy/Alert";
+import Box from "@mui/joy/Box";
+import Button from "@mui/joy/Button";
+import CircularProgress from "@mui/joy/CircularProgress";
+import CssBaseline from "@mui/joy/CssBaseline";
+import Stack from "@mui/joy/Stack";
+import { CssVarsProvider } from "@mui/joy/styles";
+import Typography from "@mui/joy/Typography";
+import * as React from "react";
 import { useTransition } from "react";
+import TaskConfirmationList from "./TaskConfirmationList";
 
 interface TaskConfirmationClientProps {
   meetingId: number;
@@ -21,7 +21,7 @@ interface TaskConfirmationClientProps {
   error?: string;
   updateTaskAction: (
     taskId: number,
-    updates: TaskUpdateRequest
+    updates: Partial<Task>
   ) => Promise<{ success: boolean; error?: string }>;
   createTaskAction: (
     taskData: TaskCreateRequest
@@ -32,6 +32,12 @@ interface TaskConfirmationClientProps {
   confirmAllTasksAction: (
     meetingId: number
   ) => Promise<{ success: boolean; confirmedCount?: number; error?: string }>;
+  searchUsersAction?: (searchTerm: string) => Promise<User[]>;
+  updateTaskAssignmentAction?: (
+    taskId: number,
+    userIds: number[]
+  ) => Promise<{ success: boolean; error?: string }>;
+  getTaskAssigneesAction?: (taskId: number) => Promise<TaskUserAssignmentResponse[]>;
 }
 
 // Transform flat task list to hierarchical structure
@@ -86,6 +92,9 @@ export default function TaskConfirmationClient({
   createTaskAction,
   deleteTaskAction,
   confirmAllTasksAction,
+  searchUsersAction,
+  updateTaskAssignmentAction,
+  getTaskAssigneesAction,
 }: TaskConfirmationClientProps) {
   const [isPending, startTransition] = useTransition();
   const [mounted, setMounted] = React.useState(false);
@@ -112,15 +121,22 @@ export default function TaskConfirmationClient({
     setTimeout(() => setAlertMessage(null), 5000);
   };
 
-  const handleTaskUpdate = async (taskId: number, updates: TaskUpdateRequest) => {
+  const handleTaskUpdate = async (taskId: number, updates: Partial<Task>) => {
     startTransition(async () => {
       const result = await updateTaskAction(taskId, updates);
       if (result.success) {
         showAlert("success", "Task updated successfully");
-        // Update local state
+        // Update local state - only update fields that exist in TaskResponse
         setTasks(prev => prev.map(task => 
           task.task_id === taskId 
-            ? { ...task, ...updates }
+            ? { 
+                ...task, 
+                ...(updates.title !== undefined && { title: updates.title }),
+                ...(updates.description !== undefined && { description: updates.description }),
+                ...(updates.status !== undefined && { status: updates.status }),
+                ...(updates.priority !== undefined && { priority: updates.priority }),
+                ...(updates.deadline !== undefined && { deadline: updates.deadline })
+              }
             : task
         ));
       } else {
@@ -259,6 +275,9 @@ export default function TaskConfirmationClient({
             onTaskCreate={handleTaskCreate}
             onTaskDelete={handleTaskDelete}
             isLoading={isPending}
+            searchUsersAction={searchUsersAction}
+            updateTaskAssignmentAction={updateTaskAssignmentAction}
+            getTaskAssigneesAction={getTaskAssigneesAction}
           />
 
           {/* Confirm All Button */}

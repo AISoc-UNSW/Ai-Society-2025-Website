@@ -52,3 +52,4 @@ venv/
 .cursorrules
 .cursor/
 .vscode/
+frontend/openapi.json

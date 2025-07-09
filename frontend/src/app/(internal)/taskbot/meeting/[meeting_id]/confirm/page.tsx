@@ -1,12 +1,12 @@
-import { getPendingTasksByMeeting } from "@/lib/api/task";
-import { updateTask, createTask, deleteTask } from "@/lib/api/task";
-import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
-import { TaskResponse, TaskUpdateRequest, TaskCreateRequest, PortfolioSimple } from "@/lib/types";
 import TaskConfirmationClient from "@/components/joyui/task/TaskConfirmationClient";
+import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
+import { createTask, deleteTask, getPendingTasksByMeeting, getTaskAssignees, updateTask, updateTaskAssignment } from "@/lib/api/task";
+import { searchUsers } from "@/lib/api/user";
+import { Task, TaskCreateRequest, TaskUserAssignmentResponse, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 // Server Actions
-async function updateTaskAction(taskId: number, updates: TaskUpdateRequest) {
+async function updateTaskAction(taskId: number, updates: Partial<Task>) {
   "use server";
   
   try {
@@ -51,6 +51,45 @@ async function deleteTaskAction(taskId: number) {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete task",
     };
+  }
+}
+
+// Add these new server actions for assignees
+async function searchUsersAction(searchTerm: string): Promise<User[]> {
+  "use server";
+
+  try {
+    return await searchUsers(searchTerm, 10);
+  } catch (error) {
+    console.error("Failed to search users:", error);
+    return [];
+  }
+}
+
+async function updateTaskAssignmentAction(taskId: number, userIds: number[]) {
+  "use server";
+
+  try {
+    await updateTaskAssignment(taskId, userIds);
+    revalidatePath(`/taskbot/meeting/[meeting_id]/confirm`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update task assignment:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update assignees",
+    };
+  }
+}
+
+async function getTaskAssigneesAction(taskId: number): Promise<TaskUserAssignmentResponse[]> {
+  "use server";
+
+  try {
+    return await getTaskAssignees(taskId);
+  } catch (error) {
+    console.error("Failed to get task assignees:", error);
+    return [];
   }
 }
 
@@ -112,6 +151,9 @@ export default async function TaskConfirmationPage({ params }: PageProps) {
         createTaskAction={createTaskAction}
         deleteTaskAction={deleteTaskAction}
         confirmAllTasksAction={confirmAllTasksAction}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
+        getTaskAssigneesAction={getTaskAssigneesAction}
       />
     );
   } catch (error) {
@@ -126,6 +168,9 @@ export default async function TaskConfirmationPage({ params }: PageProps) {
         createTaskAction={createTaskAction}
         deleteTaskAction={deleteTaskAction}
         confirmAllTasksAction={confirmAllTasksAction}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
+        getTaskAssigneesAction={getTaskAssigneesAction}
       />
     );
   }

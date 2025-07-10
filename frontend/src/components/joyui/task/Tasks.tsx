@@ -35,7 +35,6 @@ interface TasksProps {
 }
 
 export default function Tasks({
-  myTasks = true,
   directorPortfolioId,
   admin = false,
   tasks,
@@ -46,13 +45,35 @@ export default function Tasks({
   updateTaskAssignmentAction,
   headerActions,
   currentStatus,
-  handleStatusChange,
 }: TasksProps) {
+  // Local state for tab filtering
+  const [tabFilter, setTabFilter] = React.useState<string>("all");
+
   const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {
       await onTaskStatusUpdate(task.id, newStatus);
     }
   };
+
+  // Filter tasks based on tab selection
+  const filteredTasks = React.useMemo(() => {
+    // For created-tasks, don't apply tab filtering
+    if (currentStatus === "created-tasks") {
+      return tasks;
+    }
+
+    // Apply tab filtering for my-tasks and all tasks
+    switch (tabFilter) {
+      case "in-progress":
+        return tasks.filter(task => task.status === "In Progress");
+      case "completed":
+        return tasks.filter(task => task.status === "Completed");
+      case "cancelled":
+        return tasks.filter(task => task.status === "Cancelled");
+      default:
+        return tasks;
+    }
+  }, [tasks, tabFilter, currentStatus]);
 
   // Sort tasks by status priority: In Progress -> Not Started -> Completed -> Cancelled
   const sortedTasks = React.useMemo(() => {
@@ -64,7 +85,7 @@ export default function Tasks({
       Pending: 0,
     };
 
-    return [...tasks].sort((a, b) => {
+    return [...filteredTasks].sort((a, b) => {
       const aOrder = statusOrder[a.status];
       const bOrder = statusOrder[b.status];
 
@@ -76,36 +97,50 @@ export default function Tasks({
       // Secondary sort by deadline (earliest first) for tasks with same status
       return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
     });
-  }, [tasks]);
+  }, [filteredTasks]);
 
-  const totalTasks = tasks.length;
-  const inProgressTasks = tasks.filter(t => t.status === "In Progress").length;
-  const completedTasks = tasks.filter(t => t.status === "Completed").length;
+  const totalTasks = filteredTasks.length;
+  const inProgressTasks = filteredTasks.filter(t => t.status === "In Progress").length;
+  const completedTasks = filteredTasks.filter(t => t.status === "Completed").length;
 
-  // Determine the display mode based on role hierarchy
+  // Determine the display mode based on current view
   const getDisplayTitle = () => {
     if (currentStatus === "created-tasks") return "Tasks Created by Me";
-    if (directorPortfolioId) return "Your portfolio's Tasks";
+    if (currentStatus === "my-tasks") return "My Tasks";
+    if (directorPortfolioId) return "Your Portfolio's Tasks";
+    if (currentStatus === "all") return "All Tasks";
     if (admin) return "All Tasks";
-    if (myTasks) return "My Tasks";
     return "Tasks";
   };
 
   const getDisplayDescription = () => {
     if (currentStatus === "created-tasks") return "View and manage tasks you have created";
+    if (currentStatus === "my-tasks") return "View and manage your assigned tasks";
+    if (currentStatus === "all") return "View and manage all tasks in the system";
     if (directorPortfolioId) return "View and manage your portfolio's tasks";
     if (admin) return "View and manage all tasks";
-    if (myTasks) return "View and manage your assigned tasks";
     return "View and manage tasks";
   };
 
   const getEmptyStateMessage = () => {
     if (currentStatus === "created-tasks") return "You haven't created any tasks yet.";
+    if (currentStatus === "my-tasks")
+      return "You don't have any tasks assigned to you at the moment.";
+    if (currentStatus === "all") return "No tasks found in the system.";
     if (directorPortfolioId)
       return "You don't have any tasks assigned to your portfolio at the moment.";
     if (admin) return "No tasks found.";
-    if (myTasks) return "You don't have any tasks assigned to you at the moment.";
     return "No tasks found.";
+  };
+
+  // Handle tab changes for local filtering
+  const handleTabChange = (
+    event: React.SyntheticEvent | null,
+    newValue: string | number | null
+  ) => {
+    if (typeof newValue === "string") {
+      setTabFilter(newValue);
+    }
   };
 
   return (
@@ -149,17 +184,19 @@ export default function Tasks({
         </Card>
       </Stack>
 
-      <Box sx={{ mb: 2 }}>
-        <Tabs value={currentStatus} onChange={handleStatusChange}>
-          <TabList>
-            <Tab value="all">All Tasks</Tab>
-            <Tab value="in-progress">In Progress</Tab>
-            <Tab value="completed">Completed</Tab>
-            <Tab value="cancelled">Cancelled</Tab>
-            <Tab value="created-tasks">Created Tasks</Tab>
-          </TabList>
-        </Tabs>
-      </Box>
+      {/* Status Filter Tabs - only show for filtering, not for created-tasks view */}
+      {currentStatus !== "created-tasks" && (
+        <Box sx={{ mb: 2 }}>
+          <Tabs value={tabFilter} onChange={handleTabChange}>
+            <TabList>
+              <Tab value="all">All Tasks</Tab>
+              <Tab value="in-progress">In Progress</Tab>
+              <Tab value="completed">Completed</Tab>
+              <Tab value="cancelled">Cancelled</Tab>
+            </TabList>
+          </Tabs>
+        </Box>
+      )}
 
       {/* Tasks Grid or Empty State */}
       {totalTasks > 0 ? (
@@ -190,7 +227,7 @@ export default function Tasks({
         <Card variant="outlined" sx={{ p: 4, textAlign: "center" }}>
           <CardContent>
             <Typography level="h4" sx={{ mb: 2 }}>
-              No Tasks Assigned
+              No Tasks Found
             </Typography>
             <Typography level="body-md" color="neutral">
               {getEmptyStateMessage()}

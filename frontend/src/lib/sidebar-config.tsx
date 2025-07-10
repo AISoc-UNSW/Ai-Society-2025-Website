@@ -46,28 +46,18 @@ export const sidebarConfig: SidebarSection[] = [
         defaultExpanded: false,
         children: [
           {
+            id: "my-tasks",
+            label: "My Tasks",
+            href: "/taskbot/tasks/my-tasks",
+          },
+          {
             id: "all-tasks",
-            label: "All tasks",
+            label: "All Tasks",
             href: "/taskbot/tasks/all",
           },
           {
-            id: "in-progress",
-            label: "In progress",
-            href: "/taskbot/tasks/in-progress",
-          },
-          {
-            id: "completed",
-            label: "Completed",
-            href: "/taskbot/tasks/completed",
-          },
-          {
-            id: "cancelled",
-            label: "Cancelled",
-            href: "/taskbot/tasks/cancelled",
-          },
-          {
             id: "created-tasks",
-            label: "Created tasks",
+            label: "Created Tasks",
             href: "/taskbot/tasks/created-tasks",
           },
         ],
@@ -104,24 +94,6 @@ export const sidebarConfig: SidebarSection[] = [
       },
     ],
   },
-  //   {
-  //     id: "footer",
-  //     position: "bottom",
-  //     items: [
-  //       {
-  //         id: "support",
-  //         label: "Support",
-  //         icon: <SupportRoundedIcon />,
-  //         href: "/support",
-  //       },
-  //       {
-  //         id: "settings",
-  //         label: "Settings",
-  //         icon: <SettingsRoundedIcon />,
-  //         href: "/settings",
-  //       },
-  //     ],
-  //   },
 ];
 
 export interface BrandConfig {

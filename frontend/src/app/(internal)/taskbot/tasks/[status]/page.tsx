@@ -4,6 +4,9 @@ import {
   updateTaskStatus,
   fetchTasksCreatedByMe,
   transformTaskResponseToTask,
+  getUserTasksWithRole,
+  fetchUserTasks,
+  transformUserTaskToTask,
 } from "@/lib/api/task";
 import { TaskCreateRequest, TaskStatus, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
@@ -12,21 +15,11 @@ import { getCurrentUser, searchUsers } from "@/lib/api/user";
 import { Suspense } from "react";
 import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
 import TaskDashboardClient from "@/components/joyui/task/TaskDashboardClient";
-import { getUserTasksWithRole } from "@/lib/api/task";
 import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
 
-// Valid status values from sidebar configuration
-const VALID_STATUSES = ["all", "in-progress", "completed", "cancelled", "created-tasks"] as const;
+// Valid status values - simplified to only include main views from sidebar
+const VALID_STATUSES = ["my-tasks", "all", "created-tasks"] as const;
 type ValidStatus = (typeof VALID_STATUSES)[number];
-
-// Map URL status to TaskStatus
-const STATUS_MAPPING: Record<ValidStatus, TaskStatus | null | "created-tasks"> = {
-  all: null, // null means show all tasks
-  "in-progress": "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  "created-tasks": "created-tasks", // special value for created tasks
-};
 
 interface PageProps {
   params: Promise<{
@@ -95,13 +88,7 @@ async function createTaskAction(taskData: TaskCreateRequest) {
   }
 }
 
-async function TaskData({
-  targetStatus,
-  currentStatus,
-}: {
-  targetStatus: TaskStatus | null | "created-tasks";
-  currentStatus: string;
-}) {
+async function TaskData({ currentStatus }: { currentStatus: string }) {
   try {
     const user = await getCurrentUser();
 
@@ -113,13 +100,28 @@ async function TaskData({
       const transformedTasks = await Promise.all(createdTasks.map(transformTaskResponseToTask));
       tasks = transformedTasks;
       userRole = {
-        showMyTasks: false, // This is a special view, not "my tasks"
+        showMyTasks: false,
         directorPortfolioId: undefined,
         userIsAdmin: false,
       };
+    } else if (currentStatus === "my-tasks") {
+      // Fetch user's assigned tasks using the specific API
+      const userTasks = await fetchUserTasks();
+      const transformedTasks = await Promise.all(userTasks.map(transformUserTaskToTask));
+      tasks = transformedTasks;
+      userRole = {
+        showMyTasks: true,
+        directorPortfolioId: undefined,
+        userIsAdmin: false,
+      };
+    } else if (currentStatus === "all") {
+      // Fetch all tasks (role-based: admin sees all, director sees portfolio, user sees assigned)
+      const result = await getUserTasksWithRole(user, null);
+      tasks = result.tasks;
+      userRole = result.userRole;
     } else {
-      // Use existing logic for other statuses
-      const result = await getUserTasksWithRole(user, targetStatus as TaskStatus | null);
+      // Fallback
+      const result = await getUserTasksWithRole(user, null);
       tasks = result.tasks;
       userRole = result.userRole;
     }
@@ -167,12 +169,11 @@ export default async function TasksByStatusPage({ params }: PageProps) {
   }
 
   const validStatus = status as ValidStatus;
-  const targetStatus = STATUS_MAPPING[validStatus];
 
   return (
     <div>
       <Suspense fallback={<TaskLoadingState stage="fetching" />}>
-        <TaskData targetStatus={targetStatus} currentStatus={validStatus} />
+        <TaskData currentStatus={validStatus} />
       </Suspense>
     </div>
   );

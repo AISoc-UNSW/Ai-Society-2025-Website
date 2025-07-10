@@ -13,7 +13,6 @@ import {
   PortfolioSimple,
 } from "@/lib/types";
 import React, { useState, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 interface TaskDashboardClientProps {
   tasks: Task[];
@@ -48,12 +47,10 @@ export default function TaskDashboardClient({
   updateTaskAssignmentAction,
   createTaskAction,
   portfolios = [],
-  myTasks = true,
   directorPortfolioId = undefined,
   admin = false,
   currentStatus = "all",
 }: TaskDashboardClientProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [mounted, setMounted] = useState(false);
   const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
@@ -61,15 +58,6 @@ export default function TaskDashboardClient({
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const handleStatusChange = (
-    event: React.SyntheticEvent | null,
-    newValue: string | number | null
-  ) => {
-    if (typeof newValue === "string") {
-      router.push(`/taskbot/tasks/${newValue}`);
-    }
-  };
 
   const handleTaskStatusUpdate = async (taskId: number, status: TaskStatus) => {
     if (!updateTaskStatusAction) return;
@@ -119,8 +107,8 @@ export default function TaskDashboardClient({
   if (!mounted) {
     return (
       <div style={{ padding: "16px" }}>
-        <h2>My Tasks</h2>
-        <p>Loading tasks...</p>
+        <h2>Loading Tasks...</h2>
+        <p>Please wait while we load your tasks.</p>
       </div>
     );
   }
@@ -128,7 +116,6 @@ export default function TaskDashboardClient({
   return (
     <>
       <Tasks
-        myTasks={myTasks}
         directorPortfolioId={directorPortfolioId}
         admin={admin}
         tasks={tasks}
@@ -149,7 +136,6 @@ export default function TaskDashboardClient({
           </Button>
         }
         currentStatus={currentStatus}
-        handleStatusChange={handleStatusChange}
       />
 
       {/* Create Task Modal */}

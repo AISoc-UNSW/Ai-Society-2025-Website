@@ -14,6 +14,7 @@ import {
 import { apiFetch } from "./client";
 import { getPortfolioDetails } from "./portfolio";
 import { getRole } from "./role";
+import { Assignee } from "@/lib/types";
 
 // Server-side API function that works in server components
 export async function fetchUserTasks(): Promise<UserTaskAssignment[]> {
@@ -131,50 +132,88 @@ export async function deleteTask(taskId: number): Promise<void> {
   });
 }
 
-// Keep the original function as fallback
+// Improved transformation that handles errors gracefully
 export const transformUserTaskToTask = async (userTask: UserTaskAssignment): Promise<Task> => {
-  const taskDetails = await getTaskDetails(userTask.task_id);
+  // Essential data that we must have
+  let portfolioDetails;
+  try {
+    portfolioDetails = await getPortfolioDetails(userTask.task_portfolio_id);
+  } catch (error) {
+    console.warn(`Failed to get portfolio details for task ${userTask.task_id}:`, error);
+    portfolioDetails = { name: "Unknown Portfolio" };
+  }
 
-  // Get assignees for this task
-  const assigneesData = await getTaskAssignees(userTask.task_id);
-  const assignees = assigneesData.map(assignee => ({
-    id: assignee.user_id,
-    name: assignee.user_username,
-    email: assignee.user_email,
-  }));
-  const creator = await getTaskCreator(userTask.task_id);
+  // Optional data - handle failures gracefully
+  let assignees: Assignee[] = [];
+  try {
+    const assigneesData = await getTaskAssignees(userTask.task_id);
+    assignees = assigneesData.map(assignee => ({
+      id: assignee.user_id,
+      name: assignee.user_username,
+      email: assignee.user_email,
+    }));
+  } catch (error) {
+    console.warn(`Failed to get assignees for task ${userTask.task_id}:`, error);
+    assignees = [];
+  }
 
-  const portfolioDetails = await getPortfolioDetails(taskDetails.portfolio_id);
+  let creator: TaskCreatedByResponse;
+  try {
+    creator = await getTaskCreator(userTask.task_id);
+  } catch (error) {
+    console.warn(`Failed to get creator for task ${userTask.task_id}:`, error);
+    creator = {
+      user_id: 0,
+      username: "Unknown",
+      email: "unknown@example.com",
+    };
+  }
 
-  // Get subtasks for this task
-  const subtasksData = await getSubtasks(userTask.task_id);
-  const subtasks = await Promise.all(
-    subtasksData.map(async subtask => {
-      const subtaskCreator = await getTaskCreator(subtask.task_id);
-      return {
-        id: subtask.task_id,
-        title: subtask.title,
-        description: subtask.description,
-        status: subtask.status as TaskStatus,
-        priority: subtask.priority as PriorityLevel,
-        deadline: subtask.deadline,
-        created_at: subtask.created_at,
-        updated_at: subtask.updated_at,
-        created_by: subtaskCreator,
-        portfolio: portfolioDetails.name as Portfolio,
-        assignees: [], // assignees for subtasks
-        subtasks: [], // subtasks of subtasks
-      };
-    })
-  );
+  let subtasks: Task[] = [];
+  try {
+    const subtasksData = await getSubtasks(userTask.task_id);
+    // For subtasks, we'll use a simpler approach to avoid recursive errors
+    subtasks = await Promise.all(
+      subtasksData.map(async subtask => {
+        let subtaskCreator: TaskCreatedByResponse;
+        try {
+          subtaskCreator = await getTaskCreator(subtask.task_id);
+        } catch {
+          subtaskCreator = {
+            user_id: 0,
+            username: "Unknown",
+            email: "unknown@example.com",
+          };
+        }
+
+        return {
+          id: subtask.task_id,
+          title: subtask.title,
+          description: subtask.description,
+          status: subtask.status as TaskStatus,
+          priority: subtask.priority as PriorityLevel,
+          deadline: subtask.deadline,
+          created_at: subtask.created_at,
+          updated_at: subtask.updated_at,
+          created_by: subtaskCreator,
+          portfolio: portfolioDetails.name as Portfolio,
+          assignees: [], // Skip assignees for subtasks to avoid more API calls
+          subtasks: [], // No nested subtasks to avoid infinite recursion
+        };
+      })
+    );
+  } catch (error) {
+    console.warn(`Failed to get subtasks for task ${userTask.task_id}:`, error);
+    subtasks = [];
+  }
 
   return {
     id: userTask.task_id,
     title: userTask.task_title,
     portfolio: portfolioDetails.name as Portfolio,
     description: userTask.task_description,
-    created_at: taskDetails.created_at,
-    updated_at: taskDetails.updated_at,
+    created_at: userTask.task_created_at,
+    updated_at: userTask.task_updated_at,
     priority: userTask.task_priority as PriorityLevel,
     deadline: userTask.task_deadline,
     status: userTask.task_status as TaskStatus,

@@ -7,9 +7,10 @@ import {
   PriorityLevel,
   Task,
   TaskCreateRequest,
+  TaskFormData,
   TaskStatus,
   TaskUserAssignmentResponse,
-  User
+  User,
 } from "@/lib/types";
 import { formatDateWithMinutes, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
 import Avatar from "@mui/joy/Avatar";
@@ -23,19 +24,13 @@ import Chip from "@mui/joy/Chip";
 import DialogActions from "@mui/joy/DialogActions";
 import DialogContent from "@mui/joy/DialogContent";
 import DialogTitle from "@mui/joy/DialogTitle";
-import FormControl from "@mui/joy/FormControl";
-import FormLabel from "@mui/joy/FormLabel";
-import Input from "@mui/joy/Input";
 import Modal from "@mui/joy/Modal";
-import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
-import Option from "@mui/joy/Option";
-import Select from "@mui/joy/Select";
 import Stack from "@mui/joy/Stack";
-import Textarea from "@mui/joy/Textarea";
 import Typography from "@mui/joy/Typography";
 import * as React from "react";
 import EditTaskModal from "./EditTaskModal";
+import TaskFormModal from "./TaskFormModal";
 
 // Priority color mapping
 const getPriorityColor = (priority: string) => {
@@ -69,14 +64,6 @@ interface TaskConfirmationListProps {
   getTaskAssigneesAction?: (taskId: number) => Promise<TaskUserAssignmentResponse[]>;
 }
 
-interface TaskFormData {
-  title: string;
-  description: string;
-  priority: PriorityLevel;
-  deadline: string;
-  portfolio_id: number;
-}
-
 export default function TaskConfirmationList({
   tasks,
   meetingId,
@@ -89,7 +76,6 @@ export default function TaskConfirmationList({
   updateTaskAssignmentAction,
   getTaskAssigneesAction,
 }: TaskConfirmationListProps) {
-  const [editingTask, setEditingTask] = React.useState<HierarchicalTask | null>(null);
   const [creatingTask, setCreatingTask] = React.useState<{
     parentId?: number;
     isOpen: boolean;
@@ -97,7 +83,9 @@ export default function TaskConfirmationList({
   const [deleteConfirm, setDeleteConfirm] = React.useState<number | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [taskToEdit, setTaskToEdit] = React.useState<Task | null>(null);
-  const [taskAssignees, setTaskAssignees] = React.useState<Map<number, TaskUserAssignmentResponse[]>>(new Map());
+  const [taskAssignees, setTaskAssignees] = React.useState<
+    Map<number, TaskUserAssignmentResponse[]>
+  >(new Map());
 
   // Helper function to get portfolio name by ID
   const getPortfolioName = (portfolioId: number): string => {
@@ -106,16 +94,19 @@ export default function TaskConfirmationList({
   };
 
   // Function to load assignees for a task
-  const loadTaskAssignees = React.useCallback(async (taskId: number) => {
-    if (getTaskAssigneesAction) {
-      try {
-        const assignees = await getTaskAssigneesAction(taskId);
-        setTaskAssignees(prev => new Map(prev).set(taskId, assignees));
-      } catch (error) {
-        console.error("Failed to load task assignees:", error);
+  const loadTaskAssignees = React.useCallback(
+    async (taskId: number) => {
+      if (getTaskAssigneesAction) {
+        try {
+          const assignees = await getTaskAssigneesAction(taskId);
+          setTaskAssignees(prev => new Map(prev).set(taskId, assignees));
+        } catch (error) {
+          console.error("Failed to load task assignees:", error);
+        }
       }
-    }
-  }, [getTaskAssigneesAction]);
+    },
+    [getTaskAssigneesAction]
+  );
 
   React.useEffect(() => {
     setMounted(true);
@@ -143,7 +134,7 @@ export default function TaskConfirmationList({
   const handleEditTask = async (task: HierarchicalTask) => {
     // Get current assignees for this task
     const currentAssignees = taskAssignees.get(task.task_id) || [];
-    
+
     // Convert HierarchicalTask to Task for EditTaskModal
     const taskForEdit: Task = {
       id: task.task_id,
@@ -201,6 +192,7 @@ export default function TaskConfirmationList({
       portfolio_id: formData.portfolio_id,
       parent_task_id: parentId,
       source_meeting_id: meetingId,
+      status: "Pending",
     });
     setCreatingTask({ isOpen: false });
   };
@@ -212,7 +204,7 @@ export default function TaskConfirmationList({
 
   const renderTask = (task: HierarchicalTask, level: number = 0) => {
     const assignees = taskAssignees.get(task.task_id) || [];
-    
+
     return (
       <Box key={task.task_id} sx={{ ml: level * 3 }}>
         <Card
@@ -270,7 +262,7 @@ export default function TaskConfirmationList({
                     Assigned to:
                   </Typography>
                   <AvatarGroup size="sm" sx={{ "--AvatarGroup-gap": "-8px" }}>
-                    {assignees.slice(0, 3).map((assignee) => (
+                    {assignees.slice(0, 3).map(assignee => (
                       <Avatar
                         key={assignee.user_id}
                         size="sm"
@@ -386,6 +378,7 @@ export default function TaskConfirmationList({
         onSave={formData => handleCreateTask(formData, creatingTask.parentId)}
         portfolios={portfolios}
         title={creatingTask.parentId ? "Add Subtask" : "Add Main Task"}
+        searchUsersAction={searchUsersAction}
       />
 
       {/* Delete Confirmation Modal */}
@@ -411,140 +404,5 @@ export default function TaskConfirmationList({
         </ModalDialog>
       </Modal>
     </>
-  );
-}
-
-// Task Form Modal Component
-interface TaskFormModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSave: (formData: TaskFormData) => Promise<void>;
-  initialData?: TaskFormData;
-  title: string;
-  portfolios: PortfolioSimple[];
-}
-
-function TaskFormModal({
-  open,
-  onClose,
-  onSave,
-  initialData,
-  title,
-  portfolios,
-}: TaskFormModalProps) {
-  const [formData, setFormData] = React.useState<TaskFormData>({
-    title: "",
-    description: "",
-    priority: "Medium",
-    deadline: "",
-    portfolio_id: portfolios.length > 0 ? portfolios[0].portfolio_id : 101, // Default to first portfolio
-  });
-
-  React.useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        priority: "Medium",
-        deadline: "",
-        portfolio_id: portfolios.length > 0 ? portfolios[0].portfolio_id : 101,
-      });
-    }
-  }, [initialData, open]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onSave(formData);
-  };
-
-  return (
-    <Modal open={open} onClose={onClose}>
-      <ModalDialog>
-        <ModalClose />
-        <DialogTitle>{title}</DialogTitle>
-        <form onSubmit={handleSubmit}>
-          <DialogContent sx={{ gap: 2 }}>
-            <FormControl required>
-              <FormLabel>Title</FormLabel>
-              <Input
-                value={formData.title}
-                onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter task title"
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Description</FormLabel>
-              <Textarea
-                value={formData.description}
-                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter task description"
-                minRows={3}
-              />
-            </FormControl>
-
-            <FormControl required>
-              <FormLabel>Priority</FormLabel>
-              <Select
-                value={formData.priority}
-                onChange={(_, value) =>
-                  value && setFormData(prev => ({ ...prev, priority: value }))
-                }
-              >
-                <Option value="Low">Low</Option>
-                <Option value="Medium">Medium</Option>
-                <Option value="High">High</Option>
-                <Option value="Critical">Critical</Option>
-              </Select>
-            </FormControl>
-
-            <FormControl required>
-              <FormLabel>Deadline</FormLabel>
-              <Input
-                type="datetime-local"
-                value={formData.deadline.slice(0, 16)} // Format for datetime-local input
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    deadline: e.target.value + ":00Z", // Add seconds and timezone
-                  }))
-                }
-              />
-            </FormControl>
-
-            <FormControl required>
-              <FormLabel>Portfolio</FormLabel>
-              <Select
-                value={formData.portfolio_id}
-                onChange={(_, value) =>
-                  value &&
-                  setFormData(prev => ({
-                    ...prev,
-                    portfolio_id: value,
-                  }))
-                }
-              >
-                {portfolios.map(portfolio => (
-                  <Option key={portfolio.portfolio_id} value={portfolio.portfolio_id}>
-                    {portfolio.name}
-                  </Option>
-                ))}
-              </Select>
-            </FormControl>
-          </DialogContent>
-
-          <DialogActions>
-            <Button type="submit" variant="solid" color="primary">
-              Save
-            </Button>
-            <Button variant="plain" color="neutral" onClick={onClose}>
-              Cancel
-            </Button>
-          </DialogActions>
-        </form>
-      </ModalDialog>
-    </Modal>
   );
 }

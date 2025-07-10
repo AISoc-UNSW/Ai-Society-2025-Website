@@ -196,9 +196,9 @@ export default function TaskCard({
                 lineHeight: 1.4,
               }}
             >
-              {task.description}
+              {task.description || ""}
             </Typography>
-            {task.description.length > 100 && (
+            {task.description && task.description.length > 100 && (
               <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
                 <Typography
                   level="body-xs"
@@ -356,6 +356,9 @@ export default function TaskCard({
                           <TaskCard
                             task={expandedSubtask}
                             onStatusUpdate={onStatusUpdate}
+                            updateTaskAction={updateTaskAction}
+                            searchUsersAction={searchUsersAction}
+                            updateTaskAssignmentAction={updateTaskAssignmentAction}
                             isUpdating={isUpdating}
                           />
                         )}
@@ -376,7 +379,7 @@ export default function TaskCard({
             {/* Assignees */}
             <AvatarsList
               label="Assigned to:"
-              users={task.assignees.map(assignee => ({
+              users={(task.assignees || []).map(assignee => ({
                 id: assignee.id,
                 name: assignee.name,
                 email: assignee.email,

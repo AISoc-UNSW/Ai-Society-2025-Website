@@ -41,6 +41,14 @@ export interface Task {
   subtasks: Task[];
 }
 
+export interface TaskFormData {
+  title: string;
+  description: string;
+  priority: PriorityLevel;
+  deadline: string;
+  portfolio_id: number;
+}
+
 // Meeting related types
 export interface Meeting {
   id: string;
@@ -162,6 +170,7 @@ export interface TaskCreateRequest {
   portfolio_id: number;
   parent_task_id?: number;
   source_meeting_id?: number;
+  status?: string;
 }
 
 // Hierarchical task structure for confirmation page

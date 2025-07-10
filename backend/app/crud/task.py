@@ -32,6 +32,11 @@ def get_by_priority(db: Session, priority: str, skip: int = 0, limit: int = 100)
     return db.query(Task).filter(Task.priority == priority).offset(skip).limit(limit).all()
 
 
+def get_by_created_by(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> list[Task]:
+    """Get tasks created by a specific user"""
+    return db.query(Task).filter(Task.created_by == user_id).offset(skip).limit(limit).all()
+
+
 def get_subtasks(db: Session, parent_task_id: int) -> list[Task]:
     """Get subtasks of a parent task"""
     return db.query(Task).filter(Task.parent_task_id == parent_task_id).all()

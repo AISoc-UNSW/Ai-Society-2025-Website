@@ -110,3 +110,16 @@ export function formatDateWithMinutes(dateString: string, forDisplay: boolean = 
     return "";
   }
 }
+
+// Helper function to get current datetime in 'yyyy-MM-ddTHH:mm' format
+export function getCurrentDateTimeLocal() {
+  const now = new Date();
+  // Pad month, day, hour, minute with leading zeros if needed
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const yyyy = now.getFullYear();
+  const MM = pad(now.getMonth() + 1);
+  const dd = pad(now.getDate());
+  const hh = pad(now.getHours());
+  const mm = pad(now.getMinutes());
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+}

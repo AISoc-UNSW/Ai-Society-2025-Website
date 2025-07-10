@@ -5,8 +5,8 @@ from app.api import deps
 from app.crud import task
 from app.models.user import User
 from app.schemas.task import (
-    TaskCreateRequestBody,
     TaskCreatedByResponse,
+    TaskCreateRequestBody,
     TaskDetailResponse,
     TaskGroupCreateRequest,
     TaskGroupCreateResponse,
@@ -53,6 +53,22 @@ def read_tasks(
     return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
 
 
+@router.get("/created-by/{user_id}", response_model=list[TaskListResponse])
+def read_tasks_created_by(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int,
+    skip: int = Query(0, ge=0, description="Skip items"),
+    limit: int = Query(100, ge=1, le=1000, description="Limit items"),
+    current_user: User = Depends(deps.get_current_user),
+) -> list[TaskListResponse]:
+    """
+    Get tasks created by a specific user
+    """
+    tasks = task.get_by_created_by(db, user_id=user_id, skip=skip, limit=limit)
+    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+
+
 @router.get("/{task_id}/created-by", response_model=TaskCreatedByResponse)
 def read_task_created_by(
     *,
@@ -67,6 +83,7 @@ def read_task_created_by(
     if not task_record:
         raise HTTPException(status_code=404, detail="Task not found")
     return TaskCreatedByResponse(**task_record.created_by_user.__dict__)
+
 
 @router.get("/{task_id}", response_model=TaskDetailResponse)
 def read_task(

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.crud import user
 from app.models.user import User
-from app.schemas.user import UserCreateRequestBody, UserCreateResponse, UserListResponse
+from app.schemas.user import UserCreateRequestBody, UserCreateResponse, UserListResponse, UserAdminUpdate, UserSelfUpdate
 
 router = APIRouter()
 
@@ -67,6 +67,30 @@ def read_user_me(
     return user_response
 
 
+@router.put("/me", response_model=UserListResponse)
+def update_user_me(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_in: UserSelfUpdate,
+    current_user: User = Depends(deps.get_current_user),
+) -> UserListResponse:
+    """
+    Update current user's information
+    
+    Business rule: portfolio_id can only be modified once.
+    If the user already has a portfolio_id set, it cannot be changed.
+    """
+    user_record = user.update_user_self(db, db_obj=current_user, obj_in=user_in)
+    return UserListResponse(
+        user_id=user_record.user_id,
+        email=user_record.email,
+        username=user_record.username,
+        role_id=user_record.role_id,
+        discord_id=user_record.discord_id,
+        portfolio_id=user_record.portfolio_id,
+    )
+
+
 @router.get("/portfolio/{portfolio_id}", response_model=list[UserListResponse])
 def get_users_by_portfolio(
     *,
@@ -94,3 +118,37 @@ def search_users(
     """
     users = user.search_users(db, search_term=q, limit=limit)
     return [UserListResponse(**user_record.__dict__) for user_record in users]
+
+
+@router.get("/", response_model=list[UserListResponse])
+def get_all_users(
+    *,
+    db: Session = Depends(deps.get_db),
+    skip: int = Query(0, ge=0, description="Skip items"),
+    limit: int = Query(100, ge=1, le=1000, description="Limit items"),
+    current_admin: User = Depends(deps.get_current_admin),
+) -> list[UserListResponse]:
+    """
+    Get all users (Admin only)
+    """
+    users = user.get_all_users(db, skip=skip, limit=limit)
+    return [UserListResponse(**user_record.__dict__) for user_record in users]
+
+
+@router.put("/{user_id}", response_model=UserListResponse)
+def update_user_admin(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int,
+    user_in: UserAdminUpdate,
+    current_admin: User = Depends(deps.get_current_admin),
+) -> UserListResponse:
+    """
+    Update user's role and portfolio (Admin only)
+    """
+    user_record = user.get_by_id(db, id=user_id)
+    if not user_record:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_record = user.update_user(db, db_obj=user_record, obj_in=user_in)
+    return UserListResponse(**user_record.__dict__)

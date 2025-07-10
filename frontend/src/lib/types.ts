@@ -170,6 +170,7 @@ export interface TaskCreateRequest {
   portfolio_id: number;
   parent_task_id?: number;
   source_meeting_id?: number;
+  status?: string;
 }
 
 // Hierarchical task structure for confirmation page

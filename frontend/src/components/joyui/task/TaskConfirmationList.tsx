@@ -7,6 +7,7 @@ import {
   PriorityLevel,
   Task,
   TaskCreateRequest,
+  TaskFormData,
   TaskStatus,
   TaskUserAssignmentResponse,
   User,
@@ -30,7 +31,6 @@ import Typography from "@mui/joy/Typography";
 import * as React from "react";
 import EditTaskModal from "./EditTaskModal";
 import TaskFormModal from "./TaskFormModal";
-import { TaskFormData } from "@/lib/types";
 
 // Priority color mapping
 const getPriorityColor = (priority: string) => {
@@ -192,6 +192,7 @@ export default function TaskConfirmationList({
       portfolio_id: formData.portfolio_id,
       parent_task_id: parentId,
       source_meeting_id: meetingId,
+      status: "Pending",
     });
     setCreatingTask({ isOpen: false });
   };

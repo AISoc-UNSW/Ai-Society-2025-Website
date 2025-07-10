@@ -109,15 +109,17 @@ export async function createTask(taskData: {
   portfolio_id: number;
   parent_task_id?: number;
   source_meeting_id?: number;
+  status?: string;
 }): Promise<TaskResponse> {
+  const { status, ...rest } = taskData;
   return await apiFetch("/api/v1/tasks/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      ...taskData,
-      status: "Pending", // Always set status to Pending for new tasks in confirmation page
+      ...rest,
+      status: status ?? "Not Started",
     }),
   });
 }

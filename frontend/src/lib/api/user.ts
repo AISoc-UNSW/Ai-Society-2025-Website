@@ -1,4 +1,4 @@
-import { LoginCredentials, LoginResponse, User, UserRegistration } from "@/lib/types";
+import { LoginCredentials, LoginResponse, User, UserListResponse, UserProfileUpdate, UserRegistration } from "@/lib/types";
 import { apiFetch } from "./client";
 
 // Login
@@ -39,5 +39,16 @@ export async function searchUsers(searchTerm: string, limit: number = 100): Prom
 
   return apiFetch(`/api/v1/users/search?${params.toString()}`, {
     method: "GET",
+  });
+}
+
+// Update current user's profile
+export async function updateUserProfile(updates: UserProfileUpdate): Promise<UserListResponse> {
+  return apiFetch("/api/v1/users/me", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updates),
   });
 }

@@ -228,3 +228,9 @@ export interface PermissionsSearchFilters {
   roleFilter?: number;
   portfolioFilter?: number;
 }
+
+// User profile update type (for current user updating their own profile)
+export interface UserProfileUpdate {
+  username?: string;
+  portfolio_id?: number;
+}

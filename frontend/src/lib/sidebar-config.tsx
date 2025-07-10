@@ -84,7 +84,7 @@ export const sidebarConfig: SidebarSection[] = [
           {
             id: "my-profile",
             label: "My profile",
-            href: "/profile",
+            href: "/taskbot/profile",
             selected: false,
           },
           {

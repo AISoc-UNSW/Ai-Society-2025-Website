@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libopus0 \
     libsndfile1 \
     build-essential \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies

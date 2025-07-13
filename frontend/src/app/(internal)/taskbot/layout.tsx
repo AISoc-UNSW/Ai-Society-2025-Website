@@ -15,12 +15,8 @@ export default async function TaskbotLayout({ children }: { children: React.Reac
   } : undefined;
 
   return (
-    <html lang="en">
-      <body>
-        <UserProvider initialUser={user || undefined}>
-          <TaskbotLayoutClient>{children}</TaskbotLayoutClient>
-        </UserProvider>
-      </body>
-    </html>
+    <UserProvider initialUser={user || undefined}>
+      <TaskbotLayoutClient>{children}</TaskbotLayoutClient>
+    </UserProvider>
   );
 }

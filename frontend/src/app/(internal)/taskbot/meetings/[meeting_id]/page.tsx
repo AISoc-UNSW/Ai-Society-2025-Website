@@ -26,32 +26,28 @@ async function MeetingDetailData({ meetingId }: { meetingId: number }) {
       />
     );
   } catch (error) {
-    console.error("Error fetching meeting details:", error);
+    console.error("Error fetching meeting detail data:", error);
     return (
       <Box sx={{ textAlign: "center", py: 4 }}>
         <Typography color="danger">
-          Failed to load meeting details. Please try again later.
+          Failed to load meeting details. Please try again.
         </Typography>
       </Box>
     );
   }
 }
 
-function MeetingDetailLoadingState() {
+function MeetingDetailLoading() {
   return (
-    <Box sx={{ 
-      display: "flex", 
-      justifyContent: "center", 
-      alignItems: "center", 
-      minHeight: "50vh" 
-    }}>
+    <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
       <CircularProgress />
     </Box>
   );
 }
 
-export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
-  const meetingId = parseInt(params.meeting_id);
+export default async function MeetingDetailPage({ params }: MeetingDetailPageProps) {
+  const { meeting_id } = await params;
+  const meetingId = parseInt(meeting_id);
 
   if (isNaN(meetingId)) {
     return (
@@ -64,8 +60,10 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
   }
 
   return (
-    <Suspense fallback={<MeetingDetailLoadingState />}>
-      <MeetingDetailData meetingId={meetingId} />
-    </Suspense>
+    <Box sx={{ p: 3 }}>
+      <Suspense fallback={<MeetingDetailLoading />}>
+        <MeetingDetailData meetingId={meetingId} />
+      </Suspense>
+    </Box>
   );
 } 

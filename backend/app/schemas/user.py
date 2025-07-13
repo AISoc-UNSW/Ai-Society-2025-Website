@@ -44,6 +44,18 @@ class UserUpdate(UserBase):
     password: str | None = None
 
 
+class UserSelfUpdate(BaseModel):
+    """Used when a user updates their own information"""
+    username: str | None = None
+    portfolio_id: int | None = None
+
+
+class UserAdminUpdate(BaseModel):
+    """Used by admin to update user's role and portfolio"""
+    role_id: int | None = None
+    portfolio_id: int | None = None
+
+
 # Used when logging in
 class UserLoginRequest(BaseModel):
     email: EmailStr

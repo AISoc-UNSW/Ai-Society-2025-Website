@@ -1,8 +1,10 @@
-import React from "react";
-import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import { VideoChatRounded } from "@mui/icons-material";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import React from "react";
+import { UserProfile } from "./types";
 import { VideoChatRounded } from "@mui/icons-material";
 
 export interface SidebarItem {
@@ -14,6 +16,7 @@ export interface SidebarItem {
   selected?: boolean;
   children?: SidebarItem[];
   defaultExpanded?: boolean;
+  requiresRoles?: string[]; // Required roles to access this item (any of these roles)
 }
 
 export interface SidebarSection {
@@ -77,7 +80,7 @@ export const sidebarConfig: SidebarSection[] = [
           {
             id: "my-profile",
             label: "My profile",
-            href: "/profile",
+            href: "/taskbot/profile",
             selected: false,
           },
           {
@@ -88,7 +91,8 @@ export const sidebarConfig: SidebarSection[] = [
           {
             id: "roles",
             label: "Roles & permission",
-            href: "/users/roles",
+            href: "/taskbot/admin/permissions",
+            requiresRoles: ["admin"], // Allow both director and admin
           },
         ],
       },

@@ -8,6 +8,7 @@ from app.schemas.user import (
     DiscordUserCreateRequestBody,
     UserCreateRequestBody,
     UserUpdate,
+    UserSelfUpdate,
 )
 
 
@@ -91,3 +92,31 @@ def search_users(db: Session, *, search_term: str, limit: int = 10) -> list[User
     )
 
     return db.query(User).filter(search_filter).limit(limit).all()
+
+
+def get_all_users(db: Session, *, skip: int = 0, limit: int = 100) -> list[User]:
+    """Get all users with pagination support"""
+    return db.query(User).offset(skip).limit(limit).all()
+
+
+def update_user_self(db: Session, *, db_obj: User, obj_in: UserSelfUpdate) -> User:
+    """Update user's own information with business logic validation"""
+    from fastapi import HTTPException
+    
+    update_data = obj_in.model_dump(exclude_unset=True)
+    
+    # Business logic: portfolio can only be modified once
+    if "portfolio_id" in update_data:
+        if db_obj.portfolio_id is not None:
+            raise HTTPException(
+                status_code=400,
+                detail="Portfolio can only be modified once. Your portfolio has already been set."
+            )
+    
+    for field in update_data:
+        setattr(db_obj, field, update_data[field])
+    
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj

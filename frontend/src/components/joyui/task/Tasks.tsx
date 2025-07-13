@@ -64,6 +64,8 @@ export default function Tasks({
 
     // Apply tab filtering for my-tasks and all tasks
     switch (tabFilter) {
+      case "not-started":
+        return tasks.filter(task => task.status === "Not Started");
       case "in-progress":
         return tasks.filter(task => task.status === "In Progress");
       case "completed":
@@ -192,6 +194,7 @@ export default function Tasks({
               <Tab value="all">All Tasks</Tab>
               <Tab value="in-progress">In Progress</Tab>
               <Tab value="completed">Completed</Tab>
+              <Tab value="not-started">Not Started</Tab>
               <Tab value="cancelled">Cancelled</Tab>
             </TabList>
           </Tabs>

@@ -1,6 +1,6 @@
+import TaskbotLayoutClient from "@/components/joyui/task/TaskbotLayoutClient";
 import { UserProvider } from "@/components/providers/UserProvider";
 import { getCurrentUser } from "@/lib/session";
-import TaskbotLayoutClient from "@/components/joyui/task/TaskbotLayoutClient";
 
 export default async function TaskbotLayout({ children }: { children: React.ReactNode }) {
   const userResponse = await getCurrentUser().catch(() => null);

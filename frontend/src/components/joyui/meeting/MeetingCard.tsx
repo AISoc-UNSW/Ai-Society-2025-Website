@@ -31,11 +31,11 @@ export default function MeetingCard({
 
   const getPortfolioColor = (portfolio: string) => {
     switch (portfolio.toLowerCase()) {
-      case 'product':
+      case 'edu':
         return 'primary';
-      case 'marketing':
+      case 'it portfolio':
         return 'success';
-      case 'finance':
+      case 'marketing':
         return 'warning';
       default:
         return 'neutral';
@@ -43,60 +43,82 @@ export default function MeetingCard({
   };
 
   return (
-    <Card 
-      variant="outlined" 
-      sx={{ 
+    <Card
+      variant="outlined"
+      onClick={onClick}
+      sx={{
         cursor: 'pointer',
-        transition: 'all 0.2s',
+        transition: 'all 0.2s ease-in-out',
+        height: '240px', // Fixed height
+        display: 'flex',
+        flexDirection: 'column',
         '&:hover': {
           boxShadow: 'md',
-          transform: 'translateY(-2px)'
-        }
+          transform: 'translateY(-2px)',
+        },
       }}
-      onClick={onClick}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-          <Typography level="title-md" sx={{ fontWeight: 'bold' }}>
-            {meeting.meeting_name}
-          </Typography>
-          <Chip 
-            variant="soft" 
+      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {/* Header with portfolio and date */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+          <Chip
             color={getPortfolioColor(portfolioName)}
             size="sm"
+            variant="soft"
+            sx={{ flexShrink: 0 }}
           >
             {portfolioName}
           </Chip>
+          <Typography level="body-sm" color="neutral" sx={{ flexShrink: 0 }}>
+            {formatDate(meeting.meeting_date)}
+          </Typography>
         </Box>
-        
-        <Typography level="body-sm" color="neutral" sx={{ mb: 2 }}>
-          {formatDate(meeting.meeting_date)}
+
+        {/* Meeting title */}
+        <Typography 
+          level="title-md" 
+          sx={{ 
+            fontWeight: 'bold',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            lineHeight: 1.4,
+            minHeight: '2.8em', // Reserve space for 2 lines
+          }}
+        >
+          {meeting.meeting_name}
         </Typography>
-        
-        {meeting.summary && (
+
+        {/* Summary */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Typography 
             level="body-sm" 
+            color="neutral"
             sx={{ 
               display: '-webkit-box',
-              WebkitLineClamp: 3,
+              WebkitLineClamp: 4,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              lineHeight: 1.4
+              lineHeight: 1.5,
+              flex: 1,
             }}
           >
-            {meeting.summary}
+            {meeting.summary || 'No summary available'}
           </Typography>
-        )}
-        
-        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+        </Box>
+
+        {/* Status indicators */}
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 'auto' }}>
           {meeting.has_recording && (
-            <Chip variant="soft" color="success" size="sm">
+            <Chip size="sm" color="success" variant="soft">
               Recording
             </Chip>
           )}
           {meeting.has_summary && (
-            <Chip variant="soft" color="primary" size="sm">
+            <Chip size="sm" color="primary" variant="soft">
               Summary
             </Chip>
           )}

@@ -92,7 +92,7 @@ export default function PermissionsClient({
       const searchResults = await searchUsersAction(query);
       setUsers(searchResults);
       setSearchQuery(query);
-    } catch (error) {
+    } catch {
       setAlert({ type: 'error', message: 'Failed to search users' });
     } finally {
       setIsLoading(false);
@@ -112,7 +112,7 @@ export default function PermissionsClient({
       } else {
         setAlert({ type: 'error', message: 'Failed to update permissions' });
       }
-    } catch (error) {
+    } catch {
       setAlert({ type: 'error', message: 'Error occurred while updating permissions' });
     }
   }, [updateUserPermissionsAction]);

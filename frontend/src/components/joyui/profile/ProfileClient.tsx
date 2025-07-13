@@ -42,10 +42,7 @@ export default function ProfileClient({ user, roles, portfolios, onSave }: Profi
     return roles.find((r) => r.role_id === user.role_id)?.role_name || 'Unknown';
   }, [user.role_id, roles]);
   
-  const portfolioName = useMemo(() => {
-    if (!user.portfolio_id) return 'Unassigned';
-    return portfolios.find((p) => p.portfolio_id === user.portfolio_id)?.name || 'Unknown';
-  }, [user.portfolio_id, portfolios]);
+
 
   const hasPortfolioAssigned = user.portfolio_id !== null;
   const hasChanges = username !== user.username || selectedPortfolioId !== user.portfolio_id;

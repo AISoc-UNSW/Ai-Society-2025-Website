@@ -1,38 +1,38 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1
 
+# ---------- Build dependencies layer ----------
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copy package management files
-COPY package.json package-lock.json ./
+# Install dependencies based on lock file if available for reproducible builds
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
+# ---------- Application build layer ----------
+FROM node:20-alpine AS builder
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy the rest of the application source code
+# Re-use node_modules from previous stage
+COPY --from=deps /app/node_modules ./node_modules
+# Copy remaining application source
 COPY . .
 
-# Build the Next.js application
 RUN npm run build
 
-# Stage 2: Production
-FROM node:20-alpine AS production
-
+# ---------- Production runtime layer ----------
+FROM node:20-alpine AS runner
 WORKDIR /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
 
-# Copy package management files
-COPY package.json package-lock.json ./
-
-# Install only production dependencies
-RUN npm ci --omit=dev
-
-# Copy the built application from the builder stage
+# Copy the built application and only runtime files to keep image slim
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./next.config.ts
+COPY --from=builder /app/package.json ./package.json
+# Reuse production dependencies
+COPY --from=deps /app/node_modules ./node_modules
 
-# Expose the port the app runs on
 EXPOSE 3000
 
-# The command to start the application
 CMD ["npm", "start"] 

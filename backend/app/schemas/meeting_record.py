@@ -35,6 +35,7 @@ class MeetingRecordUpdate(BaseModel):
 # Used for API responses
 class MeetingRecordResponse(MeetingRecordBase):
     meeting_id: int
+    portfolio_name: str | None = None
     
     class Config:
         from_attributes = True
@@ -49,6 +50,8 @@ class MeetingRecordListResponse(BaseModel):
     user_can_see: bool
     has_recording: bool = False  # Computed field
     has_summary: bool = False    # Computed field
+    summary: str | None = None   # Added summary field
+    portfolio_name: str | None = None  # Added portfolio_name field
     
     class Config:
         from_attributes = True

@@ -1,26 +1,24 @@
+import { PortfolioSimple, TaskFormData, User } from "@/lib/types";
+import { getCurrentDateTimeLocal, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
 import {
-  Modal,
-  ModalDialog,
-  ModalClose,
-  DialogTitle,
-  DialogContent,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  Select,
-  Option,
-  Button,
-  DialogActions,
-  Chip,
+    Button,
+    Chip,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControl,
+    FormLabel,
+    Input,
+    Modal,
+    ModalClose,
+    ModalDialog,
+    Option,
+    Select,
+    Textarea,
 } from "@mui/joy";
-import React from "react";
-import { PortfolioSimple, User } from "@/lib/types";
-import { TaskFormData } from "@/lib/types";
-import { getCurrentDateTimeLocal } from "@/lib/utils";
 import Avatar from "@mui/joy/Avatar";
 import Stack from "@mui/joy/Stack";
-import { getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
+import React from "react";
 
 interface TaskFormModalProps {
   open: boolean;
@@ -105,7 +103,7 @@ export default function TaskFormModal({
       });
       setSelectedAssignees([]);
     }
-  }, [initialData, open]);
+  }, [initialData, open, portfolios]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

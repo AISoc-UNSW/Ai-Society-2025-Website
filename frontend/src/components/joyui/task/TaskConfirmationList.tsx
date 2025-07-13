@@ -1,16 +1,16 @@
 "use client";
 
 import {
-  HierarchicalTask,
-  Portfolio,
-  PortfolioSimple,
-  PriorityLevel,
-  Task,
-  TaskCreateRequest,
-  TaskFormData,
-  TaskStatus,
-  TaskUserAssignmentResponse,
-  User,
+    HierarchicalTask,
+    Portfolio,
+    PortfolioSimple,
+    PriorityLevel,
+    Task,
+    TaskCreateRequest,
+    TaskFormData,
+    TaskStatus,
+    TaskUserAssignmentResponse,
+    User
 } from "@/lib/types";
 import { formatDateWithMinutes, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
 import Avatar from "@mui/joy/Avatar";
@@ -161,12 +161,13 @@ export default function TaskConfirmationList({
     if (!taskToEdit) return;
 
     // Convert Task updates back to backend format
-    const backendUpdates: any = {
+    const backendUpdates = {
       title: updates.title,
       description: updates.description,
       status: updates.status,
       priority: updates.priority,
       deadline: updates.deadline,
+      portfolio_id: undefined as number | undefined,
     };
 
     // If portfolio was changed, find the portfolio_id

@@ -5,9 +5,9 @@ import { Box, CircularProgress, Typography } from "@mui/joy";
 import { Suspense } from "react";
 
 interface MeetingDetailPageProps {
-  params: {
+  params: Promise<{
     meeting_id: string;
-  };
+  }>;
 }
 
 async function MeetingDetailData({ meetingId }: { meetingId: number }) {

@@ -22,7 +22,7 @@ export default function MeetingCard({
         day: 'numeric',
         year: 'numeric'
       });
-    } catch (error) {
+    } catch {
       return dateString;
     }
   };

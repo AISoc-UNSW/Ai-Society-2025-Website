@@ -45,12 +45,12 @@ export default function MeetingDetailClient({
         month: 'long',
         day: 'numeric'
       });
-    } catch (error) {
+    } catch {
       return dateString;
     }
   };
 
-  const getPortfolioColor = (portfolio: string) => {
+  const getPortfolioColor = () => {
     return 'primary' as const;
   };
 
@@ -88,7 +88,7 @@ export default function MeetingDetailClient({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Chip 
               variant="soft" 
-              color={getPortfolioColor(portfolioName)}
+              color={getPortfolioColor()}
               size="sm"
             >
               {portfolioName}

@@ -73,7 +73,8 @@ class MeetingRecord(commands.Cog):
         self, 
         ctx: discord.ApplicationContext,
         meeting_name: str = discord.Option(str, "Meeting name", required=True),
-        portfolio_id: int = discord.Option(int, "Portfolio ID", required=True)
+        portfolio_id: int = discord.Option(int, "Portfolio ID", required=True),
+        user_can_see: bool = discord.Option(bool, "Whether users can see this meeting record", required=False, default=True)
     ):
         """Start recording command"""
         # Check if user is in voice channel
@@ -108,6 +109,7 @@ class MeetingRecord(commands.Cog):
                 "voice_client": vc,
                 "meeting_name": meeting_name,
                 "portfolio_id": portfolio_id,
+                "user_can_see": user_can_see,
                 "channel_name": voice_channel.name,
                 "start_time": datetime.now()
             }
@@ -119,15 +121,17 @@ class MeetingRecord(commands.Cog):
                 ctx.channel
             )
             
+            visibility_text = "👁️ Visible to users" if user_can_see else "🔒 Hidden from users"
             await ctx.respond(
                 f"🎙️ Recording started!\n"
                 f"**Meeting name**: {meeting_name}\n"
                 f"**Portfolio ID**: {portfolio_id}\n"
                 f"**Voice channel**: {voice_channel.name}\n"
+                f"**Visibility**: {visibility_text}\n"
                 f"Use `/stop_record` to end recording."
             )
             
-            logger.info(f"Started recording in {voice_channel.name} for meeting: {meeting_name}")
+            logger.info(f"Started recording in {voice_channel.name} for meeting: {meeting_name} (user_can_see: {user_can_see})")
             
         except Exception:
             logger.exception("Failed to start recording")  # 打完整回溯
@@ -255,6 +259,7 @@ class MeetingRecord(commands.Cog):
             recording_file_path=file_path,
             summary=summary,
             transcript=transcript,
+            user_can_see=session["user_can_see"]  # Use the user_can_see value from the session
         )
         if result:
             duration = datetime.now() - session["start_time"]

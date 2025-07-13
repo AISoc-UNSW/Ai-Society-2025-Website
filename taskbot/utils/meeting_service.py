@@ -44,7 +44,8 @@ class MeetingService:
         recording_file_path: str,
         summary: str | None = None,
         transcript: str | None = None,
-        meeting_date: date | None = None
+        meeting_date: date | None = None,
+        user_can_see: bool = True
     ) -> dict | None:
         """
         Create meeting record
@@ -56,6 +57,7 @@ class MeetingService:
             summary: Meeting summary text
             transcript: Meeting transcript text
             meeting_date: Meeting date, defaults to today
+            user_can_see: Whether users can see this meeting record, defaults to True
             
         Returns:
             Returns meeting record data if successful, None if failed
@@ -75,7 +77,8 @@ class MeetingService:
                 "recording_file_link": recording_file_path,
                 "auto_caption": transcript,
                 "summary": summary,
-                "portfolio_id": portfolio_id
+                "portfolio_id": portfolio_id,
+                "user_can_see": user_can_see
             }
             
             # Send create request

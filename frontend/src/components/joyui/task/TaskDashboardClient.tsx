@@ -84,6 +84,7 @@ export default function TaskDashboardClient({
         priority: formData.priority,
         deadline: formData.deadline,
         portfolio_id: formData.portfolio_id,
+        assignees: formData.assignees,
       });
 
       if (result.success) {

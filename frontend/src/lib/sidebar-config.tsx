@@ -2,10 +2,7 @@ import { VideoChatRounded } from "@mui/icons-material";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import React from "react";
-import { UserProfile } from "./types";
-import { VideoChatRounded } from "@mui/icons-material";
 
 export interface SidebarItem {
   id: string;
@@ -30,12 +27,6 @@ export const sidebarConfig: SidebarSection[] = [
     id: "main",
     position: "top",
     items: [
-      {
-        id: "home",
-        label: "Home",
-        icon: <HomeRoundedIcon />,
-        href: "/",
-      },
       {
         id: "dashboard",
         label: "Dashboard",
@@ -82,11 +73,6 @@ export const sidebarConfig: SidebarSection[] = [
             label: "My profile",
             href: "/taskbot/profile",
             selected: false,
-          },
-          {
-            id: "create-user",
-            label: "Create a new user",
-            href: "/users/create",
           },
           {
             id: "roles",

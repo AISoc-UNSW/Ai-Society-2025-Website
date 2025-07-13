@@ -1,7 +1,6 @@
 'use client';
 
 import EditUserPermissionsModal from '@/components/joyui/permissions/EditUserPermissionsModal';
-import Sidebar from '@/components/joyui/Sidebar';
 import type {
   PortfolioListResponse,
   RoleListResponse,
@@ -153,7 +152,6 @@ export default function PermissionsClient({
     <CssVarsProvider disableTransitionOnChange>
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar />
         <Box
           component="main"
           sx={{

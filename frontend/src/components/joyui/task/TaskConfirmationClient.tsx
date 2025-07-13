@@ -1,6 +1,5 @@
 "use client";
 
-import Sidebar from "@/components/joyui/Sidebar";
 import {
   HierarchicalTask,
   PortfolioSimple,
@@ -237,7 +236,6 @@ export default function TaskConfirmationClient({
     <CssVarsProvider disableTransitionOnChange>
       <CssBaseline />
       <Box sx={{ display: "flex", minHeight: "100vh" }}>
-        <Sidebar />
         <Box
           component="main"
           sx={{

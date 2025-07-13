@@ -5,8 +5,17 @@ services:
     build:
       context: ./backend
     container_name: ai-society-backend
-    env_file:
-      - ./backend/.env # create this file with your production variables
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - API_V1_STR=${API_V1_STR}
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - DEFAULT_TIMEZONE=${DEFAULT_TIMEZONE}
+      - DATABASE_TIMEZONE=${DATABASE_TIMEZONE}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI}
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -15,8 +24,9 @@ services:
     build:
       context: ./frontend
     container_name: ai-society-frontend
-    env_file:
-      - ./frontend/.env # create this file with env variables like NEXT_PUBLIC_API_BASE_URL
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=${API_BASE_URL}
+      - NODE_ENV=production
     ports:
       - "3000:3000"
     depends_on:
@@ -27,8 +37,17 @@ services:
     build:
       context: ./taskbot
     container_name: ai-society-taskbot
-    env_file:
-      - ./taskbot/.env # place your Discord & OpenAI keys here
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - API_BASE_URL=${API_BASE_URL}
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
+      - API_USERNAME=${API_USERNAME}
+      - API_PASSWORD=${API_PASSWORD}
+      - RECORDING_SAVE_PATH=${RECORDING_SAVE_PATH}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DEV_MODE=${DEV_MODE}
     depends_on:
       - backend
     restart: unless-stopped

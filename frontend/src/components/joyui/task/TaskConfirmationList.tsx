@@ -193,6 +193,7 @@ export default function TaskConfirmationList({
       parent_task_id: parentId,
       source_meeting_id: meetingId,
       status: "Pending",
+      assignees: formData.assignees,
     });
     setCreatingTask({ isOpen: false });
   };

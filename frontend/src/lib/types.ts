@@ -47,6 +47,7 @@ export interface TaskFormData {
   priority: PriorityLevel;
   deadline: string;
   portfolio_id: number;
+  assignees?: number[];
 }
 
 // Meeting Record types based on OpenAPI spec
@@ -212,6 +213,7 @@ export interface TaskCreateRequest {
   parent_task_id?: number;
   source_meeting_id?: number;
   status?: string;
+  assignees?: number[];
 }
 
 // Hierarchical task structure for confirmation page

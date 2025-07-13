@@ -77,6 +77,7 @@ async function createTaskAction(taskData: TaskCreateRequest) {
 
   try {
     const newTask = await createTask(taskData);
+    await updateTaskAssignment(newTask.task_id, taskData.assignees || []);
     revalidatePath(`/taskbot/tasks/[status]`);
     return { success: true, task: newTask };
   } catch (error) {

@@ -109,10 +109,11 @@ export default function TaskFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave({
+    const formDataWithAssignees = {
       ...formData,
       assignees: selectedAssignees.map(u => u.user_id),
-    });
+    };
+    await onSave(formDataWithAssignees);
   };
 
   return (

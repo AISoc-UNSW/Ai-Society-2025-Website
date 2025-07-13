@@ -3,17 +3,16 @@
 import { MeetingRecordDetailResponse, PortfolioListResponse, TaskListResponse } from "@/lib/types";
 import { ArrowBack } from "@mui/icons-material";
 import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Grid,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemContent,
-    Typography
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Grid,
+  List,
+  ListItem,
+  ListItemContent,
+  Typography
 } from "@mui/joy";
 import { useRouter } from "next/navigation";
 
@@ -57,8 +56,19 @@ export default function MeetingDetailClient({
     return 'primary' as const;
   };
 
-  const handleTaskClick = (taskId: number) => {
-    router.push(`/taskbot/tasks/${taskId}`);
+  const getTaskStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'success' as const;
+      case 'in progress':
+        return 'warning' as const;
+      case 'cancelled':
+        return 'danger' as const;
+      case 'pending':
+        return 'neutral' as const;
+      default:
+        return 'neutral' as const;
+    }
   };
 
   return (
@@ -161,38 +171,48 @@ export default function MeetingDetailClient({
                 {relatedTasks.length > 0 ? (
                   <List size="sm">
                     {relatedTasks.map((task) => (
-                      <ListItem key={task.task_id}>
-                        <ListItemButton
-                          onClick={() => handleTaskClick(task.task_id)}
-                          sx={{ 
-                            borderRadius: 'sm',
-                            '&:hover': {
-                              backgroundColor: 'background.level2'
-                            }
-                          }}
-                        >
-                          <ListItemContent>
-                            <Typography level="body-sm" sx={{ fontWeight: 'md' }}>
+                      <ListItem 
+                        key={task.task_id}
+                        sx={{ 
+                          borderRadius: 'sm',
+                          p: 1,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          mb: 1
+                        }}
+                      >
+                        <ListItemContent>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                            <Typography level="body-sm" sx={{ fontWeight: 'md', flex: 1 }}>
                               {task.title}
                             </Typography>
-                            {task.description && (
-                              <Typography 
-                                level="body-xs" 
-                                color="neutral"
-                                sx={{ 
-                                  mt: 0.5,
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis'
-                                }}
+                            {task.status && (
+                              <Chip 
+                                size="sm" 
+                                color={getTaskStatusColor(task.status)}
+                                variant="soft"
+                                sx={{ ml: 1, flexShrink: 0 }}
                               >
-                                {task.description}
-                              </Typography>
+                                {task.status}
+                              </Chip>
                             )}
-                          </ListItemContent>
-                        </ListItemButton>
+                          </Box>
+                          {task.description && (
+                            <Typography 
+                              level="body-xs" 
+                              color="neutral"
+                              sx={{ 
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                            >
+                              {task.description}
+                            </Typography>
+                          )}
+                        </ListItemContent>
                       </ListItem>
                     ))}
                   </List>

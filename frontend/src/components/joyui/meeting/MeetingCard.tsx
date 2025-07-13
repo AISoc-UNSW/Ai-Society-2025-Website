@@ -30,16 +30,7 @@ export default function MeetingCard({
   };
 
   const getPortfolioColor = (portfolio: string) => {
-    switch (portfolio.toLowerCase()) {
-      case 'edu':
-        return 'primary';
-      case 'it portfolio':
-        return 'success';
-      case 'marketing':
-        return 'warning';
-      default:
-        return 'neutral';
-    }
+    return 'primary' as const;
   };
 
   return (
@@ -110,19 +101,7 @@ export default function MeetingCard({
           </Typography>
         </Box>
 
-        {/* Status indicators */}
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 'auto' }}>
-          {meeting.has_recording && (
-            <Chip size="sm" color="success" variant="soft">
-              Recording
-            </Chip>
-          )}
-          {meeting.has_summary && (
-            <Chip size="sm" color="primary" variant="soft">
-              Summary
-            </Chip>
-          )}
-        </Box>
+
       </CardContent>
     </Card>
   );

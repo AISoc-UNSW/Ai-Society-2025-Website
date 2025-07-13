@@ -54,16 +54,7 @@ export default function MeetingDetailClient({
   };
 
   const getPortfolioColor = (portfolio: string) => {
-    switch (portfolio.toLowerCase()) {
-      case 'product':
-        return 'primary';
-      case 'marketing':
-        return 'success';
-      case 'finance':
-        return 'warning';
-      default:
-        return 'neutral';
-    }
+    return 'primary' as const;
   };
 
   const handleTaskClick = (taskId: number) => {

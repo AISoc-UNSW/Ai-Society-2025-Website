@@ -1,5 +1,6 @@
 # Discord bot dependencies
-git+https://github.com/Pycord-Development/pycord@master#egg=py-cord[voice]
+# git+https://github.com/Pycord-Development/pycord@master#egg=py-cord[voice]
+py-cord[voice]>=2.6.1
 
 # Voice support dependencies
 PyNaCl>=1.5.0

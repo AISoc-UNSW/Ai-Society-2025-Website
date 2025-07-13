@@ -49,6 +49,47 @@ export interface TaskFormData {
   portfolio_id: number;
 }
 
+// Meeting Record types based on OpenAPI spec
+export interface MeetingRecordListResponse {
+  meeting_id: number;
+  meeting_date: string;
+  meeting_name: string;
+  portfolio_id: number;
+  user_can_see: boolean;
+  has_recording: boolean;
+  has_summary: boolean;
+  summary?: string;
+  portfolio_name?: string;
+}
+
+export interface MeetingRecordDetailResponse {
+  meeting_date: string;
+  meeting_name: string;
+  recording_file_link?: string;
+  auto_caption?: string;
+  summary?: string;
+  portfolio_id: number;
+  user_can_see: boolean;
+  meeting_id: number;
+  portfolio_name?: string;
+  related_tasks_count?: number;
+}
+
+export interface TaskListResponse {
+  task_id: number;
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  deadline: string;
+  parent_task_id?: number;
+  source_meeting_id?: number;
+  portfolio_id: number;
+  created_at?: string;
+  updated_at?: string;
+  created_by: number;
+}
+
 // Meeting related types
 export interface Meeting {
   id: string;

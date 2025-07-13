@@ -1,24 +1,25 @@
-import { updateTaskStatus } from "@/lib/api/task";
-import { TaskStatus } from "@/lib/types";
+import {
+  createTask,
+  updateTaskAssignment,
+  updateTaskStatus,
+  fetchTasksCreatedByMe,
+  transformTaskResponseToTask,
+  getUserTasksWithRole,
+  fetchUserTasks,
+  transformUserTaskToTask,
+} from "@/lib/api/task";
+import { TaskCreateRequest, TaskStatus, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
-import { getCurrentUser } from "@/lib/api/user";
+import { getCurrentUser, searchUsers } from "@/lib/api/user";
 import { Suspense } from "react";
 import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
 import TaskDashboardClient from "@/components/joyui/task/TaskDashboardClient";
-import { getUserTasksWithRole } from "@/lib/api/task";
+import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
 
-// Valid status values from sidebar configuration
-const VALID_STATUSES = ["all", "in-progress", "completed", "cancelled"] as const;
+// Valid status values - simplified to only include main views from sidebar
+const VALID_STATUSES = ["my-tasks", "all", "created-tasks"] as const;
 type ValidStatus = (typeof VALID_STATUSES)[number];
-
-// Map URL status to TaskStatus
-const STATUS_MAPPING: Record<ValidStatus, TaskStatus | null> = {
-  all: null, // null means show all tasks
-  "in-progress": "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
 
 interface PageProps {
   params: Promise<{
@@ -43,18 +44,102 @@ async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
   }
 }
 
-async function TaskData({ targetStatus }: { targetStatus: TaskStatus | null }) {
+// server actions for assignees
+async function searchUsersAction(searchTerm: string): Promise<User[]> {
+  "use server";
+
+  try {
+    return await searchUsers(searchTerm, 10);
+  } catch (error) {
+    console.error("Failed to search users:", error);
+    return [];
+  }
+}
+
+async function updateTaskAssignmentAction(taskId: number, userIds: number[]) {
+  "use server";
+
+  try {
+    await updateTaskAssignment(taskId, userIds);
+    revalidatePath("/taskbot/tasks/[status]");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update task assignment:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update assignees",
+    };
+  }
+}
+
+async function createTaskAction(taskData: TaskCreateRequest) {
+  "use server";
+
+  try {
+    const newTask = await createTask(taskData);
+    revalidatePath(`/taskbot/tasks/[status]`);
+    return { success: true, task: newTask };
+  } catch (error) {
+    console.error("Failed to create task:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create task",
+    };
+  }
+}
+
+async function TaskData({ currentStatus }: { currentStatus: string }) {
   try {
     const user = await getCurrentUser();
-    const { tasks, userRole } = await getUserTasksWithRole(user, targetStatus);
+
+    let tasks, userRole;
+
+    if (currentStatus === "created-tasks") {
+      // Fetch tasks created by current user
+      const createdTasks = await fetchTasksCreatedByMe(user.user_id);
+      const transformedTasks = await Promise.all(createdTasks.map(transformTaskResponseToTask));
+      tasks = transformedTasks;
+      userRole = {
+        showMyTasks: false,
+        directorPortfolioId: undefined,
+        userIsAdmin: false,
+      };
+    } else if (currentStatus === "my-tasks") {
+      // Fetch user's assigned tasks using the specific API
+      const userTasks = await fetchUserTasks();
+      const transformedTasks = await Promise.all(userTasks.map(transformUserTaskToTask));
+      tasks = transformedTasks;
+      userRole = {
+        showMyTasks: true,
+        directorPortfolioId: undefined,
+        userIsAdmin: false,
+      };
+    } else if (currentStatus === "all") {
+      // Fetch all tasks (role-based: admin sees all, director sees portfolio, user sees assigned)
+      const result = await getUserTasksWithRole(user, null);
+      tasks = result.tasks;
+      userRole = result.userRole;
+    } else {
+      // Fallback
+      const result = await getUserTasksWithRole(user, null);
+      tasks = result.tasks;
+      userRole = result.userRole;
+    }
+
+    const portfolios = await getAllPortfoliosSimple();
 
     return (
       <TaskDashboardClient
         tasks={tasks}
         updateTaskStatusAction={updateTaskStatusAction}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
+        createTaskAction={createTaskAction}
+        portfolios={portfolios}
         myTasks={userRole.showMyTasks}
         directorPortfolioId={userRole.directorPortfolioId}
         admin={userRole.userIsAdmin}
+        currentStatus={currentStatus}
       />
     );
   } catch (error) {
@@ -65,7 +150,10 @@ async function TaskData({ targetStatus }: { targetStatus: TaskStatus | null }) {
         tasks={[]}
         error={errorMessage}
         updateTaskStatusAction={updateTaskStatusAction}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
         myTasks={true}
+        currentStatus={currentStatus}
       />
     );
   }
@@ -81,12 +169,11 @@ export default async function TasksByStatusPage({ params }: PageProps) {
   }
 
   const validStatus = status as ValidStatus;
-  const targetStatus = STATUS_MAPPING[validStatus];
 
   return (
     <div>
       <Suspense fallback={<TaskLoadingState stage="fetching" />}>
-        <TaskData targetStatus={targetStatus} />
+        <TaskData currentStatus={validStatus} />
       </Suspense>
     </div>
   );

@@ -4,13 +4,15 @@ import {
   updateTaskStatus,
   updateTask,
   updateTaskAssignment,
+  createTask,
 } from "@/lib/api/task";
 import { searchUsers } from "@/lib/api/user";
-import { Task, TaskStatus, User } from "@/lib/types";
+import { Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { Suspense } from "react";
 import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
 import TaskDashboardClient from "@/components/joyui/task/TaskDashboardClient";
+import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
 
 // Server Action for updating task status
 async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
@@ -29,7 +31,6 @@ async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
   }
 }
 
-// Add this server action
 async function updateTaskAction(taskId: number, updates: Partial<Task>) {
   "use server";
 
@@ -46,7 +47,7 @@ async function updateTaskAction(taskId: number, updates: Partial<Task>) {
   }
 }
 
-// Add these new server actions for assignees
+// server actions for assignees
 async function searchUsersAction(searchTerm: string): Promise<User[]> {
   "use server";
 
@@ -74,17 +75,36 @@ async function updateTaskAssignmentAction(taskId: number, userIds: number[]) {
   }
 }
 
+async function createTaskAction(taskData: TaskCreateRequest) {
+    "use server";
+    
+    try {
+      const newTask = await createTask(taskData);
+      revalidatePath(`/taskbot/dashboard`);
+      return { success: true, task: newTask };
+    } catch (error) {
+      console.error("Failed to create task:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to create task",
+      };
+    }
+  }
+
 // Data fetching component
 async function TaskData() {
   try {
     const tasks = await fetchUserTasks();
     const transformedTasks = await Promise.all(tasks.map(transformUserTaskToTask));
+    const portfolios = await getAllPortfoliosSimple();
 
     return (
       <TaskDashboardClient
         tasks={transformedTasks}
         updateTaskStatusAction={updateTaskStatusAction}
         updateTaskAction={updateTaskAction}
+        createTaskAction={createTaskAction}
+        portfolios={portfolios}
         searchUsersAction={searchUsersAction}
         updateTaskAssignmentAction={updateTaskAssignmentAction}
         myTasks={true}
@@ -98,6 +118,7 @@ async function TaskData() {
         error={errorMessage}
         updateTaskStatusAction={updateTaskStatusAction}
         updateTaskAction={updateTaskAction}
+        createTaskAction={createTaskAction}
         searchUsersAction={searchUsersAction}
         updateTaskAssignmentAction={updateTaskAssignmentAction}
         myTasks={true}

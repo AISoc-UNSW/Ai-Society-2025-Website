@@ -1,13 +1,18 @@
 "use client";
 
-import * as React from "react";
-import { CssVarsProvider } from "@mui/joy/styles";
-import CssBaseline from "@mui/joy/CssBaseline";
-import Box from "@mui/joy/Box";
-import Sidebar from "@/components/joyui/Sidebar";
+import Button from "@mui/joy/Button";
+import AddIcon from "@mui/icons-material/Add";
 import Tasks from "@/components/joyui/task/Tasks";
-import { Task, TaskStatus, User } from "@/lib/types";
-import { useTransition } from "react";
+import TaskFormModal from "./TaskFormModal";
+import {
+  Task,
+  TaskStatus,
+  User,
+  TaskFormData,
+  TaskCreateRequest,
+  PortfolioSimple,
+} from "@/lib/types";
+import React, { useState, useEffect, useTransition } from "react";
 
 interface TaskDashboardClientProps {
   tasks: Task[];
@@ -25,9 +30,12 @@ interface TaskDashboardClientProps {
     taskId: number,
     userIds: number[]
   ) => Promise<{ success: boolean; error?: string }>;
+  createTaskAction?: (taskData: TaskCreateRequest) => Promise<{ success: boolean; error?: string }>;
+  portfolios?: PortfolioSimple[];
   myTasks?: boolean;
   directorPortfolioId?: number;
   admin?: boolean;
+  currentStatus?: string;
 }
 
 export default function TaskDashboardClient({
@@ -37,14 +45,17 @@ export default function TaskDashboardClient({
   updateTaskAction,
   searchUsersAction,
   updateTaskAssignmentAction,
-  myTasks = true,
+  createTaskAction,
+  portfolios = [],
   directorPortfolioId = undefined,
   admin = false,
+  currentStatus = "all",
 }: TaskDashboardClientProps) {
   const [isPending, startTransition] = useTransition();
-  const [mounted, setMounted] = React.useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setMounted(true);
   }, []);
 
@@ -60,6 +71,29 @@ export default function TaskDashboardClient({
     });
   };
 
+  const handleCreateTask = async (formData: TaskFormData) => {
+    if (!createTaskAction) {
+      alert("Task creation is not available");
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await createTaskAction({
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        deadline: formData.deadline,
+        portfolio_id: formData.portfolio_id,
+      });
+
+      if (result.success) {
+        setCreateTaskModalOpen(false);
+      } else {
+        alert(`Failed to create task: ${result.error}`);
+      }
+    });
+  };
+
   if (error) {
     return (
       <div className="p-4">
@@ -69,43 +103,50 @@ export default function TaskDashboardClient({
     );
   }
 
-  // Prevent hydration mismatch by not rendering MUI components until mounted
+  // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (
       <div style={{ padding: "16px" }}>
-        <h2>My Tasks</h2>
-        <p>Loading tasks...</p>
+        <h2>Loading Tasks...</h2>
+        <p>Please wait while we load your tasks.</p>
       </div>
     );
   }
 
   return (
-    <CssVarsProvider disableTransitionOnChange>
-      <CssBaseline />
-      <Box sx={{ display: "flex", minHeight: "100vh" }}>
-        <Sidebar />
-        <Box
-          component="main"
-          sx={{
-            flex: 1,
-            p: { xs: 2, sm: 3 },
-            backgroundColor: "background.surface",
-            minHeight: "100vh",
-          }}
-        >
-          <Tasks
-            myTasks={myTasks}
-            directorPortfolioId={directorPortfolioId}
-            admin={admin}
-            tasks={tasks}
-            onTaskStatusUpdate={handleTaskStatusUpdate}
-            isUpdating={isPending}
-            updateTaskAction={updateTaskAction}
-            searchUsersAction={searchUsersAction}
-            updateTaskAssignmentAction={updateTaskAssignmentAction}
-          />
-        </Box>
-      </Box>
-    </CssVarsProvider>
+    <>
+      <Tasks
+        directorPortfolioId={directorPortfolioId}
+        admin={admin}
+        tasks={tasks}
+        onTaskStatusUpdate={handleTaskStatusUpdate}
+        isUpdating={isPending}
+        updateTaskAction={updateTaskAction}
+        searchUsersAction={searchUsersAction}
+        updateTaskAssignmentAction={updateTaskAssignmentAction}
+        headerActions={
+          <Button
+            variant="solid"
+            color="primary"
+            startDecorator={<AddIcon />}
+            onClick={() => setCreateTaskModalOpen(true)}
+            disabled={isPending}
+          >
+            Create New Task
+          </Button>
+        }
+        currentStatus={currentStatus}
+      />
+
+      {/* Create Task Modal */}
+      <TaskFormModal
+        open={createTaskModalOpen}
+        onClose={() => setCreateTaskModalOpen(false)}
+        onSave={handleCreateTask}
+        portfolios={portfolios}
+        title="Create New Task"
+        searchUsersAction={searchUsersAction}
+      />
+    </>
   );
 }

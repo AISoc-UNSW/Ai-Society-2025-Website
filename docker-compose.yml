@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # In the Docker network, the frontend connects to the backend via the service name 'backend'
+      # This environment variable will override the NEXT_PUBLIC_API_URL in the .env file
+      NEXT_PUBLIC_API_URL: http://backend:8000
+    env_file:
+      - .env
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  taskbot:
+    build:
+      context: ./taskbot
+      dockerfile: Dockerfile
+    environment:
+      # In the Docker network, taskbot connects to the backend via the service name 'backend'
+      # This environment variable will override the API_BASE_URL in the .env file
+      API_BASE_URL: http://backend:8000
+    env_file:
+      - .env
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge 

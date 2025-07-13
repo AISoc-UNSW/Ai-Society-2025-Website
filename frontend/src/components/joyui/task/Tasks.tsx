@@ -63,6 +63,10 @@ export default function Tasks({
 
     // Then apply tab filtering
     switch (tabFilter) {
+      case "active":
+        return tasksWithValidStatus.filter(
+          task => task.status === "In Progress" || task.status === "Not Started"
+        );
       case "not-started":
         return tasksWithValidStatus.filter(task => task.status === "Not Started");
       case "in-progress":
@@ -100,9 +104,9 @@ export default function Tasks({
     });
   }, [filteredTasks]);
 
-  const totalTasks = filteredTasks.length;
-  const inProgressTasks = filteredTasks.filter(t => t.status === "In Progress").length;
-  const completedTasks = filteredTasks.filter(t => t.status === "Completed").length;
+  const totalTasks = tasks.length;
+  const inProgressTasks = tasks.filter(t => t.status === "In Progress").length;
+  const completedTasks = tasks.filter(t => t.status === "Completed").length;
 
   // Determine the display mode based on current view
   const getDisplayTitle = () => {
@@ -189,10 +193,10 @@ export default function Tasks({
       <Box sx={{ mb: 2 }}>
         <Tabs value={tabFilter} onChange={handleTabChange}>
           <TabList>
-            <Tab value="all">All Tasks</Tab>
+            <Tab value="active">Active Tasks</Tab>
             <Tab value="in-progress">In Progress</Tab>
-            <Tab value="completed">Completed</Tab>
             <Tab value="not-started">Not Started</Tab>
+            <Tab value="completed">Completed</Tab>
             <Tab value="cancelled">Cancelled</Tab>
           </TabList>
         </Tabs>

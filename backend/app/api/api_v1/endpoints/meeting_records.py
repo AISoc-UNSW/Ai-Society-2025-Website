@@ -27,7 +27,12 @@ def create_meeting_record(
     Create new meeting record
     """
     meeting_rec = meeting_record.create_meeting_record(db, obj_in=meeting_in)
-    return MeetingRecordResponse(**meeting_rec.__dict__)
+    # Reload with portfolio to get portfolio_name
+    meeting_rec = meeting_record.get_by_id(db, meeting_id=meeting_rec.meeting_id)
+    
+    response_data = MeetingRecordResponse(**meeting_rec.__dict__)
+    response_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
+    return response_data
 
 
 @router.get("/{meeting_id}", response_model=MeetingRecordDetailResponse)
@@ -49,6 +54,7 @@ def read_meeting_record(
 
     meeting_data = MeetingRecordDetailResponse(**meeting_rec.__dict__)
     meeting_data.related_tasks_count = related_tasks_count
+    meeting_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
     return meeting_data
 
 
@@ -85,6 +91,7 @@ def read_meeting_records(
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = bool(meeting_rec.summary)
+        meeting_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
         result.append(meeting_data)
 
     return result
@@ -106,7 +113,12 @@ def update_meeting_record(
         raise HTTPException(status_code=404, detail="Meeting record not found")
 
     meeting_rec = meeting_record.update_meeting_record(db, db_obj=meeting_rec, obj_in=meeting_in)
-    return MeetingRecordResponse(**meeting_rec.__dict__)
+    # Reload with portfolio to ensure we have the latest data
+    meeting_rec = meeting_record.get_by_id(db, meeting_id=meeting_rec.meeting_id)
+    
+    response_data = MeetingRecordResponse(**meeting_rec.__dict__)
+    response_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
+    return response_data
 
 
 @router.delete("/{meeting_id}")
@@ -156,6 +168,7 @@ def read_meeting_records_by_portfolio(
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = bool(meeting_rec.summary)
+        meeting_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
         result.append(meeting_data)
 
     return result
@@ -185,6 +198,7 @@ def read_meeting_records_with_recordings(
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = True  # Always true for this endpoint
         meeting_data.has_summary = bool(meeting_rec.summary)
+        meeting_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
         result.append(meeting_data)
 
     return result
@@ -214,6 +228,7 @@ def read_meeting_records_with_summaries(
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = True  # Always true for this endpoint
+        meeting_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
         result.append(meeting_data)
 
     return result
@@ -242,6 +257,7 @@ def search_meeting_records(
         meeting_data = MeetingRecordListResponse(**meeting_rec.__dict__)
         meeting_data.has_recording = bool(meeting_rec.recording_file_link)
         meeting_data.has_summary = bool(meeting_rec.summary)
+        meeting_data.portfolio_name = meeting_rec.portfolio.name if meeting_rec.portfolio else None
         result.append(meeting_data)
 
     return result

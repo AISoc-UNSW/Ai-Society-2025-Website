@@ -1,5 +1,5 @@
 from typing import Any
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 from datetime import date
 
@@ -11,17 +11,17 @@ from app.schemas.meeting_record import MeetingRecordCreateRequestBody, MeetingRe
 
 def get_by_id(db: Session, meeting_id: int) -> MeetingRecord | None:
     """Get meeting record by ID"""
-    return db.query(MeetingRecord).filter(MeetingRecord.meeting_id == meeting_id).first()
+    return db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio)).filter(MeetingRecord.meeting_id == meeting_id).first()
 
 
 def get_by_portfolio(db: Session, portfolio_id: int, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records by portfolio ID"""
-    return db.query(MeetingRecord).filter(MeetingRecord.portfolio_id == portfolio_id).offset(skip).limit(limit).all()
+    return db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio)).filter(MeetingRecord.portfolio_id == portfolio_id).offset(skip).limit(limit).all()
 
 
 def get_by_date_range(db: Session, start_date: date, end_date: date, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records within date range"""
-    return db.query(MeetingRecord).filter(
+    return db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio)).filter(
         and_(
             MeetingRecord.meeting_date >= start_date,
             MeetingRecord.meeting_date <= end_date
@@ -31,14 +31,14 @@ def get_by_date_range(db: Session, start_date: date, end_date: date, skip: int =
 
 def get_with_recordings(db: Session, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records that have recording files"""
-    return db.query(MeetingRecord).filter(
+    return db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio)).filter(
         MeetingRecord.recording_file_link.isnot(None)
     ).offset(skip).limit(limit).all()
 
 
 def get_with_summaries(db: Session, skip: int = 0, limit: int = 100) -> list[MeetingRecord]:
     """Get meeting records that have summaries"""
-    return db.query(MeetingRecord).filter(
+    return db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio)).filter(
         MeetingRecord.summary.isnot(None)
     ).offset(skip).limit(limit).all()
 
@@ -55,7 +55,7 @@ def get_multi(
     limit: int = 100
 ) -> list[MeetingRecord]:
     """Get multiple meeting records with optional filters"""
-    query = db.query(MeetingRecord)
+    query = db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio))
     
     if portfolio_id:
         query = query.filter(MeetingRecord.portfolio_id == portfolio_id)
@@ -98,7 +98,7 @@ def get_multi_with_permissions(
     limit: int = 100
 ) -> list[MeetingRecord]:
     """Get multiple meeting records with permission-based filtering"""
-    query = db.query(MeetingRecord)
+    query = db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio))
     
     # Apply permission-based filtering based on user role
     if current_user.role_id == 2:  # Admin - can see all meetings
@@ -155,7 +155,7 @@ def get_multi_with_permissions(
 
 def get_by_id_with_permissions(db: Session, meeting_id: int, current_user: User) -> MeetingRecord | None:
     """Get meeting record by ID with permission check"""
-    meeting = db.query(MeetingRecord).filter(MeetingRecord.meeting_id == meeting_id).first()
+    meeting = db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio)).filter(MeetingRecord.meeting_id == meeting_id).first()
     
     if not meeting:
         return None
@@ -222,7 +222,7 @@ def delete_meeting_record(db: Session, *, meeting_id: int) -> bool:
 
 def search_meeting_records(db: Session, *, search_term: str, portfolio_id: int | None = None) -> list[MeetingRecord]:
     """Search meeting records by name or summary"""
-    query = db.query(MeetingRecord)
+    query = db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio))
     
     if portfolio_id:
         query = query.filter(MeetingRecord.portfolio_id == portfolio_id)
@@ -244,7 +244,7 @@ def search_meeting_records_with_permissions(
     portfolio_id: int | None = None
 ) -> list[MeetingRecord]:
     """Search meeting records by name or summary with permission filtering"""
-    query = db.query(MeetingRecord)
+    query = db.query(MeetingRecord).options(joinedload(MeetingRecord.portfolio))
     
     # Apply permission-based filtering based on user role
     if current_user.role_id == 2:  # Admin - can see all meetings

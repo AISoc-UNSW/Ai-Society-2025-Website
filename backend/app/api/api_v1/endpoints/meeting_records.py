@@ -38,9 +38,9 @@ def read_meeting_record(
     current_user: User = Depends(deps.get_current_user),
 ) -> MeetingRecordDetailResponse:
     """
-    Get meeting record by ID with details
+    Get meeting record by ID with details (permission-filtered)
     """
-    meeting_rec = meeting_record.get_by_id(db, meeting_id=meeting_id)
+    meeting_rec = meeting_record.get_by_id_with_permissions(db, meeting_id=meeting_id, current_user=current_user)
     if not meeting_rec:
         raise HTTPException(status_code=404, detail="Meeting record not found")
 
@@ -65,10 +65,11 @@ def read_meeting_records(
     current_user: User = Depends(deps.get_current_user),
 ) -> list[MeetingRecordListResponse]:
     """
-    Get meeting records with optional filters
+    Get meeting records with optional filters (permission-filtered)
     """
-    meetings = meeting_record.get_multi(
+    meetings = meeting_record.get_multi_with_permissions(
         db,
+        current_user=current_user,
         portfolio_id=portfolio_id,
         start_date=start_date,
         end_date=end_date,
@@ -98,9 +99,9 @@ def update_meeting_record(
     current_user: User = Depends(deps.get_current_user),
 ) -> MeetingRecordResponse:
     """
-    Update meeting record
+    Update meeting record (permission-checked)
     """
-    meeting_rec = meeting_record.get_by_id(db, meeting_id=meeting_id)
+    meeting_rec = meeting_record.get_by_id_with_permissions(db, meeting_id=meeting_id, current_user=current_user)
     if not meeting_rec:
         raise HTTPException(status_code=404, detail="Meeting record not found")
 
@@ -116,8 +117,13 @@ def delete_meeting_record(
     current_user: User = Depends(deps.get_current_user),
 ):
     """
-    Delete meeting record
+    Delete meeting record (permission-checked)
     """
+    # Check if user has permission to access this meeting first
+    meeting_rec = meeting_record.get_by_id_with_permissions(db, meeting_id=meeting_id, current_user=current_user)
+    if not meeting_rec:
+        raise HTTPException(status_code=404, detail="Meeting record not found")
+
     success = meeting_record.delete_meeting_record(db, meeting_id=meeting_id)
     if not success:
         raise HTTPException(status_code=404, detail="Meeting record not found")
@@ -135,10 +141,14 @@ def read_meeting_records_by_portfolio(
     current_user: User = Depends(deps.get_current_user),
 ) -> list[MeetingRecordListResponse]:
     """
-    Get meeting records by portfolio ID
+    Get meeting records by portfolio ID (permission-filtered)
     """
-    meetings = meeting_record.get_by_portfolio(
-        db, portfolio_id=portfolio_id, skip=skip, limit=limit
+    meetings = meeting_record.get_multi_with_permissions(
+        db, 
+        current_user=current_user,
+        portfolio_id=portfolio_id, 
+        skip=skip, 
+        limit=limit
     )
 
     result = []
@@ -160,9 +170,15 @@ def read_meeting_records_with_recordings(
     current_user: User = Depends(deps.get_current_user),
 ) -> list[MeetingRecordListResponse]:
     """
-    Get meeting records that have recording files
+    Get meeting records that have recording files (permission-filtered)
     """
-    meetings = meeting_record.get_with_recordings(db, skip=skip, limit=limit)
+    meetings = meeting_record.get_multi_with_permissions(
+        db, 
+        current_user=current_user,
+        has_recording=True,
+        skip=skip, 
+        limit=limit
+    )
 
     result = []
     for meeting_rec in meetings:
@@ -183,9 +199,15 @@ def read_meeting_records_with_summaries(
     current_user: User = Depends(deps.get_current_user),
 ) -> list[MeetingRecordListResponse]:
     """
-    Get meeting records that have summaries
+    Get meeting records that have summaries (permission-filtered)
     """
-    meetings = meeting_record.get_with_summaries(db, skip=skip, limit=limit)
+    meetings = meeting_record.get_multi_with_permissions(
+        db, 
+        current_user=current_user,
+        has_summary=True,
+        skip=skip, 
+        limit=limit
+    )
 
     result = []
     for meeting_rec in meetings:
@@ -206,9 +228,14 @@ def search_meeting_records(
     current_user: User = Depends(deps.get_current_user),
 ) -> list[MeetingRecordListResponse]:
     """
-    Search meeting records by name, summary, or caption
+    Search meeting records by name, summary, or caption (permission-filtered)
     """
-    meetings = meeting_record.search_meeting_records(db, search_term=q, portfolio_id=portfolio_id)
+    meetings = meeting_record.search_meeting_records_with_permissions(
+        db, 
+        search_term=q, 
+        current_user=current_user,
+        portfolio_id=portfolio_id
+    )
 
     result = []
     for meeting_rec in meetings:

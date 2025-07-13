@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Optional
-from sqlalchemy import ForeignKey, String, Text, Integer, DateTime
+from sqlalchemy import ForeignKey, String, Text, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from app.database.session import Base
@@ -18,6 +18,7 @@ class MeetingRecord(Base):
     auto_caption: Mapped[str | None] = mapped_column(Text, nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     portfolio_id: Mapped[int] = mapped_column(ForeignKey("portfolios.portfolio_id"), nullable=False)
+    user_can_see: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Relationships
     portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="meeting_records")

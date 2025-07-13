@@ -10,6 +10,7 @@ class MeetingRecordBase(BaseModel):
     auto_caption: str | None = None
     summary: str | None = None
     portfolio_id: int
+    user_can_see: bool = True
 
 
 # Used when creating a meeting record
@@ -17,6 +18,7 @@ class MeetingRecordCreateRequestBody(MeetingRecordBase):
     meeting_date: date
     meeting_name: str
     portfolio_id: int
+    user_can_see: bool = True
 
 
 # Used when updating a meeting record
@@ -27,6 +29,7 @@ class MeetingRecordUpdate(BaseModel):
     auto_caption: str | None = None
     summary: str | None = None
     portfolio_id: int | None = None
+    user_can_see: bool | None = None
 
 
 # Used for API responses
@@ -43,6 +46,7 @@ class MeetingRecordListResponse(BaseModel):
     meeting_date: date
     meeting_name: str
     portfolio_id: int
+    user_can_see: bool
     has_recording: bool = False  # Computed field
     has_summary: bool = False    # Computed field
     

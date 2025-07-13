@@ -147,6 +147,7 @@ export default function TaskConfirmationList({
       updated_at: task.updated_at || "",
       created_by: { user_id: 0, username: "", email: "" }, // Placeholder
       portfolio: getPortfolioName(task.portfolio_id) as Portfolio,
+      portfolio_id: task.portfolio_id,
       assignees: currentAssignees.map(assignee => ({
         id: assignee.user_id,
         name: assignee.user_username,
@@ -161,7 +162,7 @@ export default function TaskConfirmationList({
     if (!taskToEdit) return;
 
     // Convert Task updates back to backend format
-    const backendUpdates: any = {
+    const backendUpdates: Partial<Task> = {
       title: updates.title,
       description: updates.description,
       status: updates.status,

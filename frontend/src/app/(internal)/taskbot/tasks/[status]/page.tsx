@@ -2,13 +2,14 @@ import {
   createTask,
   updateTaskAssignment,
   updateTaskStatus,
+  updateTask,
   fetchTasksCreatedByMe,
   transformTaskResponseToTask,
   getUserTasksWithRole,
   fetchUserTasks,
   transformUserTaskToTask,
 } from "@/lib/api/task";
-import { TaskCreateRequest, TaskStatus, User } from "@/lib/types";
+import { Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import { getCurrentUser, searchUsers } from "@/lib/api/user";
@@ -89,6 +90,23 @@ async function createTaskAction(taskData: TaskCreateRequest) {
   }
 }
 
+// Add the missing updateTaskAction server action
+async function updateTaskAction(taskId: number, updates: Partial<Task>) {
+  "use server";
+
+  try {
+    await updateTask(taskId, updates);
+    revalidatePath(`/taskbot/tasks/[status]`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update task:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update task",
+    };
+  }
+}
+
 async function TaskData({ currentStatus }: { currentStatus: string }) {
   try {
     const user = await getCurrentUser();
@@ -133,6 +151,7 @@ async function TaskData({ currentStatus }: { currentStatus: string }) {
       <TaskDashboardClient
         tasks={tasks}
         updateTaskStatusAction={updateTaskStatusAction}
+        updateTaskAction={updateTaskAction}
         searchUsersAction={searchUsersAction}
         updateTaskAssignmentAction={updateTaskAssignmentAction}
         createTaskAction={createTaskAction}
@@ -151,8 +170,11 @@ async function TaskData({ currentStatus }: { currentStatus: string }) {
         tasks={[]}
         error={errorMessage}
         updateTaskStatusAction={updateTaskStatusAction}
+        updateTaskAction={updateTaskAction}
         searchUsersAction={searchUsersAction}
         updateTaskAssignmentAction={updateTaskAssignmentAction}
+        createTaskAction={createTaskAction}
+        portfolios={[]}
         myTasks={true}
         currentStatus={currentStatus}
       />

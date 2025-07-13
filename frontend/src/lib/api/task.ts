@@ -196,6 +196,7 @@ export const transformUserTaskToTask = async (userTask: UserTaskAssignment): Pro
           created_at: subtask.created_at,
           updated_at: subtask.updated_at,
           created_by: subtaskCreator,
+          portfolio_id: subtask.portfolio_id,
           portfolio: portfolioDetails.name as Portfolio,
           assignees: [], // Skip assignees for subtasks to avoid more API calls
           subtasks: [], // No nested subtasks to avoid infinite recursion
@@ -217,6 +218,7 @@ export const transformUserTaskToTask = async (userTask: UserTaskAssignment): Pro
     priority: userTask.task_priority as PriorityLevel,
     deadline: userTask.task_deadline,
     status: userTask.task_status as TaskStatus,
+    portfolio_id: userTask.task_portfolio_id,
     subtasks: subtasks,
     assignees: assignees,
     created_by: creator,
@@ -247,6 +249,7 @@ export const transformTaskResponseToTask = async (taskResponse: TaskResponse): P
         created_at: subtask.created_at,
         updated_at: subtask.updated_at,
         created_by: subtaskCreator,
+        portfolio_id: subtask.portfolio_id,
         portfolio: portfolioDetails.name as Portfolio,
         assignees: [], // assignees for subtasks
         subtasks: [], // subtasks of subtasks
@@ -263,6 +266,7 @@ export const transformTaskResponseToTask = async (taskResponse: TaskResponse): P
     created_at: taskDetails.created_at,
     updated_at: taskDetails.updated_at,
     created_by: creator,
+    portfolio_id: taskResponse.portfolio_id,
     portfolio: portfolioDetails.name as Portfolio,
     assignees: assignees,
     subtasks: subtasks,

@@ -57,12 +57,6 @@ export default function Tasks({
 
   // Filter tasks based on tab selection
   const filteredTasks = React.useMemo(() => {
-    // For created-tasks, don't apply tab filtering
-    if (currentStatus === "created-tasks") {
-      return tasks;
-    }
-
-    // Apply tab filtering for my-tasks and all tasks
     switch (tabFilter) {
       case "not-started":
         return tasks.filter(task => task.status === "Not Started");
@@ -75,7 +69,7 @@ export default function Tasks({
       default:
         return tasks;
     }
-  }, [tasks, tabFilter, currentStatus]);
+  }, [tasks, tabFilter]);
 
   // Sort tasks by status priority: In Progress -> Not Started -> Completed -> Cancelled
   const sortedTasks = React.useMemo(() => {
@@ -186,20 +180,18 @@ export default function Tasks({
         </Card>
       </Stack>
 
-      {/* Status Filter Tabs - only show for filtering, not for created-tasks view */}
-      {currentStatus !== "created-tasks" && (
-        <Box sx={{ mb: 2 }}>
-          <Tabs value={tabFilter} onChange={handleTabChange}>
-            <TabList>
-              <Tab value="all">All Tasks</Tab>
-              <Tab value="in-progress">In Progress</Tab>
-              <Tab value="completed">Completed</Tab>
-              <Tab value="not-started">Not Started</Tab>
-              <Tab value="cancelled">Cancelled</Tab>
-            </TabList>
-          </Tabs>
-        </Box>
-      )}
+      {/* Status Filter Tabs - now available for all views including created-tasks */}
+      <Box sx={{ mb: 2 }}>
+        <Tabs value={tabFilter} onChange={handleTabChange}>
+          <TabList>
+            <Tab value="all">All Tasks</Tab>
+            <Tab value="in-progress">In Progress</Tab>
+            <Tab value="completed">Completed</Tab>
+            <Tab value="not-started">Not Started</Tab>
+            <Tab value="cancelled">Cancelled</Tab>
+          </TabList>
+        </Tabs>
+      </Box>
 
       {/* Tasks Grid or Empty State */}
       {totalTasks > 0 ? (

@@ -45,7 +45,7 @@ def summary(transcript):
         return "Error: No transcript exists to summarize."
     
     prompt = (
-        """You are a professional meeting-minutes assistant. After reading the transcript below, write a structured summary (approximately 500-1000 words) that:\n
+        f"""You are a professional meeting-minutes assistant. After reading the transcript below, write a structured summary (approximately 500-1000 words) that:\n
         1. **Context (1-2 sentences)** — State the meeting's purpose, date, and key participants.\n
         2. **Discussion Highlights** — Capture the main topics in logical order, grouping related points.\n
         3. **Decisions Made** — List each decision, including the rationale and the person/team responsible.\n

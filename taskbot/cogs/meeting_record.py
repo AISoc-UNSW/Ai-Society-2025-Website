@@ -235,7 +235,6 @@ class MeetingRecord(commands.Cog):
         url = f"{config.api_base_url}/api/v1/tasks/group"
         payload = {
             "tasks": tasks,
-            "portfolio_id": session["portfolio_id"],
             "source_meeting_id": meeting_id
         }
         headers = self.auth_manager.auth_headers

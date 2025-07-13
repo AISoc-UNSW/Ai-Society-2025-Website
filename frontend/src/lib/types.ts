@@ -35,7 +35,7 @@ export interface Task {
   updated_at: string;
   created_by: TaskCreatedByResponse;
   source?: string;
-
+  portfolio_id: number;
   portfolio: Portfolio;
   assignees: Assignee[];
   subtasks: Task[];

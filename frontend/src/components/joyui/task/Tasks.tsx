@@ -57,17 +57,22 @@ export default function Tasks({
 
   // Filter tasks based on tab selection
   const filteredTasks = React.useMemo(() => {
+    // First filter to only include tasks with valid statuses
+    const validStatuses: TaskStatus[] = ["Not Started", "In Progress", "Completed", "Cancelled"];
+    const tasksWithValidStatus = tasks.filter(task => validStatuses.includes(task.status));
+
+    // Then apply tab filtering
     switch (tabFilter) {
       case "not-started":
-        return tasks.filter(task => task.status === "Not Started");
+        return tasksWithValidStatus.filter(task => task.status === "Not Started");
       case "in-progress":
-        return tasks.filter(task => task.status === "In Progress");
+        return tasksWithValidStatus.filter(task => task.status === "In Progress");
       case "completed":
-        return tasks.filter(task => task.status === "Completed");
+        return tasksWithValidStatus.filter(task => task.status === "Completed");
       case "cancelled":
-        return tasks.filter(task => task.status === "Cancelled");
+        return tasksWithValidStatus.filter(task => task.status === "Cancelled");
       default:
-        return tasks;
+        return tasksWithValidStatus;
     }
   }, [tasks, tabFilter]);
 
@@ -78,7 +83,7 @@ export default function Tasks({
       "Not Started": 1,
       Completed: 2,
       Cancelled: 3,
-      Pending: 0,
+      Pending: 4,
     };
 
     return [...filteredTasks].sort((a, b) => {

@@ -12,7 +12,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - DEFAULT_TIMEZONE=${DEFAULT_TIMEZONE}
       - DATABASE_TIMEZONE=${DATABASE_TIMEZONE}
-      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - BACKEND_CORS_ORIGINS=*
       - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
       - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
       - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI}
@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: ai-society-frontend
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=${API_BASE_URL}
+      - NEXT_PUBLIC_API_URL=http://backend:8000
       - NODE_ENV=development
     ports:
       - "4321:4321"

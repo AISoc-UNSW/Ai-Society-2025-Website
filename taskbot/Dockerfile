@@ -10,6 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Install system dependencies required for audio processing and Discord bot
 RUN apt-get update && apt-get install -y \
+    # Git for installing packages from GitHub
+    git \
     # Audio processing dependencies
     libopus0 \
     libopus-dev \

@@ -1,0 +1,112 @@
+# =============================================================================
+# AI Society 2025 Website - Docker Compose Template
+# =============================================================================
+# This is a template docker-compose.yml file with all sensitive information
+# replaced with environment variables and placeholders.
+# 
+# SETUP INSTRUCTIONS:
+# 1. Copy this file to docker-compose.yml
+# 2. Create a .env file with your actual configuration values
+# 3. Update the URLs and ports to match your deployment environment
+# 
+# REQUIRED ENVIRONMENT VARIABLES:
+# - DATABASE_URL: PostgreSQL connection string
+# - DISCORD_CLIENT_ID: Discord OAuth client ID
+# - DISCORD_CLIENT_SECRET: Discord OAuth client secret
+# - DISCORD_TOKEN: Discord bot token
+# - API_USERNAME: API username for bot authentication
+# - API_PASSWORD: API password for bot authentication
+# - OPENAI_API_KEY: OpenAI API key for AI features
+# - GEMINI_API_KEY: Google Gemini API key for AI features
+# - SECRET_KEY: JWT secret key (generate with: openssl rand -hex 32)
+# =============================================================================
+
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: ai-society-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Database Configuration
+      # Replace with your actual PostgreSQL connection string
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://username:password@host:port/database}
+      
+      # Timezone Configuration
+      - DEFAULT_TIMEZONE=${DEFAULT_TIMEZONE:-Australia/Sydney}
+      - DATABASE_TIMEZONE=${DATABASE_TIMEZONE:-UTC}
+      
+      # CORS Configuration
+      # For production, replace * with specific allowed origins
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS:-*}
+      
+      # Project Configuration
+      - PROJECT_NAME=${PROJECT_NAME:-Ai Society 2025 Website}
+      - API_V1_STR=${API_V1_STR:-/api/v1}
+      # IMPORTANT: Generate a secure secret key for production
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      
+      # Discord OAuth Configuration
+      # Get these from Discord Developer Portal: https://discord.com/developers/applications
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      # Update with your actual domain/IP and port
+      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI:-http://localhost:8000/auth/discord/callback}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ai-society-frontend
+    ports:
+      - "4321:4321"
+    environment:
+      # Frontend Configuration
+      - PORT=${FRONTEND_PORT:-4321}
+      # Update with your actual backend URL
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NODE_ENV=${NODE_ENV:-production}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  taskbot:
+    build:
+      context: ./taskbot
+    container_name: ai-society-taskbot
+    environment:
+      # Discord Bot Configuration
+      # Get bot token from Discord Developer Portal: https://discord.com/developers/applications
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      
+      # API Configuration
+      # Update with your actual frontend and backend URLs
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL:-http://localhost:4321}
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:8000}
+      # Create a dedicated API user account for the bot
+      - API_USERNAME=${API_USERNAME}
+      - API_PASSWORD=${API_PASSWORD}
+      
+      # Recording Configuration
+      - RECORDING_SAVE_PATH=${RECORDING_SAVE_PATH:-./recordings/}
+      
+      # AI API Keys
+      # Get from respective providers:
+      # OpenAI: https://platform.openai.com/api-keys
+      # Google AI Studio: https://aistudio.google.com/app/apikey
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      
+      # Development Configuration
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEV_MODE=${DEV_MODE:-false}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: ai-society-net 

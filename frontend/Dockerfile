@@ -35,4 +35,4 @@ COPY --from=deps /app/node_modules ./node_modules
 
 EXPOSE 4321
 
-CMD ["npm", "run", "dev"] 
+CMD ["npm", "start"] 

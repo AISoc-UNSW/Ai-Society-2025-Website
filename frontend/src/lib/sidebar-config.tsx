@@ -101,15 +101,18 @@ export const brandConfig: BrandConfig = {
         width="32"
         height="24"
         rx="6"
-        fill="#4CAF50"
-        stroke="#2E7D32"
-        stroke-width="2"
+        fill="#2196F3"
+        stroke="#0D47A1"
+        strokeWidth="2"
       />
-      <circle cx="24" cy="24" r="3" fill="white" />
-      <circle cx="40" cy="24" r="3" fill="white" />
 
-      <line x1="32" y1="4" x2="32" y2="12" stroke="#4CAF50" stroke-width="2" />
-      <circle cx="32" cy="4" r="2" fill="#4CAF50" />
+      <circle cx="24" cy="24" r="4" fill="white" />
+      <circle cx="24" cy="24" r="1.5" fill="#0D47A1" />
+      <circle cx="40" cy="24" r="4" fill="white" />
+      <circle cx="40" cy="24" r="1.5" fill="#0D47A1" />
+
+      <line x1="32" y1="4" x2="32" y2="12" stroke="#2196F3" stroke-width="2" />
+      <circle cx="32" cy="4" r="2" fill="#2196F3" />
 
       <rect
         x="20"
@@ -117,8 +120,8 @@ export const brandConfig: BrandConfig = {
         width="24"
         height="18"
         rx="4"
-        fill="#81C784"
-        stroke="#2E7D32"
+        fill="#64B5F6"
+        stroke="#0D47A1"
         stroke-width="2"
       />
 
@@ -127,7 +130,7 @@ export const brandConfig: BrandConfig = {
         y1="38"
         x2="10"
         y2="44"
-        stroke="#4CAF50"
+        stroke="#2196F3"
         stroke-width="2"
         stroke-linecap="round"
       />
@@ -136,16 +139,16 @@ export const brandConfig: BrandConfig = {
         y1="38"
         x2="54"
         y2="44"
-        stroke="#4CAF50"
+        stroke="#2196F3"
         stroke-width="2"
         stroke-linecap="round"
       />
 
       <rect x="27" y="42" width="10" height="10" rx="2" fill="white" />
-      <polyline points="29,47 31,49 35,43" fill="none" stroke="#4CAF50" stroke-width="2" />
+      <polyline points="29,47 31,49 35,43" fill="none" stroke="#2196F3" stroke-width="2" />
 
-      <line x1="26" y1="54" x2="26" y2="60" stroke="#4CAF50" stroke-width="2" />
-      <line x1="38" y1="54" x2="38" y2="60" stroke="#4CAF50" stroke-width="2" />
+      <line x1="26" y1="54" x2="26" y2="60" stroke="#2196F3" stroke-width="2" />
+      <line x1="38" y1="54" x2="38" y2="60" stroke="#2196F3" stroke-width="2" />
     </svg>
   ),
 };

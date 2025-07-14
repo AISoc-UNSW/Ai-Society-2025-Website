@@ -111,7 +111,7 @@ export const brandConfig: BrandConfig = {
       <circle cx="40" cy="24" r="4" fill="white" />
       <circle cx="40" cy="24" r="1.5" fill="#0D47A1" />
 
-      <line x1="32" y1="4" x2="32" y2="12" stroke="#2196F3" stroke-width="2" />
+      <line x1="32" y1="4" x2="32" y2="12" stroke="#2196F3" strokeWidth="2" />
       <circle cx="32" cy="4" r="2" fill="#2196F3" />
 
       <rect
@@ -122,7 +122,7 @@ export const brandConfig: BrandConfig = {
         rx="4"
         fill="#64B5F6"
         stroke="#0D47A1"
-        stroke-width="2"
+        strokeWidth="2"
       />
 
       <line
@@ -131,8 +131,8 @@ export const brandConfig: BrandConfig = {
         x2="10"
         y2="44"
         stroke="#2196F3"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <line
         x1="48"
@@ -140,15 +140,15 @@ export const brandConfig: BrandConfig = {
         x2="54"
         y2="44"
         stroke="#2196F3"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
 
       <rect x="27" y="42" width="10" height="10" rx="2" fill="white" />
-      <polyline points="29,47 31,49 35,43" fill="none" stroke="#2196F3" stroke-width="2" />
+      <polyline points="29,47 31,49 35,43" fill="none" stroke="#2196F3" strokeWidth="2" />
 
-      <line x1="26" y1="54" x2="26" y2="60" stroke="#2196F3" stroke-width="2" />
-      <line x1="38" y1="54" x2="38" y2="60" stroke="#2196F3" stroke-width="2" />
+      <line x1="26" y1="54" x2="26" y2="60" stroke="#2196F3" strokeWidth="2" />
+      <line x1="38" y1="54" x2="38" y2="60" stroke="#2196F3" strokeWidth="2" />
     </svg>
   ),
 };

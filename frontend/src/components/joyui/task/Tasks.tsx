@@ -47,7 +47,7 @@ export default function Tasks({
   currentStatus,
 }: TasksProps) {
   // Local state for tab filtering
-  const [tabFilter, setTabFilter] = React.useState<string>("all");
+  const [tabFilter, setTabFilter] = React.useState<string>("active");
 
   const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {

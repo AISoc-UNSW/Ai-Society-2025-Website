@@ -33,6 +33,6 @@ COPY --from=builder /app/package.json ./package.json
 # Reuse production dependencies
 COPY --from=deps /app/node_modules ./node_modules
 
-EXPOSE 3000
+EXPOSE 4321
 
 CMD ["npm", "start"] 

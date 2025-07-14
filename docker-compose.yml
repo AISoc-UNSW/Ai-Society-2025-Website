@@ -5,17 +5,6 @@ services:
     build:
       context: ./backend
     container_name: ai-society-backend
-    environment:
-      - PROJECT_NAME=${PROJECT_NAME}
-      - API_V1_STR=${API_V1_STR}
-      - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-      - DEFAULT_TIMEZONE=${DEFAULT_TIMEZONE}
-      - DATABASE_TIMEZONE=${DATABASE_TIMEZONE}
-      - BACKEND_CORS_ORIGINS=*
-      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
-      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
-      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI}
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -25,9 +14,6 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: ai-society-frontend
-    environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
-      - NODE_ENV=development
     ports:
       - "4321:4321"
     volumes:
@@ -41,17 +27,6 @@ services:
     build:
       context: ./taskbot
     container_name: ai-society-taskbot
-    environment:
-      - DISCORD_TOKEN=${DISCORD_TOKEN}
-      - API_BASE_URL=${API_BASE_URL}
-      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
-      - API_USERNAME=${API_USERNAME}
-      - API_PASSWORD=$${API_PASSWORD}
-      - RECORDING_SAVE_PATH=${RECORDING_SAVE_PATH}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - LOG_LEVEL=${LOG_LEVEL}
-      - DEV_MODE=${DEV_MODE}
     depends_on:
       - backend
     restart: unless-stopped

@@ -1,48 +1,31 @@
-name: Dokploy Deployment Workflow
+name: Dokploy Deployment
 
 on:
   push:
     branches: [main]
 
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      backend:  ${{ steps.filter.outputs.backend }}
-      taskbot:  ${{ steps.filter.outputs.taskbot }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            backend:
-              - 'backend/**'
-            taskbot:
-              - 'taskbot/**'
-
   deploy:
-    needs: detect-changes
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - svc_name: backend
-            changed: ${{ needs.detect-changes.outputs.backend }}
-            app_id:  ${{ secrets.DOKPLOY_BACKEND_APP_ID }}
-          - svc_name: taskbot
-            changed: ${{ needs.detect-changes.outputs.taskbot }}
-            app_id:  ${{ secrets.DOKPLOY_TASKBOT_APP_ID }}
-
-    if: ${{ matrix.changed == 'true' }}
+        service: [backend, taskbot]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy ${{ matrix.svc_name }}
+      - name: Map service -> app_id
+        id: map
+        shell: bash
+        run: |
+          case "${{ matrix.service }}" in
+            backend)  echo "app_id=${{ secrets.DOKPLOY_BACKEND_APP_ID }}"  >> $GITHUB_OUTPUT ;;
+            taskbot)  echo "app_id=${{ secrets.DOKPLOY_TASKBOT_APP_ID }}"  >> $GITHUB_OUTPUT ;;
+          esac
+
+      - name: Deploy ${{ matrix.service }}
         uses: benbristow/dokploy-deploy-action@0.0.1
         with:
-          auth_token:    ${{ secrets.DOKPLOY_AUTH_TOKEN }}
-          application_id: ${{ matrix.app_id }}
-          dokploy_url:   ${{ secrets.DOKPLOY_URL }}
+          auth_token:     ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+          application_id: ${{ steps.map.outputs.app_id }}
+          dokploy_url:    ${{ secrets.DOKPLOY_URL }}

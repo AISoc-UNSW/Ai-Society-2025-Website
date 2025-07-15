@@ -9,23 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, taskbot]
+        service: [backend, discordbot]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Map service -> app_id
-        id: map
-        shell: bash
-        run: |
-          case "${{ matrix.service }}" in
-            backend)  echo "app_id=${{ secrets.DOKPLOY_BACKEND_APP_ID }}"  >> $GITHUB_OUTPUT ;;
-            taskbot)  echo "app_id=${{ secrets.DOKPLOY_TASKBOT_APP_ID }}"  >> $GITHUB_OUTPUT ;;
-          esac
-
       - name: Deploy ${{ matrix.service }}
-        uses: benbristow/dokploy-deploy-action@0.0.1
+        uses: Crokily/dokploy-deploy-action@main
         with:
-          auth_token:     ${{ secrets.DOKPLOY_AUTH_TOKEN }}
-          application_id: ${{ steps.map.outputs.app_id }}
-          dokploy_url:    ${{ secrets.DOKPLOY_URL }}
+          dokploy_url:     ${{ secrets.DOKPLOY_URL }}
+          api_key:         ${{ secrets.DOKPLOY_API_KEY }}
+          project_name:    AISOC
+          application_name: ${{ matrix.service }}

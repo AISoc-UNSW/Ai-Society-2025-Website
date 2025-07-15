@@ -94,9 +94,9 @@ interface SidebarItemProps {
 
 function SidebarItemComponent({ item, currentPath, onNavigate, userRole }: SidebarItemProps) {
   const isSelected = Boolean(item.selected) || Boolean(item.href && currentPath === item.href);
-  
+
   // Check if user has required roles
-  if (item.requiresRoles && !item.requiresRoles.includes(userRole || '')) {
+  if (item.requiresRoles && !item.requiresRoles.includes(userRole || "")) {
     return null; // Don't render item if user doesn't have required role
   }
 
@@ -123,14 +123,15 @@ function SidebarItemComponent({ item, currentPath, onNavigate, userRole }: Sideb
   }
 
   // Filter children based on user role and check if any are selected
-  const visibleChildren = item.children?.filter(child => 
-    !child.requiresRoles || child.requiresRoles.includes(userRole || '')
-  ) || [];
-  
+  const visibleChildren =
+    item.children?.filter(
+      child => !child.requiresRoles || child.requiresRoles.includes(userRole || "")
+    ) || [];
+
   const hasSelectedChild = visibleChildren.some(
     child => Boolean(child.selected) || Boolean(child.href && currentPath === child.href)
   );
-  
+
   // If no children are visible, don't render the parent item
   if (item.children && visibleChildren.length === 0) {
     return null;
@@ -214,10 +215,14 @@ export default function Sidebar({ config = sidebarConfig, brand = brandConfig }:
   // Convert role_id to role name for permission checking
   const getUserRoleName = (roleId?: number): string => {
     switch (roleId) {
-      case 1: return "user";
-      case 2: return "admin"; 
-      case 3: return "director";
-      default: return "user";
+      case 1:
+        return "user";
+      case 2:
+        return "admin";
+      case 3:
+        return "director";
+      default:
+        return "user";
     }
   };
 

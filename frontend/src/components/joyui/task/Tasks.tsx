@@ -138,6 +138,24 @@ export default function Tasks({
     return "No tasks found.";
   };
 
+  // Add function to get tab-specific empty messages
+  const getTabEmptyStateMessage = () => {
+    switch (tabFilter) {
+      case "active":
+        return "No active tasks found. Active tasks include those that are 'Not Started' or 'In Progress'.";
+      case "not-started":
+        return "No tasks with 'Not Started' status found.";
+      case "in-progress":
+        return "No tasks with 'In Progress' status found.";
+      case "completed":
+        return "No completed tasks found.";
+      case "cancelled":
+        return "No cancelled tasks found.";
+      default:
+        return "No tasks found for the selected filter.";
+    }
+  };
+
   // Handle tab changes for local filtering
   const handleTabChange = (
     event: React.SyntheticEvent | null,
@@ -203,7 +221,7 @@ export default function Tasks({
       </Box>
 
       {/* Tasks Grid or Empty State */}
-      {totalTasks > 0 ? (
+      {sortedTasks.length > 0 ? (
         <Box
           sx={{
             display: "grid",
@@ -234,7 +252,7 @@ export default function Tasks({
               No Tasks Found
             </Typography>
             <Typography level="body-md" color="neutral">
-              {getEmptyStateMessage()}
+              {totalTasks === 0 ? getEmptyStateMessage() : getTabEmptyStateMessage()}
             </Typography>
           </CardContent>
         </Card>

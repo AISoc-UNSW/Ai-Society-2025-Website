@@ -183,7 +183,15 @@ export default function Tasks({
 
       {/* Task Stats */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 4 }}>
-        <Card variant="soft" color="primary" sx={{ flex: 1, minWidth: { xs: "auto", sm: 120 } }}>
+        <Card
+          variant="soft"
+          color="primary"
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <CardContent>
             <Typography level="body-sm" color="primary">
               Total Tasks
@@ -193,13 +201,29 @@ export default function Tasks({
             </Typography>
           </CardContent>
         </Card>
-        <Card variant="soft" color="warning" sx={{ flex: 1, minWidth: { xs: "auto", sm: 120 } }}>
+        <Card
+          variant="soft"
+          color="warning"
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <CardContent>
             <Typography level="body-sm">In Progress</Typography>
             <Typography level="h3">{inProgressTasks}</Typography>
           </CardContent>
         </Card>
-        <Card variant="soft" color="success" sx={{ flex: 1, minWidth: { xs: "auto", sm: 120 } }}>
+        <Card
+          variant="soft"
+          color="success"
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <CardContent>
             <Typography level="body-sm">Completed</Typography>
             <Typography level="h3">{completedTasks}</Typography>
@@ -207,15 +231,85 @@ export default function Tasks({
         </Card>
       </Stack>
 
-      {/* Status Filter Tabs - now available for all views including created-tasks */}
-      <Box sx={{ mb: 2 }}>
-        <Tabs value={tabFilter} onChange={handleTabChange}>
-          <TabList>
-            <Tab value="active">Active Tasks</Tab>
-            <Tab value="in-progress">In Progress</Tab>
-            <Tab value="not-started">Not Started</Tab>
-            <Tab value="completed">Completed</Tab>
-            <Tab value="cancelled">Cancelled</Tab>
+      {/* Status Filter Tabs */}
+      <Box sx={{ mb: 2, width: "100%", overflow: "hidden" }}>
+        <Tabs
+          value={tabFilter}
+          onChange={handleTabChange}
+          sx={{
+            width: "100%",
+          }}
+        >
+          <TabList
+            sx={{
+              overflow: "auto",
+              scrollSnapType: "x mandatory",
+              "&::-webkit-scrollbar": { display: "none" },
+              display: "flex",
+              flexWrap: "nowrap",
+              width: "100%",
+            }}
+          >
+            <Tab
+              value="active"
+              sx={{
+                flex: "0 0 auto",
+                scrollSnapAlign: "start",
+                whiteSpace: "nowrap",
+                minWidth: "fit-content",
+                px: 2,
+              }}
+            >
+              Active Tasks
+            </Tab>
+            <Tab
+              value="in-progress"
+              sx={{
+                flex: "0 0 auto",
+                scrollSnapAlign: "start",
+                whiteSpace: "nowrap",
+                minWidth: "fit-content",
+                px: 2,
+              }}
+            >
+              In Progress
+            </Tab>
+            <Tab
+              value="not-started"
+              sx={{
+                flex: "0 0 auto",
+                scrollSnapAlign: "start",
+                whiteSpace: "nowrap",
+                minWidth: "fit-content",
+                px: 2,
+              }}
+            >
+              Not Started
+            </Tab>
+            <Tab
+              value="completed"
+              sx={{
+                flex: "0 0 auto",
+                scrollSnapAlign: "start",
+                whiteSpace: "nowrap",
+                minWidth: "fit-content",
+                px: 2,
+              }}
+            >
+              Completed
+            </Tab>
+            <Tab
+              value="cancelled"
+              sx={{
+                flex: "0 0 auto",
+                scrollSnapAlign: "start",
+                whiteSpace: "nowrap",
+                minWidth: "fit-content",
+                px: 2,
+              }}
+            >
+              Cancelled
+            </Tab>
           </TabList>
         </Tabs>
       </Box>

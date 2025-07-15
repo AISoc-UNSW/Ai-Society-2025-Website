@@ -426,7 +426,11 @@ export default function TaskCard({
             color={getStatusColor(task.status)}
             variant="outlined"
             disabled={isUpdating}
-            sx={{ minWidth: { xs: 100, sm: 120 } }}
+            sx={{
+              minWidth: { xs: 80, sm: 100 },
+              maxWidth: "100%",
+              flex: "0 0 auto",
+            }}
           >
             {statusOptions.map(status => (
               <Option key={status} value={status}>

@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, discordbot]
+        service: [backend, taskbot]
 
     steps:
       - uses: actions/checkout@v4

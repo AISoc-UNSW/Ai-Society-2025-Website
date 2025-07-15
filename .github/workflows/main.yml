@@ -1,0 +1,23 @@
+name: Dokploy Deployment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend, discordbot]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy ${{ matrix.service }}
+        uses: Crokily/dokploy-deploy-action@main
+        with:
+          dokploy_url:     ${{ secrets.DOKPLOY_URL }}
+          api_key:         ${{ secrets.DOKPLOY_API_KEY }}
+          project_name:    AISOC
+          application_name: ${{ matrix.service }}

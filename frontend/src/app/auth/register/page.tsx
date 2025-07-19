@@ -43,7 +43,7 @@ async function handleRegister(formData: FormData) {
 
       // Username related errors
       if (errorMessage.includes("username already exists") ||
-        errorMessage.includes("username") && errorMessage.includes("exists")) {
+        (errorMessage.includes("username") && errorMessage.includes("exists"))) {
         throw new Error("This username is already taken. Please choose another username.");
       }
 
@@ -75,10 +75,11 @@ async function handleRegister(formData: FormData) {
 
       // Validation errors (422)
       if (error.status === 422) {
-        if (error.details?.detail) {
+        const details = error.details as { detail?: unknown };
+        if (details && details.detail !== undefined) {
           // Handle FastAPI validation errors
-          if (Array.isArray(error.details.detail)) {
-            const validationErrors = error.details.detail.map((err: any) => {
+          if (Array.isArray(details.detail)) {
+            const validationErrors = details.detail.map((err: { loc?: string[]; msg: string }) => {
               const field = err.loc?.[err.loc.length - 1] || 'field';
               const fieldName = field === 'email' ? 'Email' :
                 field === 'username' ? 'Username' :
@@ -87,7 +88,7 @@ async function handleRegister(formData: FormData) {
             }).join('; ');
             throw new Error(`Input validation failed: ${validationErrors}`);
           } else {
-            throw new Error(`Input validation failed: ${error.details.detail}`);
+            throw new Error(`Input validation failed: ${details.detail}`);
           }
         } else {
           throw new Error("Input data format error. Please check and try again.");

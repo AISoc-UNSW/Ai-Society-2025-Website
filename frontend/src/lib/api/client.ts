@@ -4,9 +4,9 @@ import { getAuthToken, removeAuthToken } from "../session";
 // Define API error types
 export class APIError extends Error {
   status: number;
-  details?: any;
+  details?: unknown;
 
-  constructor(message: string, status: number, details?: any) {
+  constructor(message: string, status: number, details?: unknown) {
     super(message);
     this.name = 'APIError';
     this.status = status;
@@ -38,7 +38,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     let errorMessage = "An error occurred";
-    let errorDetails;
+    let errorDetails: unknown;
 
     try {
       errorDetails = await response.json();
@@ -48,9 +48,9 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
           if (endpoint.includes("/login/access-token")) {
             errorMessage = "Invalid username or password. Please check your credentials and try again.";
           } else if (endpoint.includes("/users/")) {
-            errorMessage = errorDetails?.detail || "Invalid user data. Please check your input.";
-          } else if (errorDetails?.detail) {
-            errorMessage = errorDetails.detail;
+            errorMessage = (errorDetails as { detail?: string })?.detail || "Invalid user data. Please check your input.";
+          } else if ((errorDetails as { detail?: string })?.detail) {
+            errorMessage = (errorDetails as { detail: string }).detail;
           } else {
             errorMessage = "Bad request. Please check your input and try again.";
           }
@@ -66,15 +66,16 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
           errorMessage = "The requested resource was not found.";
           break;
         case 422:
-          if (errorDetails?.detail) {
+          if ((errorDetails as { detail?: unknown })?.detail) {
             // Handle validation errors
-            if (Array.isArray(errorDetails.detail)) {
-              const validationErrors = errorDetails.detail.map((err: any) =>
+            const detail = (errorDetails as { detail: unknown }).detail;
+            if (Array.isArray(detail)) {
+              const validationErrors = detail.map((err: { loc?: string[]; msg: string }) =>
                 `${err.loc?.join(' ')}: ${err.msg}`
               ).join(', ');
               errorMessage = `Validation error: ${validationErrors}`;
             } else {
-              errorMessage = errorDetails.detail;
+              errorMessage = String(detail);
             }
           } else {
             errorMessage = "Invalid data format. Please check your input.";
@@ -92,9 +93,9 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
           errorMessage = "Service temporarily unavailable. Please try again later.";
           break;
         default:
-          errorMessage = errorDetails?.detail || `Request failed with status ${response.status}`;
+          errorMessage = (errorDetails as { detail?: string })?.detail || `Request failed with status ${response.status}`;
       }
-    } catch (parseError) {
+    } catch {
       errorMessage = `Request failed with status ${response.status}`;
     }
 

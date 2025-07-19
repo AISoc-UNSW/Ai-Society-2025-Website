@@ -40,7 +40,7 @@ export default function LoginClient({ loginAction }: LoginClientProps) {
       } catch (err) {
         // Check if it's a Next.js redirect error
         if (err && typeof err === 'object' && 'digest' in err) {
-          const digest = (err as any).digest;
+          const digest = (err as { digest?: string }).digest;
           if (typeof digest === 'string' && digest.includes('NEXT_REDIRECT')) {
             // It's a redirect, don't show error
             return;

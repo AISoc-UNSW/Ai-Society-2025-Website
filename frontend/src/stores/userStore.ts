@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
 import { User } from "@/lib/types";
 import { useMemo } from "react";
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
 
 interface UserState {
   user: User | null;
@@ -59,8 +59,8 @@ export const useUserStore = create<UserStore>()(
               error: null,
             });
           } else {
-            // 如果没有初始用户，标记为已初始化但用户为空
-            // 不在客户端进行 API 调用
+            // If there's no initial user, mark as initialized but user is empty
+            // Don't make API calls on the client side
             set({
               user: null,
               isInitialized: true,

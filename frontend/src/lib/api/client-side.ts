@@ -1,7 +1,6 @@
-import "server-only";
-import { getAuthToken, removeAuthToken } from "../session";
+"use client";
 
-// Define API error types
+// Define API error types for client-side
 export class APIError extends Error {
   status: number;
   details?: unknown;
@@ -14,8 +13,8 @@ export class APIError extends Error {
   }
 }
 
-// Improved API call function
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
+// Client-side API call function
+export async function clientApiFetch(endpoint: string, options: RequestInit = {}) {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const url = `${apiBase}${endpoint}`;
 
@@ -28,7 +27,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     ...options,
     headers: defaultHeaders,
     cache: "no-store",
-    credentials: "include", // Include httpOnly cookies in all API requests
+    credentials: "include", // Include httpOnly cookies in all client requests
   });
 
   if (!response.ok) {
@@ -51,7 +50,6 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
           }
           break;
         case 401:
-          await removeAuthToken();
           errorMessage = "Your session has expired. Please log in again.";
           break;
         case 403:
@@ -98,4 +96,4 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   }
 
   return response.json();
-}
+} 

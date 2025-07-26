@@ -1,87 +1,141 @@
-import {
-  fetchUserTasks,
-  transformUserTaskToTask,
-  updateTaskStatus,
-  updateTask,
-  updateTaskAssignment,
-  createTask,
-} from "@/lib/api/task";
-import { searchUsers } from "@/lib/api/user";
-import { Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
-import { revalidatePath } from "next/cache";
-import { Suspense } from "react";
-import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
+"use client";
+
 import TaskDashboardClient from "@/components/joyui/task/TaskDashboardClient";
-import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
+import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
+import {
+  createTaskClient,
+  fetchUserTasksClient,
+  getAllPortfoliosSimpleClient,
+  searchUsersClient,
+  transformUserTaskToTaskClient,
+  updateTaskAssignmentClient,
+  updateTaskClient,
+  updateTaskStatusClient,
+} from "@/lib/api/task-client";
+import { Portfolio, Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
+import { useEffect, useState } from "react";
 
-// Server Action for updating task status
-async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
-  "use server";
+export default function TaskDashboard() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    await updateTaskStatus(taskId, status);
-    revalidatePath("/taskbot/dashboard");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to update task status:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update task",
-    };
-  }
-}
+  // Load initial data
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError(null);
 
-async function updateTaskAction(taskId: number, updates: Partial<Task>) {
-  "use server";
+        // Fetch tasks and portfolios in parallel
+        const [userTasks, portfoliosData] = await Promise.all([
+          fetchUserTasksClient(),
+          getAllPortfoliosSimpleClient(),
+        ]);
 
-  try {
-    await updateTask(taskId, updates);
-    revalidatePath("/taskbot/dashboard");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to update task:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update task",
-    };
-  }
-}
+        // Transform user tasks to tasks
+        const transformedTasks = await Promise.all(
+          userTasks.map(transformUserTaskToTaskClient)
+        );
 
-// server actions for assignees
-async function searchUsersAction(searchTerm: string): Promise<User[]> {
-  "use server";
+        setTasks(transformedTasks);
+        setPortfolios(portfoliosData);
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load tasks");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  try {
-    return await searchUsers(searchTerm, 10);
-  } catch (error) {
-    console.error("Failed to search users:", error);
-    return [];
-  }
-}
+    loadData();
+  }, []);
 
-async function updateTaskAssignmentAction(taskId: number, userIds: number[]) {
-  "use server";
-
-  try {
-    await updateTaskAssignment(taskId, userIds);
-    revalidatePath("/taskbot/dashboard");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to update task assignment:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update assignees",
-    };
-  }
-}
-
-async function createTaskAction(taskData: TaskCreateRequest) {
-    "use server";
-    
+  // Client-side action for updating task status
+  const updateTaskStatusAction = async (taskId: number, status: TaskStatus) => {
     try {
-      const newTask = await createTask(taskData);
-      await updateTaskAssignment(newTask.task_id, taskData.assignees || []);
-      revalidatePath(`/taskbot/dashboard`);
+      await updateTaskStatusClient(taskId, status);
+
+      // Update local state
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.task_id === taskId ? { ...task, status } : task
+        )
+      );
+
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update task",
+      };
+    }
+  };
+
+  // Client-side action for updating task
+  const updateTaskAction = async (taskId: number, updates: Partial<Task>) => {
+    try {
+      await updateTaskClient(taskId, updates);
+
+      // Update local state
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.task_id === taskId ? { ...task, ...updates } : task
+        )
+      );
+
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update task",
+      };
+    }
+  };
+
+  // Client-side action for searching users
+  const searchUsersAction = async (searchTerm: string): Promise<User[]> => {
+    try {
+      return await searchUsersClient(searchTerm, 10);
+    } catch (error) {
+      console.error("Failed to search users:", error);
+      return [];
+    }
+  };
+
+  // Client-side action for updating task assignment
+  const updateTaskAssignmentAction = async (taskId: number, userIds: number[]) => {
+    try {
+      await updateTaskAssignmentClient(taskId, userIds);
+
+      // Note: You might want to refresh the task data or update assignees locally
+      // For now, we'll just return success
+
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to update task assignment:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update assignees",
+      };
+    }
+  };
+
+  // Client-side action for creating task
+  const createTaskAction = async (taskData: TaskCreateRequest) => {
+    try {
+      const newTask = await createTaskClient(taskData);
+
+      if (taskData.assignees && taskData.assignees.length > 0) {
+        await updateTaskAssignmentClient(newTask.task_id, taskData.assignees);
+      }
+
+      // Add the new task to local state
+      setTasks(prevTasks => [...prevTasks, newTask]);
+
       return { success: true, task: newTask };
     } catch (error) {
       console.error("Failed to create task:", error);
@@ -90,51 +144,25 @@ async function createTaskAction(taskData: TaskCreateRequest) {
         error: error instanceof Error ? error.message : "Failed to create task",
       };
     }
+  };
+
+  // Show loading state
+  if (loading) {
+    return <TaskLoadingState stage="fetching" />;
   }
 
-// Data fetching component
-async function TaskData() {
-  try {
-    const tasks = await fetchUserTasks();
-    const transformedTasks = await Promise.all(tasks.map(transformUserTaskToTask));
-    const portfolios = await getAllPortfoliosSimple();
-
-    return (
-      <TaskDashboardClient
-        tasks={transformedTasks}
-        updateTaskStatusAction={updateTaskStatusAction}
-        updateTaskAction={updateTaskAction}
-        createTaskAction={createTaskAction}
-        portfolios={portfolios}
-        searchUsersAction={searchUsersAction}
-        updateTaskAssignmentAction={updateTaskAssignmentAction}
-        myTasks={true}
-      />
-    );
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to load tasks";
-    return (
-      <TaskDashboardClient
-        tasks={[]}
-        error={errorMessage}
-        updateTaskStatusAction={updateTaskStatusAction}
-        updateTaskAction={updateTaskAction}
-        createTaskAction={createTaskAction}
-        searchUsersAction={searchUsersAction}
-        updateTaskAssignmentAction={updateTaskAssignmentAction}
-        myTasks={true}
-      />
-    );
-  }
-}
-
-// Server Component - handles data fetching
-export default async function TaskDashboard() {
+  // Render the dashboard
   return (
-    <div>
-      <Suspense fallback={<TaskLoadingState stage="fetching" />}>
-        <TaskData />
-      </Suspense>
-    </div>
+    <TaskDashboardClient
+      tasks={tasks}
+      portfolios={portfolios as any}
+      error={error || undefined}
+      updateTaskStatusAction={updateTaskStatusAction}
+      updateTaskAction={updateTaskAction}
+      createTaskAction={createTaskAction}
+      searchUsersAction={searchUsersAction}
+      updateTaskAssignmentAction={updateTaskAssignmentAction}
+      myTasks={true}
+    />
   );
 }

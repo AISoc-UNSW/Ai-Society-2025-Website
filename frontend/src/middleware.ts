@@ -1,8 +1,12 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-// Public routes
-const publicRoutes = ['/auth/login', '/auth/register']
+// Public routes - routes that don't require authentication
+const publicRoutes = [
+  '/auth/login', 
+  '/auth/register',
+  '/auth/discord/callback'  // Discord OAuth callback page
+]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -24,4 +28,4 @@ export function middleware(request: NextRequest) {
 // Update matcher to run the middleware on all requests except static resources and API
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-} 
+}

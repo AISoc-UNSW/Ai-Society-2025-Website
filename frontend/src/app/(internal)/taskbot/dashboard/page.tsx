@@ -12,12 +12,12 @@ import {
   updateTaskClient,
   updateTaskStatusClient,
 } from "@/lib/api/task-client";
-import { Portfolio, Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
+import { PortfolioSimple, Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
 import { useEffect, useState } from "react";
 
 export default function TaskDashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [portfolios, setPortfolios] = useState<PortfolioSimple[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,7 +155,7 @@ export default function TaskDashboard() {
   return (
     <TaskDashboardClient
       tasks={tasks}
-      portfolios={portfolios as any}
+      portfolios={portfolios}
       error={error || undefined}
       updateTaskStatusAction={updateTaskStatusAction}
       updateTaskAction={updateTaskAction}

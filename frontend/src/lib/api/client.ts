@@ -1,5 +1,5 @@
 import "server-only";
-import { getAuthToken, removeAuthToken } from "../session";
+import { removeAuthToken } from "../session";
 
 // Define API error types
 export class APIError extends Error {

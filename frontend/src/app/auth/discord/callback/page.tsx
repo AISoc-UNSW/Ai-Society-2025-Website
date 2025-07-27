@@ -16,7 +16,6 @@ export default function DiscordCallbackPage() {
     const processCallback = async () => {
       try {
         const token = searchParams.get("token");
-        const tokenType = searchParams.get("token_type");
 
         if (!token) {
           setStatus("error");
@@ -24,7 +23,7 @@ export default function DiscordCallbackPage() {
           return;
         }
 
-        // 使用API端点设置httpOnly cookie
+        // Use API endpoint to set httpOnly cookie
         const response = await fetch('/api/auth/set-token', {
           method: 'POST',
           headers: {
@@ -38,7 +37,7 @@ export default function DiscordCallbackPage() {
           throw new Error(errorData.error || 'Failed to set authentication token');
         }
 
-        // 等待一下确保cookie设置完成
+        // Wait a moment to ensure cookie is set
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Initialize user data in the store

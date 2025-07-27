@@ -31,7 +31,7 @@ def create_task(
     Create new task
     """
     task_record = task.create_task(db, obj_in=task_in, created_by=current_user.user_id)
-    return TaskResponse(**task_record.__dict__)
+    return task_record
 
 
 @router.get("/", response_model=list[TaskListResponse])
@@ -126,12 +126,11 @@ def update_task(
     """
     Update task
     """
-    task_record = task.get_by_id(db, task_id=task_id)
-    if not task_record:
+    task_obj = task.get_by_id(db, task_id=task_id)
+    if not task_obj:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    task_record = task.update_task(db, db_obj=task_record, obj_in=task_in)
-    return TaskResponse(**task_record.__dict__)
+    return task.update_task(db, db_obj=task_obj, obj_in=task_in)
 
 
 @router.delete("/{task_id}")

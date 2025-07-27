@@ -101,20 +101,13 @@ export async function createTask(taskData: {
   priority?: string;
   deadline: string;
   portfolio_id: number;
-  parent_task_id?: number;
-  source_meeting_id?: number;
-  status?: string;
 }): Promise<TaskResponse> {
-  const { status, ...rest } = taskData;
   return await apiFetch("/api/v1/tasks/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      ...rest,
-      status: status ?? "Not Started",
-    }),
+    body: JSON.stringify(taskData),
   });
 }
 

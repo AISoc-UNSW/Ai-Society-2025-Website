@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pytz
 from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.portfolio import Portfolio
 from app.models.task import Task
@@ -17,9 +17,75 @@ def get_by_id(db: Session, task_id: int) -> Task | None:
     return db.query(Task).filter(Task.task_id == task_id).first()
 
 
-def get_by_portfolio(db: Session, portfolio_id: int, skip: int = 0, limit: int = 100) -> list[Task]:
+def _build_task_list_response_data(task: Task, include_subtasks: bool = True) -> dict:
+    """Helper function to build TaskListResponse data from Task model"""
+    task_data = {
+        "task_id": task.task_id,
+        "title": task.title,
+        "description": task.description,
+        "status": task.status,
+        "priority": task.priority,
+        "deadline": task.deadline,
+        "parent_task_id": task.parent_task_id,
+        "source_meeting_id": task.source_meeting_id,
+        "portfolio": {
+            "portfolio_id": task.portfolio_id,
+            "name": task.portfolio.name,
+        },
+        "created_at": task.created_at,
+        "updated_at": task.updated_at,
+        "created_by": {
+            "user_id": task.created_by_user.user_id,
+            "username": task.created_by_user.username,
+            "email": task.created_by_user.email,
+        },
+        "assignees": [],
+    }
+
+    if hasattr(task, "task_assignments") and task.task_assignments:
+        task_data["assignees"] = [
+            {
+                "assignment_id": assignment.assignment_id,
+                "user_id": assignment.user.user_id,
+                "username": assignment.user.username,
+                "email": assignment.user.email,
+            }
+            for assignment in task.task_assignments
+        ]
+
+    if include_subtasks and hasattr(task, "subtasks"):
+        task_data["subtasks"] = (
+            [
+                _build_task_list_response_data(subtask, include_subtasks=False)
+                for subtask in task.subtasks
+            ]
+            if task.subtasks
+            else []
+        )
+    else:
+        task_data["subtasks"] = None
+
+    return task_data
+
+
+def get_by_portfolio(
+    db: Session,
+    portfolio_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    include_subtasks: bool = True,
+) -> list[dict]:
     """Get tasks by portfolio ID"""
-    return db.query(Task).filter(Task.portfolio_id == portfolio_id).offset(skip).limit(limit).all()
+    tasks = (
+        db.query(Task)
+        .options(joinedload(Task.portfolio), joinedload(Task.created_by_user))
+        .filter(Task.portfolio_id == portfolio_id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
 
 
 def get_by_status(db: Session, status: str, skip: int = 0, limit: int = 100) -> list[Task]:
@@ -32,26 +98,58 @@ def get_by_priority(db: Session, priority: str, skip: int = 0, limit: int = 100)
     return db.query(Task).filter(Task.priority == priority).offset(skip).limit(limit).all()
 
 
-def get_by_created_by(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> list[Task]:
+def get_by_created_by(
+    db: Session, user_id: int, skip: int = 0, limit: int = 100, include_subtasks: bool = True
+) -> list[dict]:
     """Get tasks created by a specific user"""
-    return db.query(Task).filter(Task.created_by == user_id).offset(skip).limit(limit).all()
-
-
-def get_subtasks(db: Session, parent_task_id: int) -> list[Task]:
-    """Get subtasks of a parent task"""
-    return db.query(Task).filter(Task.parent_task_id == parent_task_id).all()
-
-
-def get_by_meeting(db: Session, meeting_id: int) -> list[Task]:
-    """Get tasks created from a specific meeting"""
-    return db.query(Task).filter(Task.source_meeting_id == meeting_id).all()
-
-
-def get_pending_tasks_by_meeting(db: Session, meeting_id: int) -> list[Task]:
-    """Get pending tasks created from a specific meeting"""
-    return (
-        db.query(Task).filter(Task.source_meeting_id == meeting_id, Task.status == "Pending").all()
+    tasks = (
+        db.query(Task)
+        .options(joinedload(Task.portfolio), joinedload(Task.created_by_user))
+        .filter(Task.created_by == user_id)
+        .offset(skip)
+        .limit(limit)
+        .all()
     )
+
+    return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
+
+
+def get_subtasks(db: Session, parent_task_id: int, include_subtasks: bool = True) -> list[dict]:
+    """Get subtasks of a parent task"""
+    tasks = (
+        db.query(Task)
+        .options(joinedload(Task.portfolio), joinedload(Task.created_by_user))
+        .filter(Task.parent_task_id == parent_task_id)
+        .all()
+    )
+
+    return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
+
+
+def get_by_meeting(db: Session, meeting_id: int, include_subtasks: bool = True) -> list[dict]:
+    """Get tasks created from a specific meeting"""
+    tasks = (
+        db.query(Task)
+        .options(joinedload(Task.portfolio), joinedload(Task.created_by_user))
+        .filter(Task.source_meeting_id == meeting_id)
+        .all()
+    )
+
+    return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
+
+
+def get_pending_tasks_by_meeting(
+    db: Session, meeting_id: int, include_subtasks: bool = True
+) -> list[dict]:
+    """Get pending tasks created from a specific meeting"""
+    tasks = (
+        db.query(Task)
+        .options(joinedload(Task.portfolio), joinedload(Task.created_by_user))
+        .filter(Task.source_meeting_id == meeting_id, Task.status == "Pending")
+        .all()
+    )
+
+    return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
 
 
 def get_multi(
@@ -62,9 +160,18 @@ def get_multi(
     priority: str | None = None,
     skip: int = 0,
     limit: int = 100,
-) -> list[Task]:
-    """Get multiple tasks with optional filters"""
-    query = db.query(Task)
+    include_subtasks: bool = True,
+) -> list[dict]:
+    """Get multiple tasks with optional filters, including portfolio and user info"""
+    query = db.query(Task).options(joinedload(Task.portfolio), joinedload(Task.created_by_user))
+
+    # If include subtasks, use selectinload to preload subtasks
+    if include_subtasks:
+        query = query.options(
+            selectinload(Task.subtasks).options(
+                joinedload(Task.portfolio), joinedload(Task.created_by_user)
+            )
+        )
 
     if portfolio_id:
         query = query.filter(Task.portfolio_id == portfolio_id)
@@ -73,7 +180,9 @@ def get_multi(
     if priority:
         query = query.filter(Task.priority == priority)
 
-    return query.offset(skip).limit(limit).all()
+    tasks = query.offset(skip).limit(limit).all()
+
+    return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
 
 
 def create_task(db: Session, *, obj_in: TaskCreateRequestBody, created_by: int) -> Task:
@@ -143,18 +252,26 @@ def delete_task(db: Session, *, task_id: int) -> bool:
     return False
 
 
-def search_tasks(db: Session, *, search_term: str, portfolio_id: int | None = None) -> list[Task]:
+def search_tasks(
+    db: Session,
+    search_term: str,
+    portfolio_id: int | None = None,
+    include_subtasks: bool = True,
+) -> list[dict]:
     """Search tasks by title or description"""
-    query = db.query(Task)
+    query = (
+        db.query(Task)
+        .options(joinedload(Task.portfolio), joinedload(Task.created_by_user))
+        .filter(
+            or_(Task.title.ilike(f"%{search_term}%"), Task.description.ilike(f"%{search_term}%"))
+        )
+    )
 
     if portfolio_id:
         query = query.filter(Task.portfolio_id == portfolio_id)
 
-    search_filter = or_(
-        Task.title.ilike(f"%{search_term}%"), Task.description.ilike(f"%{search_term}%")
-    )
-
-    return query.filter(search_filter).all()
+    tasks = query.all()
+    return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
 
 
 def get_tomorrow_reminders(db: Session, portfolio_id: int | None = None) -> list[dict]:

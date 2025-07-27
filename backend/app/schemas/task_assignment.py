@@ -33,8 +33,8 @@ class TaskAssignmentResponse(TaskAssignmentBase):
 class TaskAssignmentDetailResponse(TaskAssignmentResponse):
     # Optional fields for related data
     task_title: str | None = None
-    user_username: str | None = None
-    user_email: str | None = None
+    username: str | None = None
+    email: str | None = None
 
     class Config:
         from_attributes = True
@@ -69,8 +69,8 @@ class UserTaskAssignmentResponse(BaseModel):
 class TaskUserAssignmentResponse(BaseModel):
     assignment_id: int
     user_id: int
-    user_username: str
-    user_email: str
+    username: str
+    email: str
 
     class Config:
         from_attributes = True

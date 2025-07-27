@@ -1,6 +1,10 @@
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
 from app.api import deps
 from app.crud import task_assignment
 from app.models.user import User
+from app.schemas.task import TaskListResponse
 from app.schemas.task_assignment import (
     BulkTaskAssignmentCreate,
     TaskAssignmentCreateRequestBody,
@@ -9,10 +13,7 @@ from app.schemas.task_assignment import (
     TaskAssignmentUpdate,
     TaskUserAssignmentResponse,
     UpdateTaskUsersRequest,
-    UserTaskAssignmentResponse,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -118,21 +119,21 @@ def delete_task_assignment(
     return {"message": "Task assignment deleted successfully"}
 
 
-@router.get("/user/me/tasks", response_model=list[UserTaskAssignmentResponse])
+@router.get("/user/me/tasks", response_model=list[TaskListResponse])
 def read_my_assigned_tasks(
     *,
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> list[UserTaskAssignmentResponse]:
+) -> list[TaskListResponse]:
     """
     Get tasks assigned to current user with details
     """
-    task_details = task_assignment.get_user_task_details(
+    task_details = task_assignment.get_user_assigned_tasks(
         db, user_id=current_user.user_id, skip=skip, limit=limit
     )
-    return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
+    return [TaskListResponse(**task_detail) for task_detail in task_details]
 
 
 @router.get("/task/{task_id}/users", response_model=list[TaskUserAssignmentResponse])
@@ -159,11 +160,13 @@ def update_task_users(
     """
     Update users assigned to a specific task
     """
-    user_details = task_assignment.update_task_users_smart(db, task_id=task_id, user_ids=request.user_ids)
+    user_details = task_assignment.update_task_users_smart(
+        db, task_id=task_id, user_ids=request.user_ids
+    )
     return [TaskUserAssignmentResponse(**user_detail) for user_detail in user_details]
 
 
-@router.get("/user/{user_id}/tasks", response_model=list[UserTaskAssignmentResponse])
+@router.get("/user/{user_id}/tasks", response_model=list[TaskListResponse])
 def read_user_assigned_tasks(
     *,
     db: Session = Depends(deps.get_db),
@@ -171,14 +174,14 @@ def read_user_assigned_tasks(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(deps.get_current_user),
-) -> list[UserTaskAssignmentResponse]:
+) -> list[TaskListResponse]:
     """
     Get tasks assigned to a specific user with details
     """
-    task_details = task_assignment.get_user_task_details(
+    task_details = task_assignment.get_user_assigned_tasks(
         db, user_id=user_id, skip=skip, limit=limit
     )
-    return [UserTaskAssignmentResponse(**task_detail) for task_detail in task_details]
+    return [TaskListResponse(**task_detail) for task_detail in task_details]
 
 
 @router.delete("/task/{task_id}/all")

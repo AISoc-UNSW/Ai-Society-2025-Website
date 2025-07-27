@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.session import Base
 
 if TYPE_CHECKING:
+    from app.models.task_assignment import TaskAssignment
     from app.models.meeting_record import MeetingRecord
     from app.models.portfolio import Portfolio
     from app.models.user import User
@@ -46,3 +47,6 @@ class Task(Base):
         "MeetingRecord", back_populates="tasks"
     )
     created_by_user: Mapped["User"] = relationship("User", back_populates="created_tasks")
+    task_assignments: Mapped[list["TaskAssignment"]] = relationship(
+        "TaskAssignment", back_populates="task"
+    )

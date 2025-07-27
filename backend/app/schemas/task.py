@@ -5,26 +5,19 @@ from pydantic import BaseModel, computed_field
 from app.schemas.task_assignment import TaskUserAssignmentResponse
 
 
-# Shared properties
-class TaskBase(BaseModel):
+class TaskPortfolioResponse(BaseModel):
+    portfolio_id: int
+    name: str
+
+
+class TaskCreateRequestBody(BaseModel):
     title: str
     description: str | None = None
-    status: str | None = "Not Started"
     priority: str | None = "Medium"
     deadline: datetime
     portfolio_id: int
-    parent_task_id: int | None = None
-    source_meeting_id: int | None = None
 
 
-# Used when creating a task
-class TaskCreateRequestBody(TaskBase):
-    title: str
-    deadline: datetime
-    portfolio_id: int
-
-
-# Used when updating a task
 class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
@@ -36,17 +29,6 @@ class TaskUpdate(BaseModel):
     source_meeting_id: int | None = None
 
 
-# Used for API responses
-class TaskResponse(TaskBase):
-    task_id: int
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    created_by: int
-
-    class Config:
-        from_attributes = True
-
-
 class TaskCreatedByResponse(BaseModel):
     user_id: int
     username: str
@@ -56,12 +38,25 @@ class TaskCreatedByResponse(BaseModel):
         from_attributes = True
 
 
-class TaskPortfolioResponse(BaseModel):
-    portfolio_id: int
-    name: str
+class TaskResponse(BaseModel):
+    task_id: int
+    title: str
+    description: str | None = None
+    status: str | None = None
+    priority: str | None = None
+    deadline: datetime
+    parent_task_id: int | None = None
+    source_meeting_id: int | None = None
+    portfolio: TaskPortfolioResponse
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    created_by: TaskCreatedByResponse
+    assignees: list[TaskUserAssignmentResponse] | None = None
+
+    class Config:
+        from_attributes = True
 
 
-# Used for listing tasks (minimal info)
 class TaskListResponse(BaseModel):
     task_id: int
     title: str

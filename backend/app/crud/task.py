@@ -8,7 +8,7 @@ from app.models.portfolio import Portfolio
 from app.models.task import Task
 from app.models.task_assignment import TaskAssignment
 from app.models.user import User
-from app.schemas.task import TaskCreateRequestBody, TaskUpdate
+from app.schemas.task import TaskCreateRequestBody, TaskResponse, TaskUpdate
 from app.utils.timezone import tz
 
 
@@ -185,12 +185,53 @@ def get_multi(
     return [_build_task_list_response_data(task, include_subtasks) for task in tasks]
 
 
-def create_task(db: Session, *, obj_in: TaskCreateRequestBody, created_by: int) -> Task:
+def _build_task_response_data(task: Task | None) -> dict:
+    """Helper function to build TaskResponse data from Task model"""
+    if not task:
+        raise ValueError("Task cannot be None")
+
+    return {
+        "task_id": task.task_id,
+        "title": task.title,
+        "description": task.description,
+        "status": task.status,
+        "priority": task.priority,
+        "deadline": task.deadline,
+        "parent_task_id": task.parent_task_id,
+        "source_meeting_id": task.source_meeting_id,
+        "portfolio": {
+            "portfolio_id": task.portfolio_id,
+            "name": task.portfolio.name,
+        },
+        "created_at": task.created_at,
+        "updated_at": task.updated_at,
+        "created_by": {
+            "user_id": task.created_by_user.user_id,
+            "username": task.created_by_user.username,
+            "email": task.created_by_user.email,
+        },
+        "assignees": (
+            [
+                {
+                    "assignment_id": assignment.assignment_id,
+                    "user_id": assignment.user.user_id,
+                    "username": assignment.user.username,
+                    "email": assignment.user.email,
+                }
+                for assignment in task.task_assignments
+            ]
+            if hasattr(task, "task_assignments") and task.task_assignments
+            else []
+        ),
+    }
+
+
+def create_task(db: Session, *, obj_in: TaskCreateRequestBody, created_by: int) -> TaskResponse:
     """Create new task"""
     db_obj = Task()
     db_obj.title = obj_in.title
     db_obj.description = obj_in.description
-    db_obj.status = obj_in.status or "Not Started"
+    db_obj.status = "Not Started"
     db_obj.priority = obj_in.priority or "Medium"
 
     # Ensure deadline is converted to UTC for storage
@@ -201,8 +242,8 @@ def create_task(db: Session, *, obj_in: TaskCreateRequestBody, created_by: int) 
         db_obj.deadline = obj_in.deadline.astimezone(pytz.UTC)
 
     db_obj.portfolio_id = obj_in.portfolio_id
-    db_obj.parent_task_id = obj_in.parent_task_id
-    db_obj.source_meeting_id = obj_in.source_meeting_id
+    db_obj.parent_task_id = getattr(obj_in, "parent_task_id", None)
+    db_obj.source_meeting_id = getattr(obj_in, "source_meeting_id", None)
     db_obj.created_by = created_by
     db_obj.created_at = tz.now_utc()
     db_obj.updated_at = tz.now_utc()
@@ -210,10 +251,25 @@ def create_task(db: Session, *, obj_in: TaskCreateRequestBody, created_by: int) 
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
-    return db_obj
+
+    # Load relationships for proper response construction
+    task_with_relations = (
+        db.query(Task)
+        .options(
+            joinedload(Task.portfolio),
+            joinedload(Task.created_by_user),
+            selectinload(Task.task_assignments).joinedload(TaskAssignment.user),
+        )
+        .filter(Task.task_id == db_obj.task_id)
+        .first()
+    )
+
+    # Use helper function to build proper TaskResponse
+    task_data = _build_task_response_data(task_with_relations)
+    return TaskResponse(**task_data)
 
 
-def update_task(db: Session, *, db_obj: Task, obj_in: dict | TaskUpdate) -> Task:
+def update_task(db: Session, *, db_obj: Task, obj_in: dict | TaskUpdate) -> TaskResponse:
     """Update existing task"""
     if isinstance(obj_in, dict):
         update_data = obj_in
@@ -239,7 +295,22 @@ def update_task(db: Session, *, db_obj: Task, obj_in: dict | TaskUpdate) -> Task
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
-    return db_obj
+
+    # Load relationships for proper response construction
+    task_with_relations = (
+        db.query(Task)
+        .options(
+            joinedload(Task.portfolio),
+            joinedload(Task.created_by_user),
+            selectinload(Task.task_assignments).joinedload(TaskAssignment.user),
+        )
+        .filter(Task.task_id == db_obj.task_id)
+        .first()
+    )
+
+    # Use helper function to build proper TaskResponse
+    task_data = _build_task_response_data(task_with_relations)
+    return TaskResponse(**task_data)
 
 
 def delete_task(db: Session, *, task_id: int) -> bool:

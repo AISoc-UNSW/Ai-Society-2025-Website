@@ -1,13 +1,12 @@
 import {
   fetchUserTasks,
-  transformUserTaskToTask,
   updateTaskStatus,
   updateTask,
   updateTaskAssignment,
   createTask,
 } from "@/lib/api/task";
 import { searchUsers } from "@/lib/api/user";
-import { Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
+import { TaskCreateRequest, TaskResponse, TaskStatus, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { Suspense } from "react";
 import TaskLoadingState from "@/components/joyui/task/TaskLoadingState";
@@ -31,11 +30,11 @@ async function updateTaskStatusAction(taskId: number, status: TaskStatus) {
   }
 }
 
-async function updateTaskAction(taskId: number, updates: Partial<Task>) {
+async function updateTaskAction(taskId: number, updates: Partial<TaskResponse>) {
   "use server";
 
   try {
-    await updateTask(taskId, updates);
+    await updateTask(taskId, updates as Partial<TaskResponse>);
     revalidatePath("/taskbot/dashboard");
     return { success: true };
   } catch (error) {
@@ -96,12 +95,11 @@ async function createTaskAction(taskData: TaskCreateRequest) {
 async function TaskData() {
   try {
     const tasks = await fetchUserTasks();
-    const transformedTasks = await Promise.all(tasks.map(transformUserTaskToTask));
     const portfolios = await getAllPortfoliosSimple();
 
     return (
       <TaskDashboardClient
-        tasks={transformedTasks}
+        tasks={tasks as TaskResponse[]}
         updateTaskStatusAction={updateTaskStatusAction}
         updateTaskAction={updateTaskAction}
         createTaskAction={createTaskAction}

@@ -138,21 +138,6 @@ export interface User {
   avatar?: string;
 }
 
-export interface UserTaskAssignment {
-  assignment_id: number;
-  task_id: number;
-  task_title: string;
-  task_description: string;
-  task_status: string;
-  task_priority: string;
-  task_deadline: string;
-  task_portfolio_id: number;
-  task_parent_task_id: number;
-  task_source_meeting_id: number;
-  task_created_at: string;
-  task_updated_at: string;
-}
-
 // Task update interface to match backend TaskUpdate
 export interface TaskUpdateRequest {
   title?: string;
@@ -164,6 +149,7 @@ export interface TaskUpdateRequest {
   parent_task_id?: number;
   source_meeting_id?: number;
 }
+
 export interface TaskResponse {
   task_id: number;
   title: string;
@@ -171,19 +157,24 @@ export interface TaskResponse {
   status: string;
   priority: string;
   deadline: string;
-  portfolio_id: number;
+  portfolio: {
+    portfolio_id: number;
+    name: string;
+  };
   parent_task_id: number;
   source_meeting_id: number;
   created_at: string;
   updated_at: string;
-  created_by: number;
+  created_by: TaskCreatedByResponse;
+  subtasks: TaskResponse[];
+  assignees: TaskUserAssignmentResponse[];
 }
 
 export interface TaskUserAssignmentResponse {
   assignment_id: number;
   user_id: number;
-  user_username: string;
-  user_email: string;
+  username: string;
+  email: string;
 }
 
 export interface TaskCreatedByResponse {
@@ -237,7 +228,7 @@ export interface PortfolioSimple {
   portfolio_id: number;
   name: string;
   description?: string;
-  has_channel: boolean;
+  has_channel?: boolean;
 }
 
 export interface Role {

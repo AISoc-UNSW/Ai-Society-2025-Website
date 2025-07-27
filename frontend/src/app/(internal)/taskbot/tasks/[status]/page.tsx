@@ -4,12 +4,10 @@ import {
   updateTaskStatus,
   updateTask,
   fetchTasksCreatedByMe,
-  transformTaskResponseToTask,
   getUserTasksWithRole,
   fetchUserTasks,
-  transformUserTaskToTask,
 } from "@/lib/api/task";
-import { Task, TaskCreateRequest, TaskStatus, User } from "@/lib/types";
+import { TaskCreateRequest, TaskResponse, TaskStatus, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import { getCurrentUser, searchUsers } from "@/lib/api/user";
@@ -91,11 +89,11 @@ async function createTaskAction(taskData: TaskCreateRequest) {
 }
 
 // Add the missing updateTaskAction server action
-async function updateTaskAction(taskId: number, updates: Partial<Task>) {
+async function updateTaskAction(taskId: number, updates: Partial<TaskResponse>) {
   "use server";
 
   try {
-    await updateTask(taskId, updates);
+    await updateTask(taskId, updates as Partial<TaskResponse>);
     revalidatePath(`/taskbot/tasks/[status]`);
     return { success: true };
   } catch (error) {
@@ -115,9 +113,7 @@ async function TaskData({ currentStatus }: { currentStatus: string }) {
 
     if (currentStatus === "created-tasks") {
       // Fetch tasks created by current user
-      const createdTasks = await fetchTasksCreatedByMe(user.user_id);
-      const transformedTasks = await Promise.all(createdTasks.map(transformTaskResponseToTask));
-      tasks = transformedTasks;
+      tasks = await fetchTasksCreatedByMe(user.user_id);
       userRole = {
         showMyTasks: false,
         directorPortfolioId: undefined,
@@ -125,21 +121,14 @@ async function TaskData({ currentStatus }: { currentStatus: string }) {
       };
     } else if (currentStatus === "my-tasks") {
       // Fetch user's assigned tasks using the specific API
-      const userTasks = await fetchUserTasks();
-      const transformedTasks = await Promise.all(userTasks.map(transformUserTaskToTask));
-      tasks = transformedTasks;
+      tasks = await fetchUserTasks();
       userRole = {
         showMyTasks: true,
         directorPortfolioId: undefined,
         userIsAdmin: false,
       };
-    } else if (currentStatus === "all") {
-      // Fetch all tasks (role-based: admin sees all, director sees portfolio, user sees assigned)
-      const result = await getUserTasksWithRole(user, null);
-      tasks = result.tasks;
-      userRole = result.userRole;
     } else {
-      // Fallback
+      // Fetch all tasks (role-based: admin sees all, director sees portfolio, user sees assigned)
       const result = await getUserTasksWithRole(user, null);
       tasks = result.tasks;
       userRole = result.userRole;

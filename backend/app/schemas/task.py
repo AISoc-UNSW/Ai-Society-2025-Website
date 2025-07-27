@@ -2,27 +2,22 @@ from datetime import datetime
 
 from pydantic import BaseModel, computed_field
 
+from app.schemas.task_assignment import TaskUserAssignmentResponse
 
-# Shared properties
-class TaskBase(BaseModel):
+
+class TaskPortfolioResponse(BaseModel):
+    portfolio_id: int
+    name: str
+
+
+class TaskCreateRequestBody(BaseModel):
     title: str
     description: str | None = None
-    status: str | None = "Not Started"
     priority: str | None = "Medium"
     deadline: datetime
     portfolio_id: int
-    parent_task_id: int | None = None
-    source_meeting_id: int | None = None
 
 
-# Used when creating a task
-class TaskCreateRequestBody(TaskBase):
-    title: str
-    deadline: datetime
-    portfolio_id: int
-
-
-# Used when updating a task
 class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
@@ -34,18 +29,34 @@ class TaskUpdate(BaseModel):
     source_meeting_id: int | None = None
 
 
-# Used for API responses
-class TaskResponse(TaskBase):
-    task_id: int
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    created_by: int
+class TaskCreatedByResponse(BaseModel):
+    user_id: int
+    username: str
+    email: str | None = None
 
     class Config:
         from_attributes = True
 
 
-# Used for listing tasks (minimal info)
+class TaskResponse(BaseModel):
+    task_id: int
+    title: str
+    description: str | None = None
+    status: str | None = None
+    priority: str | None = None
+    deadline: datetime
+    parent_task_id: int | None = None
+    source_meeting_id: int | None = None
+    portfolio: TaskPortfolioResponse
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    created_by: TaskCreatedByResponse
+    assignees: list[TaskUserAssignmentResponse] | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class TaskListResponse(BaseModel):
     task_id: int
     title: str
@@ -55,13 +66,19 @@ class TaskListResponse(BaseModel):
     deadline: datetime
     parent_task_id: int | None = None
     source_meeting_id: int | None = None
-    portfolio_id: int
+    portfolio: TaskPortfolioResponse
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    created_by: int
+    created_by: TaskCreatedByResponse
+    subtasks: list["TaskListResponse"] | None = None
+    assignees: list[TaskUserAssignmentResponse] | None = None
 
     class Config:
         from_attributes = True
+
+
+# Fix forward reference
+TaskListResponse.model_rebuild()
 
 
 # Used for task detail with relationships
@@ -83,15 +100,6 @@ class AssignedUserResponse(BaseModel):
         from_attributes = True
 
 
-class TaskCreatedByResponse(BaseModel):
-    user_id: int
-    username: str
-    email: str | None = None
-
-    class Config:
-        from_attributes = True
-
-
 # Used for task reminders (includes portfolio info and assigned users)
 class TaskReminderResponse(BaseModel):
     task_id: int
@@ -106,7 +114,6 @@ class TaskReminderResponse(BaseModel):
     assigned_users: list[AssignedUserResponse] = []  # Users assigned to this task
 
     @computed_field
-    @property
     def deadline_local(self) -> str:
         """Get deadline formatted in project timezone"""
         from app.utils.timezone import tz
@@ -114,7 +121,6 @@ class TaskReminderResponse(BaseModel):
         return tz.format_local_time(self.deadline)
 
     @computed_field
-    @property
     def deadline_local_date(self) -> str:
         """Get deadline date in project timezone"""
         from app.utils.timezone import tz
@@ -123,7 +129,6 @@ class TaskReminderResponse(BaseModel):
         return local_dt.strftime("%Y-%m-%d")
 
     @computed_field
-    @property
     def deadline_local_time(self) -> str:
         """Get deadline time in project timezone"""
         from app.utils.timezone import tz

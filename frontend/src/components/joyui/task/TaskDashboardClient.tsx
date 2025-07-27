@@ -5,17 +5,17 @@ import AddIcon from "@mui/icons-material/Add";
 import Tasks from "@/components/joyui/task/Tasks";
 import TaskFormModal from "./TaskFormModal";
 import {
-  Task,
   TaskStatus,
   User,
   TaskFormData,
   TaskCreateRequest,
   PortfolioSimple,
+  TaskResponse,
 } from "@/lib/types";
 import React, { useState, useEffect, useTransition } from "react";
 
 interface TaskDashboardClientProps {
-  tasks: Task[];
+  tasks: TaskResponse[];
   error?: string;
   updateTaskStatusAction?: (
     taskId: number,
@@ -23,7 +23,7 @@ interface TaskDashboardClientProps {
   ) => Promise<{ success: boolean; error?: string }>;
   updateTaskAction?: (
     taskId: number,
-    updates: Partial<Task>
+    updates: Partial<TaskResponse>
   ) => Promise<{ success: boolean; error?: string }>;
   searchUsersAction?: (searchTerm: string) => Promise<User[]>;
   updateTaskAssignmentAction?: (

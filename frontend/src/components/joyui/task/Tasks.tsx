@@ -6,7 +6,7 @@ import Card from "@mui/joy/Card";
 import CardContent from "@mui/joy/CardContent";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
-import { Task, TaskStatus, User } from "@/lib/types";
+import { TaskResponse, TaskStatus, User } from "@/lib/types";
 import TaskCard from "./TaskCard";
 import { Tab, TabList, Tabs } from "@mui/joy";
 
@@ -14,12 +14,12 @@ interface TasksProps {
   myTasks?: boolean;
   directorPortfolioId?: number;
   admin?: boolean;
-  tasks: Task[];
+  tasks: TaskResponse[];
   onTaskStatusUpdate?: (taskId: number, status: TaskStatus) => Promise<void>;
   isUpdating?: boolean;
   updateTaskAction?: (
     taskId: number,
-    updates: Partial<Task>
+    updates: Partial<TaskResponse>
   ) => Promise<{ success: boolean; error?: string }>;
   searchUsersAction?: (searchTerm: string) => Promise<User[]>;
   updateTaskAssignmentAction?: (
@@ -49,9 +49,9 @@ export default function Tasks({
   // Local state for tab filtering
   const [tabFilter, setTabFilter] = React.useState<string>("active");
 
-  const handleStatusUpdate = async (task: Task, newStatus: TaskStatus) => {
+  const handleStatusUpdate = async (task: TaskResponse, newStatus: TaskStatus) => {
     if (onTaskStatusUpdate) {
-      await onTaskStatusUpdate(task.id, newStatus);
+      await onTaskStatusUpdate(task.task_id, newStatus);
     }
   };
 
@@ -59,7 +59,9 @@ export default function Tasks({
   const filteredTasks = React.useMemo(() => {
     // First filter to only include tasks with valid statuses
     const validStatuses: TaskStatus[] = ["Not Started", "In Progress", "Completed", "Cancelled"];
-    const tasksWithValidStatus = tasks.filter(task => validStatuses.includes(task.status));
+    const tasksWithValidStatus = tasks.filter(task =>
+      validStatuses.includes(task.status as TaskStatus)
+    );
 
     // Then apply tab filtering
     switch (tabFilter) {
@@ -91,8 +93,8 @@ export default function Tasks({
     };
 
     return [...filteredTasks].sort((a, b) => {
-      const aOrder = statusOrder[a.status];
-      const bOrder = statusOrder[b.status];
+      const aOrder = statusOrder[a.status as TaskStatus];
+      const bOrder = statusOrder[b.status as TaskStatus];
 
       // Primary sort by status
       if (aOrder !== bOrder) {
@@ -329,7 +331,7 @@ export default function Tasks({
         >
           {sortedTasks.map(task => (
             <TaskCard
-              key={task.id}
+              key={task.task_id}
               task={task}
               onStatusUpdate={handleStatusUpdate}
               isUpdating={isUpdating}

@@ -1,7 +1,7 @@
 from typing import Any
 
 from sqlalchemy import and_
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.task import Task
 from app.models.task_assignment import TaskAssignment
@@ -197,33 +197,38 @@ def delete_all_user_assignments(db: Session, *, user_id: int) -> int:
     return count
 
 
-def get_user_task_details(
+def get_user_assigned_tasks(
     db: Session, user_id: int, skip: int = 0, limit: int = 100
-) -> list[dict[str, Any]]:
-    """Get user's assigned tasks with task details"""
-    query = db.query(TaskAssignment, Task).join(Task).filter(TaskAssignment.user_id == user_id)
-    results = query.offset(skip).limit(limit).all()
-
-    task_details = []
-    for assignment, task in results:
-        task_details.append(
-            {
-                "assignment_id": assignment.assignment_id,
-                "task_id": task.task_id,
-                "task_title": task.title,
-                "task_description": task.description,
-                "task_status": task.status,
-                "task_priority": task.priority,
-                "task_deadline": task.deadline.isoformat() if task.deadline else None,
-                "task_portfolio_id": task.portfolio_id,
-                "task_parent_task_id": task.parent_task_id,
-                "task_source_meeting_id": task.source_meeting_id,
-                "task_created_at": task.created_at,
-                "task_updated_at": task.updated_at,
-            }
+) -> list[dict]:
+    """Get user's assigned tasks in TaskListResponse format"""
+    # Join TaskAssignment to Task and preload related data
+    query = (
+        db.query(Task)
+        .join(TaskAssignment, Task.task_id == TaskAssignment.task_id)
+        .options(
+            joinedload(Task.portfolio),
+            joinedload(Task.created_by_user),
+            selectinload(Task.task_assignments).joinedload(
+                TaskAssignment.user
+            ),  # 预加载所有assignees
+            selectinload(Task.subtasks).options(
+                joinedload(Task.portfolio),
+                joinedload(Task.created_by_user),
+                selectinload(Task.task_assignments).joinedload(
+                    TaskAssignment.user
+                ),  # subtasks的assignees
+            ),
         )
+        .filter(TaskAssignment.user_id == user_id)
+        .offset(skip)
+        .limit(limit)
+    )
 
-    return task_details
+    tasks = query.all()
+
+    from app.crud.task import _build_task_list_response_data
+
+    return [_build_task_list_response_data(task) for task in tasks]
 
 
 def get_task_user_details(db: Session, task_id: int) -> list[dict[str, Any]]:
@@ -237,8 +242,8 @@ def get_task_user_details(db: Session, task_id: int) -> list[dict[str, Any]]:
             {
                 "assignment_id": assignment.assignment_id,
                 "user_id": user.user_id,
-                "user_username": user.username,
-                "user_email": user.email,
+                "username": user.username,
+                "email": user.email,
             }
         )
 

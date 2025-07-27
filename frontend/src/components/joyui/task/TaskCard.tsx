@@ -14,7 +14,7 @@ import Divider from "@mui/joy/Divider";
 import IconButton from "@mui/joy/IconButton";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import EditIcon from "@mui/icons-material/Edit";
-import { Task, TaskStatus, User } from "@/lib/types";
+import { TaskResponse, TaskStatus, User } from "@/lib/types";
 import { formatDateWithMinutes } from "@/lib/utils";
 import Modal from "@mui/joy/Modal";
 import ModalDialog from "@mui/joy/ModalDialog";
@@ -59,12 +59,12 @@ const statusOptions: TaskStatus[] = ["Not Started", "In Progress", "Completed", 
 
 // Task Card Component Props
 interface TaskCardProps {
-  task: Task;
-  onStatusUpdate: (task: Task, newStatus: TaskStatus) => void;
+  task: TaskResponse;
+  onStatusUpdate: (task: TaskResponse, newStatus: TaskStatus) => void;
   isUpdating?: boolean;
   updateTaskAction?: (
     taskId: number,
-    updates: Partial<Task>
+    updates: Partial<TaskResponse>
   ) => Promise<{ success: boolean; error?: string }>;
   searchUsersAction?: (searchTerm: string) => Promise<User[]>;
   updateTaskAssignmentAction?: (
@@ -86,7 +86,7 @@ export default function TaskCard({
   // Add a mounted state to prevent hydration issues
   const [mounted, setMounted] = React.useState(false);
   const [showDetails, setShowDetails] = React.useState(false);
-  const [expandedSubtask, setExpandedSubtask] = React.useState<Task | null>(null);
+  const [expandedSubtask, setExpandedSubtask] = React.useState<TaskResponse | null>(null);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [isUpdatingTask, setIsUpdatingTask] = React.useState(false);
 
@@ -108,10 +108,10 @@ export default function TaskCard({
   };
 
   // Handle save task changes
-  const handleSaveTask = async (updates: Partial<Task>) => {
+  const handleSaveTask = async (updates: Partial<TaskResponse>) => {
     setIsUpdatingTask(true);
     try {
-      const result = await updateTaskAction?.(task.id, updates);
+      const result = await updateTaskAction?.(task.task_id, updates);
       if (result?.success) {
         setEditModalOpen(false);
       } else {
@@ -157,7 +157,7 @@ export default function TaskCard({
                 {task.title}
               </Typography>
               <Typography level="body-sm" color="neutral" sx={{ mt: 0.5 }}>
-                {task.portfolio}
+                {task.portfolio.name}
               </Typography>
             </Box>
             <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
@@ -267,7 +267,7 @@ export default function TaskCard({
                       <Stack spacing={1}>
                         {task.subtasks.map(subtask => (
                           <Box
-                            key={subtask.id}
+                            key={subtask.task_id}
                             onClick={() => setExpandedSubtask(subtask)}
                             sx={{
                               p: 1.5,
@@ -297,7 +297,7 @@ export default function TaskCard({
                                 overflow: "hidden",
                               }}
                             >
-                              <Chip size="sm" variant="soft" color={getStatusColor(subtask.status)}>
+                              <Chip size="sm" variant="soft" color={getStatusColor(subtask.status as TaskStatus)}>
                                 {subtask.status}
                               </Chip>
                               <Typography
@@ -380,10 +380,9 @@ export default function TaskCard({
             <AvatarsList
               label="Assigned to:"
               users={(task.assignees || []).map(assignee => ({
-                id: assignee.id,
-                name: assignee.name,
+                id: assignee.user_id,
+                name: assignee.username,
                 email: assignee.email,
-                avatar: assignee.avatar,
               }))}
               showGroup={true}
             />
@@ -411,7 +410,7 @@ export default function TaskCard({
 
       <CardActions sx={{ pt: 0 }}>
         <Stack direction="row" spacing={1} sx={{ width: "100%", alignItems: "center" }}>
-          <Chip variant="soft" color={getStatusColor(task.status)} size="sm">
+          <Chip variant="soft" color={getStatusColor(task.status as TaskStatus)} size="sm">
             {task.status}
           </Chip>
           <Box sx={{ flex: 1 }} />
@@ -423,7 +422,7 @@ export default function TaskCard({
               }
             }}
             size="sm"
-            color={getStatusColor(task.status)}
+            color={getStatusColor(task.status as TaskStatus)}
             variant="outlined"
             disabled={isUpdating}
             sx={{
@@ -434,7 +433,7 @@ export default function TaskCard({
           >
             {statusOptions.map(status => (
               <Option key={status} value={status}>
-                <Chip size="sm" variant="soft" color={getStatusColor(status)} sx={{ mr: 1 }}>
+                <Chip size="sm" variant="soft" color={getStatusColor(status as TaskStatus)} sx={{ mr: 1 }}>
                   {status}
                 </Chip>
               </Option>

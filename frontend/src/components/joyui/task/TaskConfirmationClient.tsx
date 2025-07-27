@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  HierarchicalTask,
   PortfolioSimple,
-  Task,
   TaskCreateRequest,
   TaskResponse,
   TaskUserAssignmentResponse,
@@ -28,7 +26,7 @@ interface TaskConfirmationClientProps {
   error?: string;
   updateTaskAction: (
     taskId: number,
-    updates: Partial<Task>
+    updates: Partial<TaskResponse>
   ) => Promise<{ success: boolean; error?: string }>;
   createTaskAction: (
     taskData: TaskCreateRequest
@@ -43,49 +41,6 @@ interface TaskConfirmationClientProps {
     userIds: number[]
   ) => Promise<{ success: boolean; error?: string }>;
   getTaskAssigneesAction?: (taskId: number) => Promise<TaskUserAssignmentResponse[]>;
-}
-
-// Transform flat task list to hierarchical structure
-function buildTaskHierarchy(tasks: TaskResponse[]): HierarchicalTask[] {
-  const taskMap = new Map<number, HierarchicalTask>();
-  const rootTasks: HierarchicalTask[] = [];
-
-  // First pass: create all task objects
-  tasks.forEach(task => {
-    taskMap.set(task.task_id, {
-      task_id: task.task_id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      priority: task.priority,
-      deadline: task.deadline,
-      portfolio_id: task.portfolio_id,
-      parent_task_id: task.parent_task_id,
-      source_meeting_id: task.source_meeting_id,
-      created_at: task.created_at,
-      updated_at: task.updated_at,
-      subtasks: [],
-    });
-  });
-
-  // Second pass: build hierarchy
-  tasks.forEach(task => {
-    const hierarchicalTask = taskMap.get(task.task_id)!;
-
-    if (task.parent_task_id) {
-      const parentTask = taskMap.get(task.parent_task_id);
-      if (parentTask) {
-        parentTask.subtasks.push(hierarchicalTask);
-      } else {
-        // Parent not found, treat as root task
-        rootTasks.push(hierarchicalTask);
-      }
-    } else {
-      rootTasks.push(hierarchicalTask);
-    }
-  });
-
-  return rootTasks;
 }
 
 export default function TaskConfirmationClient({
@@ -117,16 +72,12 @@ export default function TaskConfirmationClient({
     setTasks(initialTasks);
   }, [initialTasks]);
 
-  const hierarchicalTasks = React.useMemo(() => {
-    return buildTaskHierarchy(tasks);
-  }, [tasks]);
-
   const showAlert = (type: "success" | "danger" | "warning", message: string) => {
     setAlertMessage({ type, message });
     setTimeout(() => setAlertMessage(null), 5000);
   };
 
-  const handleTaskUpdate = async (taskId: number, updates: Partial<Task>) => {
+  const handleTaskUpdate = async (taskId: number, updates: Partial<TaskResponse>) => {
     startTransition(async () => {
       const result = await updateTaskAction(taskId, updates);
       if (result.success) {
@@ -272,7 +223,7 @@ export default function TaskConfirmationClient({
 
           {/* Task List */}
           <TaskConfirmationList
-            tasks={hierarchicalTasks}
+            tasks={tasks}
             meetingId={meetingId}
             portfolios={portfolios}
             onTaskUpdate={handleTaskUpdate}

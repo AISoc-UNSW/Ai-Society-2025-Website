@@ -1,6 +1,8 @@
 import TaskbotLayoutClient from "@/components/joyui/task/TaskbotLayoutClient";
 import { UserProvider } from "@/components/providers/UserProvider";
 import { getCurrentUser } from "@/lib/session";
+import { CssVarsProvider } from "@mui/joy/styles";
+import CssBaseline from "@mui/joy/CssBaseline";
 
 export default async function TaskbotLayout({ children }: { children: React.ReactNode }) {
   const userResponse = await getCurrentUser().catch(() => null);
@@ -15,8 +17,11 @@ export default async function TaskbotLayout({ children }: { children: React.Reac
   } : undefined;
 
   return (
-    <UserProvider initialUser={user || undefined}>
-      <TaskbotLayoutClient>{children}</TaskbotLayoutClient>
-    </UserProvider>
+    <CssVarsProvider disableTransitionOnChange>
+      <CssBaseline />
+      <UserProvider initialUser={user || undefined}>
+        <TaskbotLayoutClient>{children}</TaskbotLayoutClient>
+      </UserProvider>
+    </CssVarsProvider>
   );
 }

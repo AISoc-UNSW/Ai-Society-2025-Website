@@ -60,7 +60,7 @@ export default function TaskDashboard() {
       // Update local state
       setTasks(prevTasks =>
         prevTasks.map(task =>
-          task.task_id === taskId ? { ...task, status } : task
+          task.id === taskId ? { ...task, status } : task
         )
       );
 
@@ -82,7 +82,7 @@ export default function TaskDashboard() {
       // Update local state
       setTasks(prevTasks =>
         prevTasks.map(task =>
-          task.task_id === taskId ? { ...task, ...updates } : task
+          task.id === taskId ? { ...task, ...updates } : task
         )
       );
 
@@ -130,7 +130,7 @@ export default function TaskDashboard() {
       const newTask = await createTaskClient(taskData);
 
       if (taskData.assignees && taskData.assignees.length > 0) {
-        await updateTaskAssignmentClient(newTask.task_id, taskData.assignees);
+        await updateTaskAssignmentClient(newTask.id, taskData.assignees);
       }
 
       // Add the new task to local state

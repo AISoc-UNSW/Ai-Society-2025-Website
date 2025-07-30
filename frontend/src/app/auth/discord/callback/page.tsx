@@ -3,9 +3,9 @@
 import { useInitializeUserFromAPI } from "@/stores/userStore";
 import { Alert, Box, CircularProgress, Typography } from "@mui/joy";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
-export default function DiscordCallbackPage() {
+function DiscordCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initializeUser = useInitializeUserFromAPI();
@@ -147,5 +147,28 @@ export default function DiscordCallbackPage() {
         </>
       )}
     </Box>
+  );
+}
+
+export default function DiscordCallbackPage() {
+  return (
+    <Suspense fallback={
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          gap: 3,
+          p: 3,
+        }}
+      >
+        <CircularProgress size="lg" />
+        <Typography level="h4">Loading...</Typography>
+      </Box>
+    }>
+      <DiscordCallbackContent />
+    </Suspense>
   );
 } 

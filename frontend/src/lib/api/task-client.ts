@@ -3,6 +3,7 @@
 import {
   Portfolio,
   PortfolioSimple,
+  PriorityLevel,
   Task,
   TaskCreateRequest,
   TaskStatus,
@@ -10,7 +11,22 @@ import {
 } from "../types";
 import { clientApiFetch } from "./client-side";
 import { getPortfolioDetailsClient } from "./portfolio-client";
-import { getRoleClient } from "./role-client";
+
+// Helper function to safely convert string to PriorityLevel
+function safePriorityLevel(priority: string): PriorityLevel {
+  const validPriorities: PriorityLevel[] = ["Low", "Medium", "High", "Critical"];
+  return validPriorities.includes(priority as PriorityLevel)
+    ? (priority as PriorityLevel)
+    : "Medium";
+}
+
+// Helper function to safely convert string to Portfolio
+function safePortfolio(portfolioName: string): Portfolio {
+  const validPortfolios: Portfolio[] = ["EDU", "IT portfolio", "Marketing"];
+  return validPortfolios.includes(portfolioName as Portfolio)
+    ? (portfolioName as Portfolio)
+    : "EDU";
+}
 
 // Client-side version of fetchUserTasks
 export async function fetchUserTasksClient(): Promise<UserTaskAssignment[]> {
@@ -31,65 +47,48 @@ export async function transformUserTaskToTaskClient(
   userTask: UserTaskAssignment
 ): Promise<Task> {
   try {
-    const [role, portfolio] = await Promise.all([
-      getRoleClient(userTask.task.created_by_role_id),
-      getPortfolioDetailsClient(userTask.task.portfolio_id),
-    ]);
+    const portfolio = await getPortfolioDetailsClient(userTask.task_portfolio_id);
 
     return {
-      task_id: userTask.task.task_id,
-      title: userTask.task.title,
-      description: userTask.task.description,
-      status: userTask.task.status as TaskStatus,
-      priority: userTask.task.priority,
-      deadline: userTask.task.deadline ? new Date(userTask.task.deadline) : undefined,
-      portfolio: portfolio.name,
-      assignees: [
-        {
-          id: userTask.user.user_id,
-          name: userTask.user.username,
-          email: userTask.user.email,
-          avatar: null,
-        },
-      ],
-      createdBy: {
-        name: role?.name || "Unknown",
-        role: role?.name || "Unknown",
+      id: userTask.task_id,
+      title: userTask.task_title,
+      description: userTask.task_description,
+      status: userTask.task_status as TaskStatus,
+      priority: safePriorityLevel(userTask.task_priority),
+      deadline: userTask.task_deadline || "",
+      portfolio_id: userTask.task_portfolio_id,
+      portfolio: safePortfolio(portfolio.name),
+      assignees: [],
+      created_by: {
+        user_id: 0,
+        username: "Unknown",
+        email: "",
       },
-      created_at: new Date(userTask.task.created_at),
-      updated_at: new Date(userTask.task.updated_at),
+      created_at: userTask.task_created_at || "",
+      updated_at: userTask.task_updated_at || "",
       subtasks: [],
-      parent_task_id: userTask.task.parent_task_id,
-      source_meeting_id: userTask.task.source_meeting_id,
     };
   } catch (error) {
     console.error("Error transforming user task:", error);
     // Return a fallback task object
     return {
-      task_id: userTask.task.task_id,
-      title: userTask.task.title,
-      description: userTask.task.description,
-      status: userTask.task.status as TaskStatus,
-      priority: userTask.task.priority,
-      deadline: userTask.task.deadline ? new Date(userTask.task.deadline) : undefined,
-      portfolio: "Unknown",
-      assignees: [
-        {
-          id: userTask.user.user_id,
-          name: userTask.user.username,
-          email: userTask.user.email,
-          avatar: null,
-        },
-      ],
-      createdBy: {
-        name: "Unknown",
-        role: "Unknown",
+      id: userTask.task_id,
+      title: userTask.task_title,
+      description: userTask.task_description,
+      status: userTask.task_status as TaskStatus,
+      priority: safePriorityLevel(userTask.task_priority),
+      deadline: userTask.task_deadline || "",
+      portfolio_id: userTask.task_portfolio_id,
+      portfolio: "EDU",
+      assignees: [],
+      created_by: {
+        user_id: 0,
+        username: "Unknown",
+        email: "",
       },
-      created_at: new Date(userTask.task.created_at),
-      updated_at: new Date(userTask.task.updated_at),
+      created_at: userTask.task_created_at || "",
+      updated_at: userTask.task_updated_at || "",
       subtasks: [],
-      parent_task_id: userTask.task.parent_task_id,
-      source_meeting_id: userTask.task.source_meeting_id,
     };
   }
 }

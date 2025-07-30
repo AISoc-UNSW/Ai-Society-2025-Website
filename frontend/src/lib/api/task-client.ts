@@ -2,6 +2,7 @@
 
 import {
   Portfolio,
+  PortfolioSimple,
   Task,
   TaskCreateRequest,
   TaskStatus,
@@ -19,7 +20,7 @@ export async function fetchUserTasksClient(): Promise<UserTaskAssignment[]> {
 }
 
 // Client-side version of getAllPortfoliosSimple
-export async function getAllPortfoliosSimpleClient(): Promise<Portfolio[]> {
+export async function getAllPortfoliosSimpleClient(): Promise<PortfolioSimple[]> {
   return await clientApiFetch("/api/v1/portfolios/all/simple", {
     method: "GET",
   });

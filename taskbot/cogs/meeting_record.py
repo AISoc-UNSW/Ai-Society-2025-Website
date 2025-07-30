@@ -152,7 +152,7 @@ class MeetingRecord(commands.Cog):
             )
 
         except Exception:
-            logger.exception("Failed to start recording")  # 打完整回溯
+            logger.exception("Failed to start recording")  # Log full traceback
             await ctx.respond(
                 "❌ Failed to start recording, check logs for details.", ephemeral=True
             )

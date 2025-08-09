@@ -31,7 +31,7 @@ def create_task(
     Create new task
     """
     task_record = task.create_task(db, obj_in=task_in, created_by=current_user.user_id)
-    return TaskResponse(**task_record.__dict__)
+    return task_record
 
 
 @router.get("/", response_model=list[TaskListResponse])
@@ -43,14 +43,21 @@ def read_tasks(
     skip: int = Query(0, ge=0, description="Skip items"),
     limit: int = Query(100, ge=1, le=1000, description="Limit items"),
     current_user: User = Depends(deps.get_current_user),
+    include_subtasks: bool = Query(True, description="Include subtasks in response"),
 ) -> list[TaskListResponse]:
     """
     Get tasks with optional filters
     """
-    tasks = task.get_multi(
-        db, portfolio_id=portfolio_id, status=status, priority=priority, skip=skip, limit=limit
+    tasks_data = task.get_multi(
+        db,
+        portfolio_id=portfolio_id,
+        status=status,
+        priority=priority,
+        skip=skip,
+        limit=limit,
+        include_subtasks=include_subtasks,
     )
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+    return [TaskListResponse(**task_data) for task_data in tasks_data]
 
 
 @router.get("/created-by/{user_id}", response_model=list[TaskListResponse])
@@ -66,7 +73,7 @@ def read_tasks_created_by(
     Get tasks created by a specific user
     """
     tasks = task.get_by_created_by(db, user_id=user_id, skip=skip, limit=limit)
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+    return [TaskListResponse(**task_data) for task_data in tasks]
 
 
 @router.get("/{task_id}/created-by", response_model=TaskCreatedByResponse)
@@ -101,7 +108,7 @@ def read_task(
 
     # Get subtasks if any
     subtasks = task.get_subtasks(db, parent_task_id=task_id)
-    subtasks_data = [TaskListResponse(**subtask.__dict__) for subtask in subtasks]
+    subtasks_data = [TaskListResponse(**subtask_data) for subtask_data in subtasks]
 
     task_data = TaskDetailResponse(**task_record.__dict__)
     task_data.subtasks = subtasks_data
@@ -119,12 +126,11 @@ def update_task(
     """
     Update task
     """
-    task_record = task.get_by_id(db, task_id=task_id)
-    if not task_record:
+    task_obj = task.get_by_id(db, task_id=task_id)
+    if not task_obj:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    task_record = task.update_task(db, db_obj=task_record, obj_in=task_in)
-    return TaskResponse(**task_record.__dict__)
+    return task.update_task(db, db_obj=task_obj, obj_in=task_in)
 
 
 @router.delete("/{task_id}")
@@ -157,7 +163,7 @@ def read_tasks_by_portfolio(
     Get tasks by portfolio ID
     """
     tasks = task.get_by_portfolio(db, portfolio_id=portfolio_id, skip=skip, limit=limit)
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+    return [TaskListResponse(**task_data) for task_data in tasks]
 
 
 @router.get("/subtasks/{parent_task_id}", response_model=list[TaskListResponse])
@@ -171,7 +177,7 @@ def read_subtasks(
     Get subtasks of a parent task
     """
     subtasks = task.get_subtasks(db, parent_task_id=parent_task_id)
-    return [TaskListResponse(**subtask.__dict__) for subtask in subtasks]
+    return [TaskListResponse(**subtask_data) for subtask_data in subtasks]
 
 
 @router.get("/meeting/{meeting_id}", response_model=list[TaskListResponse])
@@ -185,7 +191,7 @@ def read_tasks_by_meeting(
     Get tasks created from a specific meeting
     """
     tasks = task.get_by_meeting(db, meeting_id=meeting_id)
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+    return [TaskListResponse(**task_data) for task_data in tasks]
 
 
 @router.get("/meeting/{meeting_id}/pending", response_model=list[TaskListResponse])
@@ -199,7 +205,7 @@ def get_pending_tasks_by_meeting(
     Get pending tasks created from a specific meeting
     """
     tasks = task.get_pending_tasks_by_meeting(db, meeting_id=meeting_id)
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+    return [TaskListResponse(**task_data) for task_data in tasks]
 
 
 @router.get("/search/", response_model=list[TaskListResponse])
@@ -214,7 +220,7 @@ def search_tasks(
     Search tasks by title or description
     """
     tasks = task.search_tasks(db, search_term=q, portfolio_id=portfolio_id)
-    return [TaskListResponse(**task_record.__dict__) for task_record in tasks]
+    return [TaskListResponse(**task_data) for task_data in tasks]
 
 
 @router.get("/reminders/tomorrow", response_model=TomorrowRemindersResponse)

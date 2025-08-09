@@ -2,8 +2,6 @@
 
 import React from "react";
 import Box from "@mui/joy/Box";
-import { CssVarsProvider } from "@mui/joy/styles";
-import CssBaseline from "@mui/joy/CssBaseline";
 import IconButton from "@mui/joy/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Sidebar from "@/components/joyui/Sidebar";
@@ -12,11 +10,8 @@ import { openSidebar } from "@/lib/dom-utils";
 interface TaskbotLayoutClientProps {
   children: React.ReactNode;
 }
-
 export default function TaskbotLayoutClient({ children }: TaskbotLayoutClientProps) {
-  return (
-    <CssVarsProvider disableTransitionOnChange>
-      <CssBaseline />
+    return (
       <Box sx={{ display: "flex", minHeight: "100vh" }}>
         <Sidebar />
         <Box
@@ -60,10 +55,9 @@ export default function TaskbotLayoutClient({ children }: TaskbotLayoutClientPro
           >
             <MenuIcon />
           </IconButton>
-
+  
           {children}
         </Box>
       </Box>
-    </CssVarsProvider>
-  );
-}
+    );
+  }

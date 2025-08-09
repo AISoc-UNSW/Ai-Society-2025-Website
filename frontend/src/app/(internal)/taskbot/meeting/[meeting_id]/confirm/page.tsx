@@ -1,14 +1,21 @@
 import TaskConfirmationClient from "@/components/joyui/task/TaskConfirmationClient";
 import { getAllPortfoliosSimple } from "@/lib/api/portfolio";
-import { createTask, deleteTask, getPendingTasksByMeeting, getTaskAssignees, updateTask, updateTaskAssignment } from "@/lib/api/task";
+import {
+  createTask,
+  deleteTask,
+  getPendingTasksByMeeting,
+  getTaskAssignees,
+  updateTask,
+  updateTaskAssignment,
+} from "@/lib/api/task";
 import { searchUsers } from "@/lib/api/user";
-import { Task, TaskCreateRequest, TaskUserAssignmentResponse, User } from "@/lib/types";
+import { TaskCreateRequest, TaskResponse, TaskUserAssignmentResponse, User } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 // Server Actions
-async function updateTaskAction(taskId: number, updates: Partial<Task>) {
+async function updateTaskAction(taskId: number, updates: Partial<TaskResponse>) {
   "use server";
-  
+
   try {
     await updateTask(taskId, updates);
     revalidatePath(`/taskbot/meeting/[meeting_id]/confirm`);
@@ -24,7 +31,7 @@ async function updateTaskAction(taskId: number, updates: Partial<Task>) {
 
 async function createTaskAction(taskData: TaskCreateRequest) {
   "use server";
-  
+
   try {
     const newTask = await createTask(taskData);
     await updateTaskAssignment(newTask.task_id, taskData.assignees || []);
@@ -41,7 +48,7 @@ async function createTaskAction(taskData: TaskCreateRequest) {
 
 async function deleteTaskAction(taskId: number) {
   "use server";
-  
+
   try {
     await deleteTask(taskId);
     revalidatePath(`/taskbot/meeting/[meeting_id]/confirm`);
@@ -96,16 +103,16 @@ async function getTaskAssigneesAction(taskId: number): Promise<TaskUserAssignmen
 
 async function confirmAllTasksAction(meetingId: number) {
   "use server";
-  
+
   try {
     // Get all pending tasks for this meeting
     const pendingTasks = await getPendingTasksByMeeting(meetingId);
-    
+
     // Update all tasks from "Pending" to "Not Started"
-    const updatePromises = pendingTasks.map(task => 
+    const updatePromises = pendingTasks.map(task =>
       updateTask(task.task_id, { status: "Not Started" })
     );
-    
+
     await Promise.all(updatePromises);
     revalidatePath(`/taskbot/meeting/[meeting_id]/confirm`);
     return { success: true, confirmedCount: pendingTasks.length };
@@ -127,7 +134,7 @@ interface PageProps {
 export default async function TaskConfirmationPage({ params }: PageProps) {
   const { meeting_id } = await params;
   const meetingId = parseInt(meeting_id);
-  
+
   if (isNaN(meetingId)) {
     return (
       <div className="p-4">
@@ -140,9 +147,9 @@ export default async function TaskConfirmationPage({ params }: PageProps) {
   try {
     const [pendingTasks, portfolios] = await Promise.all([
       getPendingTasksByMeeting(meetingId),
-      getAllPortfoliosSimple()
+      getAllPortfoliosSimple(),
     ]);
-    
+
     return (
       <TaskConfirmationClient
         meetingId={meetingId}
@@ -175,4 +182,4 @@ export default async function TaskConfirmationPage({ params }: PageProps) {
       />
     );
   }
-} 
+}

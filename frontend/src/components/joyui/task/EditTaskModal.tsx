@@ -1,6 +1,6 @@
 "use client";
 
-import { Assignee, PriorityLevel, Task, TaskStatus, User } from "@/lib/types";
+import { PriorityLevel, TaskResponse, TaskStatus, TaskUserAssignmentResponse, User } from "@/lib/types";
 import { formatDateWithMinutes, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
@@ -22,9 +22,9 @@ import * as React from "react";
 
 interface EditTaskModalProps {
   open: boolean;
-  task: Task;
+  task: TaskResponse;
   onClose: () => void;
-  onSave: (updatedTask: Partial<Task>) => Promise<void>;
+  onSave: (updatedTask: Partial<TaskResponse>) => Promise<void>;
   isLoading?: boolean;
   searchUsersAction?: (searchTerm: string) => Promise<User[]>;
   updateTaskAssignmentAction?: (
@@ -59,7 +59,7 @@ export default function EditTaskModal({
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   // Assignees state
-  const [selectedAssignees, setSelectedAssignees] = React.useState<Assignee[]>(
+  const [selectedAssignees, setSelectedAssignees] = React.useState<TaskUserAssignmentResponse[]>(
     task.assignees || []
   );
   const [userSearchResults, setUserSearchResults] = React.useState<User[]>([]);
@@ -148,15 +148,15 @@ export default function EditTaskModal({
       await onSave({
         title: formData.title.trim(),
         description: formData.description.trim(),
-        status: formData.status,
-        priority: formData.priority,
+        status: formData.status as TaskStatus,
+        priority: formData.priority as PriorityLevel,
         deadline: formData.deadline,
       });
 
       // Update task assignments if the action is available
       if (updateTaskAssignmentAction) {
-        const assigneeIds = selectedAssignees.map(assignee => assignee.id);
-        const result = await updateTaskAssignmentAction(task.id, assigneeIds);
+        const assigneeIds = selectedAssignees.map(assignee => assignee.user_id);
+        const result = await updateTaskAssignmentAction(task.task_id, assigneeIds);
 
         if (!result.success) {
           console.error("Failed to update assignees:", result.error);
@@ -182,13 +182,13 @@ export default function EditTaskModal({
 
   // Handle assignee selection
   const handleAssigneeSelect = (user: User) => {
-    const isAlreadySelected = selectedAssignees.some(assignee => assignee.id === user.user_id);
+    const isAlreadySelected = selectedAssignees.some(assignee => assignee.user_id === user.user_id);
     if (!isAlreadySelected) {
-      const newAssignee: Assignee = {
-        id: user.user_id,
-        name: user.username,
+      const newAssignee: TaskUserAssignmentResponse = {
+        assignment_id: 0,
+        user_id: user.user_id,
+        username: user.username,
         email: user.email,
-        avatar: user.avatar,
       };
       setSelectedAssignees(prev => [...prev, newAssignee]);
     }
@@ -197,7 +197,7 @@ export default function EditTaskModal({
 
   // Handle assignee removal
   const handleAssigneeRemove = (assigneeId: number) => {
-    setSelectedAssignees(prev => prev.filter(assignee => assignee.id !== assigneeId));
+    setSelectedAssignees(prev => prev.filter(assignee => assignee.user_id !== assigneeId));
   };
 
   return (
@@ -394,25 +394,22 @@ export default function EditTaskModal({
                     >
                       {selectedAssignees.map(assignee => (
                         <Chip
-                          key={assignee.id}
+                          key={assignee.user_id}
                           variant="soft"
                           color="primary"
                           size="md"
                           startDecorator={
                             <Avatar
                               size="sm"
-                              src={assignee.avatar}
                               sx={{
                                 width: 20,
                                 height: 20,
                                 fontSize: "0.75rem",
-                                backgroundColor: !assignee.avatar
-                                  ? getEmailAvatarColor(assignee.email)
-                                  : undefined,
-                                color: !assignee.avatar ? "white" : undefined,
+                                backgroundColor: getEmailAvatarColor(assignee.email),
+                                color: "white",
                               }}
                             >
-                              {!assignee.avatar && getEmailInitials(assignee.email)}
+                              {getEmailInitials(assignee.email)}
                             </Avatar>
                           }
                           endDecorator={
@@ -423,7 +420,7 @@ export default function EditTaskModal({
                               onClick={e => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                handleAssigneeRemove(assignee.id);
+                                handleAssigneeRemove(assignee.user_id);
                               }}
                               disabled={isLoading}
                               sx={{
@@ -465,7 +462,7 @@ export default function EditTaskModal({
                             },
                           }}
                         >
-                          {assignee.name}
+                          {assignee.username}
                         </Chip>
                       ))}
                     </Stack>

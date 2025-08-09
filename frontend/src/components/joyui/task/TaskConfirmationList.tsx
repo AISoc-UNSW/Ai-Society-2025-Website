@@ -1,16 +1,14 @@
 "use client";
 
 import {
-    HierarchicalTask,
-    Portfolio,
-    PortfolioSimple,
-    PriorityLevel,
-    Task,
-    TaskCreateRequest,
-    TaskFormData,
-    TaskStatus,
-    TaskUserAssignmentResponse,
-    User
+  PortfolioSimple,
+  PriorityLevel,
+  TaskCreateRequest,
+  TaskFormData,
+  TaskResponse,
+  TaskStatus,
+  TaskUserAssignmentResponse,
+  User,
 } from "@/lib/types";
 import { formatDateWithMinutes, getEmailAvatarColor, getEmailInitials } from "@/lib/utils";
 import Avatar from "@mui/joy/Avatar";
@@ -49,10 +47,10 @@ const getPriorityColor = (priority: string) => {
 };
 
 interface TaskConfirmationListProps {
-  tasks: HierarchicalTask[];
+  tasks: TaskResponse[];
   meetingId: number;
   portfolios: PortfolioSimple[];
-  onTaskUpdate: (taskId: number, updates: Partial<Task>) => Promise<void>;
+  onTaskUpdate: (taskId: number, updates: Partial<TaskResponse>) => Promise<void>;
   onTaskCreate: (taskData: TaskCreateRequest) => Promise<void>;
   onTaskDelete: (taskId: number) => Promise<void>;
   isLoading: boolean;
@@ -82,7 +80,7 @@ export default function TaskConfirmationList({
   }>({ isOpen: false });
   const [deleteConfirm, setDeleteConfirm] = React.useState<number | null>(null);
   const [mounted, setMounted] = React.useState(false);
-  const [taskToEdit, setTaskToEdit] = React.useState<Task | null>(null);
+  const [taskToEdit, setTaskToEdit] = React.useState<TaskResponse | null>(null);
   const [taskAssignees, setTaskAssignees] = React.useState<
     Map<number, TaskUserAssignmentResponse[]>
   >(new Map());
@@ -118,7 +116,7 @@ export default function TaskConfirmationList({
       tasks.forEach(task => {
         loadTaskAssignees(task.task_id);
         // Also load for subtasks
-        const loadSubtaskAssignees = (subtasks: HierarchicalTask[]) => {
+        const loadSubtaskAssignees = (subtasks: TaskResponse[]) => {
           subtasks.forEach(subtask => {
             loadTaskAssignees(subtask.task_id);
             if (subtask.subtasks.length > 0) {
@@ -131,13 +129,13 @@ export default function TaskConfirmationList({
     }
   }, [tasks, getTaskAssigneesAction, loadTaskAssignees]);
 
-  const handleEditTask = async (task: HierarchicalTask) => {
+  const handleEditTask = async (task: TaskResponse) => {
     // Get current assignees for this task
     const currentAssignees = taskAssignees.get(task.task_id) || [];
 
     // Convert HierarchicalTask to Task for EditTaskModal
-    const taskForEdit: Task = {
-      id: task.task_id,
+    const taskForEdit: TaskResponse = {
+      task_id: task.task_id,
       title: task.title,
       description: task.description || "",
       status: task.status as TaskStatus,
@@ -145,43 +143,48 @@ export default function TaskConfirmationList({
       deadline: task.deadline,
       created_at: task.created_at || "",
       updated_at: task.updated_at || "",
-      created_by: { user_id: 0, username: "", email: "" }, // Placeholder
-      portfolio: getPortfolioName(task.portfolio_id) as Portfolio,
-      portfolio_id: task.portfolio_id,
+      created_by: task.created_by,
+      portfolio: {
+        portfolio_id: task.portfolio.portfolio_id,
+        name: task.portfolio.name,
+      },
       assignees: currentAssignees.map(assignee => ({
-        id: assignee.user_id,
-        name: assignee.user_username,
-        email: assignee.user_email,
+        assignment_id: 0,
+        user_id: assignee.user_id,
+        username: assignee.username,
+        email: assignee.email,
       })),
       subtasks: [], // Not needed for editing
+      parent_task_id: task.parent_task_id,
+      source_meeting_id: task.source_meeting_id,
     };
     setTaskToEdit(taskForEdit);
   };
 
-  const handleSaveEdit = async (updates: Partial<Task>) => {
+  const handleSaveEdit = async (updates: Partial<TaskResponse>) => {
     if (!taskToEdit) return;
 
     // Convert Task updates back to backend format
     const backendUpdates = {
       title: updates.title,
       description: updates.description,
-      status: updates.status,
-      priority: updates.priority,
+      status: updates.status as TaskStatus,
+      priority: updates.priority as PriorityLevel,
       deadline: updates.deadline,
       portfolio_id: undefined as number | undefined,
     };
 
     // If portfolio was changed, find the portfolio_id
     if (updates.portfolio) {
-      const portfolio = portfolios.find(p => p.name === updates.portfolio);
+      const portfolio = portfolios.find(p => p.name === updates.portfolio?.name);
       if (portfolio) {
         backendUpdates.portfolio_id = portfolio.portfolio_id;
       }
     }
 
-    await onTaskUpdate(taskToEdit.id, backendUpdates);
+    await onTaskUpdate(taskToEdit.task_id, backendUpdates);
     // Reload assignees for the updated task
-    await loadTaskAssignees(taskToEdit.id);
+    await loadTaskAssignees(taskToEdit.task_id);
     setTaskToEdit(null);
   };
 
@@ -205,7 +208,7 @@ export default function TaskConfirmationList({
     setDeleteConfirm(null);
   };
 
-  const renderTask = (task: HierarchicalTask, level: number = 0) => {
+  const renderTask = (task: TaskResponse, level: number = 0) => {
     const assignees = taskAssignees.get(task.task_id) || [];
 
     return (
@@ -254,7 +257,7 @@ export default function TaskConfirmationList({
                   Due: {mounted ? formatDateWithMinutes(task.deadline, true) : "Loading..."}
                 </Typography>
                 <Typography level="body-xs" color="neutral">
-                  Portfolio: {getPortfolioName(task.portfolio_id)}
+                  Portfolio: {getPortfolioName(task.portfolio.portfolio_id)}
                 </Typography>
               </Stack>
 
@@ -270,13 +273,13 @@ export default function TaskConfirmationList({
                         key={assignee.user_id}
                         size="sm"
                         sx={{
-                          backgroundColor: getEmailAvatarColor(assignee.user_email),
+                          backgroundColor: getEmailAvatarColor(assignee.email),
                           color: "white",
                           fontSize: "0.75rem",
                         }}
-                        title={`${assignee.user_username} (${assignee.user_email})`}
+                        title={`${assignee.username} (${assignee.email})`}
                       >
-                        {getEmailInitials(assignee.user_email)}
+                        {getEmailInitials(assignee.email)}
                       </Avatar>
                     ))}
                     {assignees.length > 3 && (

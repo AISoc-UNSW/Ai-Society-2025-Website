@@ -145,7 +145,7 @@ export default function TaskDashboard() {
       };
     }
   };
-
+      
   // Show loading state
   if (loading) {
     return <TaskLoadingState stage="fetching" />;

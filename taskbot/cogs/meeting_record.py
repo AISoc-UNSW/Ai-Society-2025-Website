@@ -84,6 +84,7 @@ class MeetingRecord(commands.Cog):
         ctx: discord.ApplicationContext,
         meeting_name = discord.Option(str, "Meeting name", required=True),
         portfolio_id = discord.Option(
+            int,
             description="Select the portfolio for this meeting",
             required=True,
             choices=portfolio_options

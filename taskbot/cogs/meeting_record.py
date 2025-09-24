@@ -4,23 +4,21 @@ Meeting Recording Cog
 Responsible for handling Discord voice channel recording functionality
 """
 
-import discord
-from discord.ext import commands
+import json
 import logging
 import os
-from datetime import datetime
-from pydub import AudioSegment
 import subprocess
-from dotenv import load_dotenv
+from datetime import datetime
 
-from utils import MeetingService
-from ai_generation.speech_to_text import speech_to_text
-from ai_generation.generate_tasks import generate_tasks
-import json
-
-from utils.config import config
-from utils.auth_manager import AuthManager
 import aiohttp
+import discord
+from ai_generation.generate_tasks import generate_tasks
+from ai_generation.speech_to_text import speech_to_text
+from discord.ext import commands
+from dotenv import load_dotenv
+from utils import MeetingService
+from utils.auth_manager import AuthManager
+from utils.config import config
 
 load_dotenv()
 
@@ -66,6 +64,17 @@ class MeetingRecord(commands.Cog):
                 logger.error("Failed to authenticate with backend API")
             return success
         return True
+    
+    portfolio_options = [
+        discord.OptionChoice(name="IT portfolio", value=101),
+        discord.OptionChoice(name="Marketing portfolio", value=102),
+        discord.OptionChoice(name="Events portfolio", value=103),
+        discord.OptionChoice(name="Edu portfolio", value=104),
+        discord.OptionChoice(name="Projects portfolio", value=105),
+        discord.OptionChoice(name="Partnerships portfolio", value=106),
+        discord.OptionChoice(name="HR portfolio", value=107),
+        discord.OptionChoice(name="Execs", value=111),
+    ]
 
     @discord.slash_command(
         name="record_voice", description="Start recording voice meeting"
@@ -73,9 +82,13 @@ class MeetingRecord(commands.Cog):
     async def start_recording(
         self,
         ctx: discord.ApplicationContext,
-        meeting_name: str = discord.Option(str, "Meeting name", required=True),
-        portfolio_id: int = discord.Option(int, "Portfolio ID", required=True),
-        user_can_see: bool = discord.Option(
+        meeting_name = discord.Option(str, "Meeting name", required=True),
+        portfolio_id = discord.Option(
+            description="Select the portfolio for this meeting",
+            required=True,
+            choices=portfolio_options
+        ),
+        user_can_see = discord.Option(
             bool,
             "Whether users can see this meeting record",
             required=False,
@@ -152,7 +165,7 @@ class MeetingRecord(commands.Cog):
             )
 
         except Exception:
-            logger.exception("Failed to start recording")  # 打完整回溯
+            logger.exception("Failed to start recording")
             await ctx.respond(
                 "❌ Failed to start recording, check logs for details.", ephemeral=True
             )

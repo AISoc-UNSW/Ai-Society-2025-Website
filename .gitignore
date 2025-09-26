@@ -47,6 +47,7 @@ next-env.d.ts
 
 # venv
 venv/
+.venv/
 
 # cursor, vscode
 .cursorrules

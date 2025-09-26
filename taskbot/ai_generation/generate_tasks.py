@@ -1,11 +1,12 @@
 import json
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
 
-import google.generativeai as genai
-from google.generativeai import types
-from utils.config import config
+load_dotenv()
 
 # No global configure needed for the client approach: since everything is called from config (?) check ts
-
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 # Updated function signature to accept context IDs
 def generate_tasks(script: str, source_meeting_id: int, portfolio_id: int | None = None):
     """
@@ -81,58 +82,39 @@ Extracted Tasks (JSON):
 """
 
     try:
-        # Initialize the client inside the function or globally if preferred
-        # Ensure the API key is loaded correctly
-        api_key = config.gemini_api_key
-        if not api_key:
-            print("Error: GEMINI_API_KEY not found in environment variables.")
-            return []
-        genai.configure(api_key=api_key)
-
-        model_name = "gemini-1.5-flash"  # Or "gemini-pro"
-        model = genai.GenerativeModel(model_name)
-
-        response = model.generate_content(
-            prompt,
-            generation_config=types.GenerationConfig(
-                max_output_tokens=8192, temperature=0.1, top_p=0.95, top_k=40
-            ),
+        # Use OpenAI Chat Completions with gpt-4.1-nano (follow summary() pattern)
+        response = client.chat.completions.create(
+            model="gpt-4.1-nano",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You extract actionable tasks from meeting transcripts and return only valid JSON (a top-level list of task objects). Avoid profanity or harmful content.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=2048,
+            temperature=0.1,
         )
 
         # Extract and parse the JSON response
-        # Adding checks for safety
-        if not response.candidates:
-            print("Warning: No candidates received from AI.")
-            print(f"Full response: {response}")  # Log full response for debugging
-            return []
-
-        # Accessing the text directly
         try:
-            # Check if parts exist, common in newer structures even with Client
-            if response.candidates[0].content and response.candidates[0].content.parts:
-                json_text = response.candidates[0].content.parts[0].text
-            else:
-                # Fallback or alternative structure check if needed
-                json_text = response.text  # Assuming response.text works directly
-        except AttributeError:
-            # If the above structure fails, try accessing response.text directly
-            print(
-                "Warning: Could not access response.candidates[0].content.parts[0].text, trying response.text."
-            )
-            if hasattr(response, "text"):
-                json_text = response.text
-            else:
-                print("Error: Cannot extract text from AI response.")
+            content = response.choices[0].message.content
+            if not content:
+                print("Warning: Empty content in AI response.")
                 print(f"Full response: {response}")
                 return []
-        except IndexError:
-            print("Error: Response candidates list is empty.")
+            if not isinstance(content, str):
+                print("Warning: Non-string content in AI response.")
+                print(f"Full response: {response}")
+                return []
+            json_text = content.strip()
+        except Exception:
+            print("Error: Could not extract text from AI response.")
             print(f"Full response: {response}")
             return []
 
         try:
             # Clean up the response text to remove markdown code block markers if present
-            json_text = json_text.strip()
             if json_text.startswith("```") and json_text.endswith("```"):
                 # Extract content between the markdown code block markers
                 json_text = json_text[json_text.find("\n") + 1 : json_text.rfind("```")].strip()

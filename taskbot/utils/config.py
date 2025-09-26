@@ -80,13 +80,7 @@ class Config:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
         return api_key
     
-    @property
-    def gemini_api_key(self) -> str:
-        """Google Gemini API key for task generation"""
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY not found in environment variables")
-        return api_key
+    # Note: Gemini API key method removed - using OpenAI for all AI tasks
 
 
 # Global configuration instance

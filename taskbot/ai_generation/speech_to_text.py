@@ -2,10 +2,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-# Changed this file to use gpt-4o-mini-transcribe for audio transcription
-# and gpt-4o for summarization.
-
-# First, load .env file and get client (which can be used for both models)
 load_dotenv()
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 

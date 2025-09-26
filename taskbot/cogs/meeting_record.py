@@ -283,7 +283,7 @@ class MeetingRecord(commands.Cog):
             f"✅ To make any changes to the tasks, access the taskbot website: {config.frontend_base_url}/taskbot/meeting/{meeting_id}/confirm"
         )
         url = f"{config.api_base_url}/api/v1/tasks/group"
-        payload = {"tasks": tasks, "source_meeting_id": meeting_id}
+        payload = {"tasks": tasks, "portfolio_id": session["portfolio_id"], "source_meeting_id": meeting_id}
         headers = self.auth_manager.auth_headers
         try:
             async with self.session.post(url, json=payload, headers=headers) as resp:

@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from utils import MeetingService
 from utils.auth_manager import AuthManager
 from utils.config import config
+from pydub import AudioSegment
 
 load_dotenv()
 

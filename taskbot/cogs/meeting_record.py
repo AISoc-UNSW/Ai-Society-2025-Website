@@ -54,12 +54,12 @@ class MeetingRecord(commands.Cog):
 
     async def ensure_authenticated(self) -> bool:
         """Ensure authentication with backend API"""
-        if not self._authenticated:
+        if not self.auth_manager.is_authenticated:
             success = await self.auth_manager.login(
                 config.api_username, config.api_password
             )
+            self._authenticated = success
             if success:
-                self._authenticated = True
                 logger.info("Successfully authenticated with backend API")
             else:
                 logger.error("Failed to authenticate with backend API")

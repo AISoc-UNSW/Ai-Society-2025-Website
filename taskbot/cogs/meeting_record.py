@@ -11,15 +11,17 @@ import subprocess
 from datetime import datetime
 
 import aiohttp
+import asyncio
+from typing import cast
 import discord
-from ai_generation.generate_tasks import generate_tasks
-from ai_generation.speech_to_text import speech_to_text
+from ai_generation.generate_tasks import generate_tasks_async
+from ai_generation.speech_to_text import speech_to_text_async
 from discord.ext import commands
 from dotenv import load_dotenv
 from utils import MeetingService
 from utils.auth_manager import AuthManager
 from utils.config import config
-from pydub import AudioSegment
+from pydub import AudioSegment  # type: ignore
 
 load_dotenv()
 
@@ -40,11 +42,11 @@ class MeetingRecord(commands.Cog):
         self.recording_sessions = {}
 
     # Ensure aiohttp session is closed when cog is unloaded (avoided duplicating session creation, as it is handled in ensure_session)
-    async def cog_unload(self):
+    def cog_unload(self):
         """Called when the cog is unloaded"""
-        # Close aiohttp session
+        # Close aiohttp session without blocking
         if self.session:
-            await self.session.close()
+            asyncio.create_task(self.session.close())
 
     async def ensure_session(self):
         """Ensure HTTP session is initialized"""
@@ -99,14 +101,18 @@ class MeetingRecord(commands.Cog):
     ):
         """Start recording command"""
         # Check if user is in voice channel
-        if not ctx.author.voice:
+        author_member = cast(discord.Member, ctx.author)
+        voice_state = getattr(author_member, "voice", None)
+        if not voice_state or not voice_state.channel:
             await ctx.respond(
                 "❌ You need to join a voice channel first!", ephemeral=True
             )
             return
 
-        voice_channel = ctx.author.voice.channel
-        guild_id = ctx.guild.id
+        voice_channel = voice_state.channel
+        guild = ctx.guild
+        assert guild is not None
+        guild_id = guild.id
 
         # Ensure there is at least one non-bot user in the channel
         non_bot_members = [m for m in voice_channel.members if not m.bot]
@@ -127,9 +133,10 @@ class MeetingRecord(commands.Cog):
 
         try:
             # Connect to voice channel
-            if ctx.guild.voice_client:
-                await ctx.guild.voice_client.move_to(voice_channel)
-                vc = ctx.guild.voice_client
+            if guild.voice_client:
+                assert guild.voice_client is not None
+                await guild.voice_client.move_to(voice_channel)
+                vc = guild.voice_client
             else:
                 vc = await voice_channel.connect()
 
@@ -180,7 +187,9 @@ class MeetingRecord(commands.Cog):
     )
     async def stop_recording(self, ctx: discord.ApplicationContext):
         """Stop recording command"""
-        guild_id = ctx.guild.id
+        guild = ctx.guild
+        assert guild is not None
+        guild_id = guild.id
 
         # Check if recording
         if guild_id not in self.recording_sessions:
@@ -203,46 +212,63 @@ class MeetingRecord(commands.Cog):
             await ctx.respond(f"❌ Failed to stop recording: {str(e)}", ephemeral=True)
 
     async def process_audio_files(self, sink, session, channel):
-        """Process and merge audio files, return file_path or None"""
+        """Process and merge audio files, return file_path or None without blocking the loop"""
         await channel.send("🔄 Processing audio files...")
-        segments = []
-        temp_files = []
-        for user_id, audio in sink.audio_data.items():
-            raw_path = f"temp_{user_id}_raw.wav"
-            fixed_path = f"temp_{user_id}_fixed.wav"
-            temp_files.extend([raw_path, fixed_path])
-            with open(raw_path, "wb") as f:
-                f.write(audio.file.getbuffer())
-            subprocess.run(
-                ["ffmpeg", "-y", "-i", raw_path, fixed_path],
-                check=True,
-                capture_output=True,
-            )
-            seg = AudioSegment.from_wav(fixed_path)
-            segments.append(seg)
-        for temp_file in temp_files:
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
-        if not segments:
+
+        def _extract_and_mix() -> str | None:
+            # Extract per-user raw files, convert with ffmpeg, mix with pydub
+            segments_local: list[AudioSegment] = []
+            temp_files_local: list[str] = []
+            try:
+                for user_id, audio in sink.audio_data.items():
+                    raw_path = f"temp_{user_id}_raw.wav"
+                    fixed_path = f"temp_{user_id}_fixed.wav"
+                    temp_files_local.extend([raw_path, fixed_path])
+                    with open(raw_path, "wb") as f:
+                        f.write(audio.file.getbuffer())
+                    # Use blocking ffmpeg in worker thread to avoid event loop blocking
+                    subprocess.run(["ffmpeg", "-y", "-i", raw_path, fixed_path], check=True, capture_output=True)
+                    seg = AudioSegment.from_wav(fixed_path)
+                    segments_local.append(seg)
+
+                if not segments_local:
+                    return None
+
+                combined = segments_local[0]
+                for seg in segments_local[1:]:
+                    combined = combined.overlay(seg)
+
+                file_path_local = self.meeting_service.get_recording_file_path(
+                    session["meeting_name"], session["portfolio_id"]
+                )
+                combined.export(file_path_local, format="wav")
+                return file_path_local
+            finally:
+                for temp_file in temp_files_local:
+                    if os.path.exists(temp_file):
+                        try:
+                            os.remove(temp_file)
+                        except OSError:
+                            pass
+
+        try:
+            file_path = await asyncio.to_thread(_extract_and_mix)
+        except Exception as e:
+            await channel.send(f"❌ Audio processing failed: {str(e)}")
+            return None
+
+        if not file_path:
             await channel.send("❌ No audio recorded!")
             return None
-        combined = segments[0]
-        for seg in segments[1:]:
-            combined = combined.overlay(seg)
-        file_path = self.meeting_service.get_recording_file_path(
-            session["meeting_name"], session["portfolio_id"]
-        )
-        combined.export(file_path, format="wav")
+
         await channel.send(f"✅ Audio file saved: `{file_path}`")
         return file_path
 
     async def transcribe_audio(self, file_path, channel):
-        """Transcribe audio file and return (transcript, summary) or (None, None)"""
-        await channel.send(
-            "📝 Converting audio to transcript and generating summary..."
-        )
+        """Transcribe audio file and return (transcript, summary) or (None, None), non-blocking"""
+        await channel.send("📝 Converting audio to transcript and generating summary...")
         try:
-            transcript, summary = speech_to_text(file_path)
+            transcript, summary = await speech_to_text_async(file_path)
             await channel.send("✅ Transcript and Summary generated successfully!")
             return transcript, summary
         except Exception as e:
@@ -256,7 +282,7 @@ class MeetingRecord(commands.Cog):
             "🤖 Based on the meeting transcript, the tasks are generated as follows..."
         )
         try:
-            tasks = generate_tasks(
+            tasks = await generate_tasks_async(
                 transcript,
                 source_meeting_id=meeting_id,
                 portfolio_id=session["portfolio_id"],
@@ -286,6 +312,7 @@ class MeetingRecord(commands.Cog):
         payload = {"tasks": tasks, "portfolio_id": session["portfolio_id"], "source_meeting_id": meeting_id}
         headers = self.auth_manager.auth_headers
         try:
+            assert self.session is not None
             async with self.session.post(url, json=payload, headers=headers) as resp:
                 if resp.status == 200:
                     data = await resp.json()
@@ -427,7 +454,7 @@ class MeetingRecord(commands.Cog):
             for guild_id, session in list(self.recording_sessions.items()):
                 if session["voice_client"].channel == before.channel:
                     logger.warning(
-                        f"Bot was disconnected from voice channel during recording"
+                        "Bot was disconnected from voice channel during recording"
                     )
                     del self.recording_sessions[guild_id]
 

@@ -216,20 +216,20 @@ Format the output as a JSON list of objects, where each object represents a task
 Ensure the output is only the JSON list, without any introductory text or explanations.
 Example format:
 [
-  {
-    "title": "Create My Tasks Page",
-    "description": "Develop a new page to display tasks assigned to the current user.",
-    "deadline": "YYYY-MM-DD",
-    "priority": "High",
-    "subtasks": [
-      {
-        "title": "Add Task Completion Checkbox",
-        "description": "Implement checkbox functionality for marking tasks as complete on the My Tasks page.",
-        "deadline": "YYYY-MM-DD",
-        "priority": "Medium"
-      }
-    ]
-  }
+        {{
+          "title": "Create My Tasks Page",
+          "description": "Develop a new page to display tasks assigned to the current user.",
+          "deadline": "YYYY-MM-DD",
+          "priority": "High",
+          "subtasks": [
+            {{
+              "title": "Add Task Completion Checkbox",
+              "description": "Implement checkbox functionality for marking tasks as complete on the My Tasks page.",
+              "deadline": "YYYY-MM-DD",
+              "priority": "Medium"
+            }}
+          ]
+        }}
 ]
 
 Meeting Transcript:

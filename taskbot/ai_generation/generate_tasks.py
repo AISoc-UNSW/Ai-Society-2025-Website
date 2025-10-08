@@ -2,6 +2,7 @@ import json
 from openai import OpenAI, AsyncOpenAI
 from dotenv import load_dotenv
 import os
+from string import Template
 
 load_dotenv()
 
@@ -29,14 +30,14 @@ def generate_tasks(script: str, source_meeting_id: int, portfolio_id: int | None
 
     # Define the prompt for the AI with updated instructions for nested subtasks
     current_date = datetime.now().strftime("%Y-%m-%d")
-    prompt = f"""
+    prompt_template = Template("""
 Analyze the following meeting transcript and extract actionable tasks.
 
 For each task:
 1. Create a SPECIFIC 'title' that clearly states the action required (use verb-noun format)
 2. Write a DETAILED 'description' including context, requirements, and expected outcomes
 3. Extract any deadline information into a 'deadline' field - ALWAYS use ISO 8601 format (YYYY-MM-DD) 
-   when possible, calculating actual dates based on the current date {current_date}
+   when possible, calculating actual dates based on the current date $current_date
 4. Assign a priority level ('High', 'Medium', or 'Low') to EVERY task based on urgency mentioned 
    or implied in the transcript
 5. If a task has subtasks, include them in a 'subtasks' array field
@@ -76,11 +77,12 @@ Example format:
 
 Meeting Transcript:
 ---
-{script}
+$script
 ---
 
 Extracted Tasks (JSON):
-"""
+""")
+    prompt = prompt_template.substitute(current_date=current_date, script=script)
 
     try:
         # Use OpenAI Chat Completions with gpt-4.1-nano (follow summary() pattern)
@@ -187,14 +189,14 @@ async def generate_tasks_async(script: str, source_meeting_id: int, portfolio_id
     from datetime import datetime, timedelta
 
     current_date = datetime.now().strftime("%Y-%m-%d")
-    prompt = f"""
+    prompt_template = Template("""
 Analyze the following meeting transcript and extract actionable tasks.
 
 For each task:
 1. Create a SPECIFIC 'title' that clearly states the action required (use verb-noun format)
 2. Write a DETAILED 'description' including context, requirements, and expected outcomes
 3. Extract any deadline information into a 'deadline' field - ALWAYS use ISO 8601 format (YYYY-MM-DD) 
-   when possible, calculating actual dates based on the current date {current_date}
+   when possible, calculating actual dates based on the current date $current_date
 4. Assign a priority level ('High', 'Medium', or 'Low') to EVERY task based on urgency mentioned 
    or implied in the transcript
 5. If a task has subtasks, include them in a 'subtasks' array field
@@ -234,11 +236,12 @@ Example format:
 
 Meeting Transcript:
 ---
-{script}
+$script
 ---
 
 Extracted Tasks (JSON):
-"""
+""")
+    prompt = prompt_template.substitute(current_date=current_date, script=script)
 
     try:
         response = await async_client.chat.completions.create(

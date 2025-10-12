@@ -1,5 +1,5 @@
 import "server-only";
-import { getAuthToken, removeAuthToken } from "../session";
+import { removeAuthToken } from "../session";
 
 // Define API error types
 export class APIError extends Error {
@@ -19,21 +19,16 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const url = `${apiBase}${endpoint}`;
 
-  const token = await getAuthToken();
-
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
-    defaultHeaders["Authorization"] = `Bearer ${token}`;
-  }
-
   const response = await fetch(url, {
     ...options,
     headers: defaultHeaders,
     cache: "no-store",
+    credentials: "include", // Include httpOnly cookies in all API requests
   });
 
   if (!response.ok) {

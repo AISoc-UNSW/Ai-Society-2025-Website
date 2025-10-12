@@ -159,7 +159,7 @@ export default function LoginClient({ loginAction }: LoginClientProps) {
               size="lg"
               fullWidth
               component="a"
-              href="/api/v1/auth/discord"
+              href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/discord`}
               disabled={isPending}
             >
               🔗 Login with Discord

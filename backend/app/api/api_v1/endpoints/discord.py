@@ -1,3 +1,4 @@
+from datetime import timedelta
 from urllib.parse import urlencode
 
 import requests
@@ -6,6 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.core.config import settings
 from app.crud import user
 from app.schemas.user import (
@@ -34,7 +36,10 @@ def discord_login():
 @router.get("/callback")
 def discord_callback(db: Session = Depends(deps.get_db), code: str | None = None):
     if code is None:
-        raise HTTPException(status_code=400, detail="No OAuth code provided")
+        # Redirect to frontend with error instead of raising HTTP exception
+        frontend_url = "http://localhost:3000"
+        error_url = f"{frontend_url}/auth/login?error=no_oauth_code"
+        return RedirectResponse(url=error_url)
 
     # Use code to exchange access token
     data = {
@@ -52,24 +57,30 @@ def discord_callback(db: Session = Depends(deps.get_db), code: str | None = None
         f"{settings.DISCORD_API_URL}/oauth2/token", data=data, headers=headers
     )
     if token_response.status_code != 200:
-        error_detail = token_response.json()
-        raise HTTPException(
-            status_code=token_response.status_code,
-            detail=f"OAuth token failed to obtain: {error_detail}",
-        )
+
+        # Redirect to frontend with error
+        frontend_url = "http://localhost:3000"
+        error_url = f"{frontend_url}/auth/login?error=oauth_token_failed&details={token_response.status_code}"
+        return RedirectResponse(url=error_url)
+
     token_data = token_response.json()
     access_token = token_data.get("access_token")
     if not access_token:
-        raise HTTPException(status_code=400, detail="No access token was obtained")
+        # Redirect to frontend with error
+        frontend_url = "http://localhost:3000"
+        error_url = f"{frontend_url}/auth/login?error=no_access_token"
+        return RedirectResponse(url=error_url)
 
     # Use access token to obtain user information
     user_response = requests.get(
         f"{settings.DISCORD_API_URL}/users/@me", headers={"Authorization": f"Bearer {access_token}"}
     )
     if user_response.status_code != 200:
-        raise HTTPException(
-            status_code=user_response.status_code, detail="Failed to obtain user information"
-        )
+        # Redirect to frontend with error
+        frontend_url = "http://localhost:3000"
+        error_url = f"{frontend_url}/auth/login?error=failed_to_get_user_info"
+        return RedirectResponse(url=error_url)
+
     user_data = user_response.json()
 
     # Validate Discord user data using the Pydantic model
@@ -81,37 +92,62 @@ def discord_callback(db: Session = Depends(deps.get_db), code: str | None = None
         username = discord_user.username
         email = discord_user.email
     except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Invalid Discord user data: {str(e)}")
+        # Redirect to frontend with error
+        frontend_url = "http://localhost:3000"
+        error_url = f"{frontend_url}/auth/login?error=invalid_discord_user_data"
+        return RedirectResponse(url=error_url)
 
     # Check if user exists by discord_id
     user_record = user.get_by_discord_id(db, discord_id=discord_id)
     if user_record:
-        # If it exists, log in directly
-        return JSONResponse(
-            content={
-                "message": "The user already exists, login is successful",
-                "discord_id": discord_id,
-                "username": username,
-                "user": {
-                    "user_id": user_record.user_id,
-                    "email": user_record.email,
-                    "username": user_record.username,
-                    "role_id": user_record.role_id,
-                    "discord_id": user_record.discord_id,
-                },
-            }
+        # If user exists, generate JWT token and redirect to frontend
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = security.create_access_token(
+            user_record.user_id, expires_delta=access_token_expires
         )
+
+        # Redirect to frontend callback page with token
+        frontend_url = "http://localhost:3000"  # This should be configurable
+        callback_url = (
+            f"{frontend_url}/auth/discord/callback?token={access_token}&token_type=bearer"
+        )
+        return RedirectResponse(url=callback_url)
     else:
-        # If it does not exist, the user is prompted to set a password
-        return JSONResponse(
-            content={
-                "message": "New users, please set your password to complete registration",
-                "discord_id": discord_id,
-                "username": username,
-                "email": email,
-                "global_name": discord_user.global_name,
-            }
-        )
+        # If user doesn't exist, create new user and generate token
+        try:
+            # Create user object for Discord registration
+            user_in = DiscordUserCreateRequestBody(
+                email=email,
+                username=username,
+                discord_id=discord_id,
+            )
+
+            # Create user in database
+            user_record = user.create_discord_user(db, obj_in=user_in)
+            if not user_record:
+                # Redirect to frontend with error
+                frontend_url = "http://localhost:3000"
+                error_url = f"{frontend_url}/auth/login?error=registration_failed"
+                return RedirectResponse(url=error_url)
+
+            # Generate JWT token for new user
+            access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token = security.create_access_token(
+                user_record.user_id, expires_delta=access_token_expires
+            )
+
+            # Redirect to frontend callback page with token
+            frontend_url = "http://localhost:3000"
+            callback_url = (
+                f"{frontend_url}/auth/discord/callback?token={access_token}&token_type=bearer"
+            )
+            return RedirectResponse(url=callback_url)
+
+        except Exception as e:
+            # Handle registration errors
+            frontend_url = "http://localhost:3000"
+            error_url = f"{frontend_url}/auth/login?error=discord_registration_failed"
+            return RedirectResponse(url=error_url)
 
 
 @router.post("/register", response_model=UserCreateResponse)

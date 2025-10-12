@@ -16,6 +16,7 @@ interface UserActions {
   setError: (error: string | null) => void;
   logout: () => void;
   initialize: (initialUser?: User) => void;
+  initializeUser: () => Promise<void>;
 }
 
 type UserStore = UserState & UserActions;
@@ -69,6 +70,43 @@ export const useUserStore = create<UserStore>()(
             });
           }
         },
+
+        initializeUser: async () => {
+          set({ isLoading: true, error: null });
+          try {
+            // Fetch user data from API using httpOnly cookie
+            // The cookie will be automatically included in the request
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/users/me`, {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include', // Include httpOnly cookies in request
+            });
+
+            if (!response.ok) {
+              if (response.status === 401 || response.status === 403) {
+                throw new Error('Authentication failed');
+              }
+              throw new Error('Failed to fetch user data');
+            }
+
+            const userData = await response.json();
+            set({
+              user: userData,
+              isInitialized: true,
+              isLoading: false,
+              error: null,
+            });
+          } catch (error) {
+            console.error('Failed to initialize user:', error);
+            set({
+              user: null,
+              isInitialized: true,
+              isLoading: false,
+              error: error instanceof Error ? error.message : 'Failed to load user data',
+            });
+          }
+        },
       }),
       {
         name: "user-store",
@@ -96,6 +134,7 @@ export const useSetLoading = () => useUserStore(state => state.setLoading);
 export const useSetError = () => useUserStore(state => state.setError);
 export const useLogout = () => useUserStore(state => state.logout);
 export const useInitializeUser = () => useUserStore(state => state.initialize);
+export const useInitializeUserFromAPI = () => useUserStore(state => state.initializeUser);
 
 // if you need to get multiple actions, use useMemo or shallow comparison
 export const useUserActions = () => {

@@ -277,3 +277,16 @@ export interface UserProfileUpdate {
   username?: string;
   portfolio_id?: number;
 }
+
+// User task assignment type for client-side operations
+export interface UserTaskAssignment {
+  task_id: number;
+  task_title: string;
+  task_description: string;
+  task_status: string;
+  task_priority: string;
+  task_deadline?: string;
+  task_portfolio_id: number;
+  task_created_at?: string;
+  task_updated_at?: string;
+}

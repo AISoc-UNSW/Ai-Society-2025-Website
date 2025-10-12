@@ -1,11 +1,10 @@
 "use client";
 
 import {
-  Portfolio,
   PortfolioSimple,
   PriorityLevel,
-  Task,
   TaskCreateRequest,
+  TaskResponse,
   TaskStatus,
   UserTaskAssignment,
 } from "../types";
@@ -18,14 +17,6 @@ function safePriorityLevel(priority: string): PriorityLevel {
   return validPriorities.includes(priority as PriorityLevel)
     ? (priority as PriorityLevel)
     : "Medium";
-}
-
-// Helper function to safely convert string to Portfolio
-function safePortfolio(portfolioName: string): Portfolio {
-  const validPortfolios: Portfolio[] = ["EDU", "IT portfolio", "Marketing"];
-  return validPortfolios.includes(portfolioName as Portfolio)
-    ? (portfolioName as Portfolio)
-    : "EDU";
 }
 
 // Client-side version of fetchUserTasks
@@ -45,20 +36,23 @@ export async function getAllPortfoliosSimpleClient(): Promise<PortfolioSimple[]>
 // Client-side version of transformUserTaskToTask
 export async function transformUserTaskToTaskClient(
   userTask: UserTaskAssignment
-): Promise<Task> {
+): Promise<TaskResponse> {
   try {
     const portfolio = await getPortfolioDetailsClient(userTask.task_portfolio_id);
 
     return {
-      id: userTask.task_id,
+      task_id: userTask.task_id,
       title: userTask.task_title,
       description: userTask.task_description,
-      status: userTask.task_status as TaskStatus,
+      status: userTask.task_status,
       priority: safePriorityLevel(userTask.task_priority),
       deadline: userTask.task_deadline || "",
-      portfolio_id: userTask.task_portfolio_id,
-      portfolio: safePortfolio(portfolio.name),
-      assignees: [],
+      portfolio: {
+        portfolio_id: userTask.task_portfolio_id,
+        name: portfolio.name,
+      },
+      parent_task_id: 0, // Default value, adjust as needed
+      source_meeting_id: 0, // Default value, adjust as needed
       created_by: {
         user_id: 0,
         username: "Unknown",
@@ -67,20 +61,24 @@ export async function transformUserTaskToTaskClient(
       created_at: userTask.task_created_at || "",
       updated_at: userTask.task_updated_at || "",
       subtasks: [],
+      assignees: [],
     };
   } catch (error) {
     console.error("Error transforming user task:", error);
     // Return a fallback task object
     return {
-      id: userTask.task_id,
+      task_id: userTask.task_id,
       title: userTask.task_title,
       description: userTask.task_description,
-      status: userTask.task_status as TaskStatus,
+      status: userTask.task_status,
       priority: safePriorityLevel(userTask.task_priority),
       deadline: userTask.task_deadline || "",
-      portfolio_id: userTask.task_portfolio_id,
-      portfolio: "EDU",
-      assignees: [],
+      portfolio: {
+        portfolio_id: userTask.task_portfolio_id,
+        name: "Unknown",
+      },
+      parent_task_id: 0,
+      source_meeting_id: 0,
       created_by: {
         user_id: 0,
         username: "Unknown",
@@ -89,6 +87,7 @@ export async function transformUserTaskToTaskClient(
       created_at: userTask.task_created_at || "",
       updated_at: userTask.task_updated_at || "",
       subtasks: [],
+      assignees: [],
     };
   }
 }
@@ -101,14 +100,14 @@ export async function updateTaskStatusClient(taskId: number, status: TaskStatus)
   });
 }
 
-export async function updateTaskClient(taskId: number, updates: Partial<Task>): Promise<void> {
+export async function updateTaskClient(taskId: number, updates: Partial<TaskResponse>): Promise<void> {
   await clientApiFetch(`/api/v1/tasks/${taskId}`, {
     method: "PUT",
     body: JSON.stringify(updates),
   });
 }
 
-export async function createTaskClient(taskData: TaskCreateRequest): Promise<Task> {
+export async function createTaskClient(taskData: TaskCreateRequest): Promise<TaskResponse> {
   return await clientApiFetch("/api/v1/tasks", {
     method: "POST",
     body: JSON.stringify(taskData),

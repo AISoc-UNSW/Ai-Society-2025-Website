@@ -4,23 +4,24 @@ Meeting Recording Cog
 Responsible for handling Discord voice channel recording functionality
 """
 
-import discord
-from discord.ext import commands
+import json
 import logging
 import os
-from datetime import datetime
-from pydub import AudioSegment
 import subprocess
-from dotenv import load_dotenv
+from datetime import datetime
 
-from utils import MeetingService
-from ai_generation.speech_to_text import speech_to_text
-from ai_generation.generate_tasks import generate_tasks
-import json
-
-from utils.config import config
-from utils.auth_manager import AuthManager
 import aiohttp
+import asyncio
+from typing import cast
+import discord
+from ai_generation.generate_tasks import generate_tasks_async
+from ai_generation.speech_to_text import speech_to_text_async
+from discord.ext import commands
+from dotenv import load_dotenv
+from utils import MeetingService
+from utils.auth_manager import AuthManager
+from utils.config import config
+from pydub import AudioSegment  # type: ignore
 
 load_dotenv()
 
@@ -41,11 +42,11 @@ class MeetingRecord(commands.Cog):
         self.recording_sessions = {}
 
     # Ensure aiohttp session is closed when cog is unloaded (avoided duplicating session creation, as it is handled in ensure_session)
-    async def cog_unload(self):
+    def cog_unload(self):
         """Called when the cog is unloaded"""
-        # Close aiohttp session
+        # Close aiohttp session without blocking
         if self.session:
-            await self.session.close()
+            asyncio.create_task(self.session.close())
 
     async def ensure_session(self):
         """Ensure HTTP session is initialized"""
@@ -55,17 +56,28 @@ class MeetingRecord(commands.Cog):
 
     async def ensure_authenticated(self) -> bool:
         """Ensure authentication with backend API"""
-        if not self._authenticated:
+        if not self.auth_manager.is_authenticated:
             success = await self.auth_manager.login(
                 config.api_username, config.api_password
             )
+            self._authenticated = success
             if success:
-                self._authenticated = True
                 logger.info("Successfully authenticated with backend API")
             else:
                 logger.error("Failed to authenticate with backend API")
             return success
         return True
+    
+    portfolio_options = [
+        discord.OptionChoice(name="IT portfolio", value=101),
+        discord.OptionChoice(name="Marketing portfolio", value=102),
+        discord.OptionChoice(name="Events portfolio", value=103),
+        discord.OptionChoice(name="Edu portfolio", value=104),
+        discord.OptionChoice(name="Projects portfolio", value=105),
+        discord.OptionChoice(name="Partnerships portfolio", value=106),
+        discord.OptionChoice(name="HR portfolio", value=107),
+        discord.OptionChoice(name="Execs", value=111),
+    ]
 
     @discord.slash_command(
         name="record_voice", description="Start recording voice meeting"
@@ -73,9 +85,14 @@ class MeetingRecord(commands.Cog):
     async def start_recording(
         self,
         ctx: discord.ApplicationContext,
-        meeting_name: str = discord.Option(str, "Meeting name", required=True),
-        portfolio_id: int = discord.Option(int, "Portfolio ID", required=True),
-        user_can_see: bool = discord.Option(
+        meeting_name = discord.Option(str, "Meeting name", required=True),
+        portfolio_id = discord.Option(
+            int,
+            description="Select the portfolio for this meeting",
+            required=True,
+            choices=portfolio_options
+        ),
+        user_can_see = discord.Option(
             bool,
             "Whether users can see this meeting record",
             required=False,
@@ -84,14 +101,18 @@ class MeetingRecord(commands.Cog):
     ):
         """Start recording command"""
         # Check if user is in voice channel
-        if not ctx.author.voice:
+        author_member = cast(discord.Member, ctx.author)
+        voice_state = getattr(author_member, "voice", None)
+        if not voice_state or not voice_state.channel:
             await ctx.respond(
                 "❌ You need to join a voice channel first!", ephemeral=True
             )
             return
 
-        voice_channel = ctx.author.voice.channel
-        guild_id = ctx.guild.id
+        voice_channel = voice_state.channel
+        guild = ctx.guild
+        assert guild is not None
+        guild_id = guild.id
 
         # Ensure there is at least one non-bot user in the channel
         non_bot_members = [m for m in voice_channel.members if not m.bot]
@@ -112,9 +133,10 @@ class MeetingRecord(commands.Cog):
 
         try:
             # Connect to voice channel
-            if ctx.guild.voice_client:
-                await ctx.guild.voice_client.move_to(voice_channel)
-                vc = ctx.guild.voice_client
+            if guild.voice_client:
+                assert guild.voice_client is not None
+                await guild.voice_client.move_to(voice_channel)
+                vc = guild.voice_client
             else:
                 vc = await voice_channel.connect()
 
@@ -152,7 +174,7 @@ class MeetingRecord(commands.Cog):
             )
 
         except Exception:
-            logger.exception("Failed to start recording")  # Log full traceback
+            logger.exception("Failed to start recording")
             await ctx.respond(
                 "❌ Failed to start recording, check logs for details.", ephemeral=True
             )
@@ -165,7 +187,9 @@ class MeetingRecord(commands.Cog):
     )
     async def stop_recording(self, ctx: discord.ApplicationContext):
         """Stop recording command"""
-        guild_id = ctx.guild.id
+        guild = ctx.guild
+        assert guild is not None
+        guild_id = guild.id
 
         # Check if recording
         if guild_id not in self.recording_sessions:
@@ -188,46 +212,63 @@ class MeetingRecord(commands.Cog):
             await ctx.respond(f"❌ Failed to stop recording: {str(e)}", ephemeral=True)
 
     async def process_audio_files(self, sink, session, channel):
-        """Process and merge audio files, return file_path or None"""
+        """Process and merge audio files, return file_path or None without blocking the loop"""
         await channel.send("🔄 Processing audio files...")
-        segments = []
-        temp_files = []
-        for user_id, audio in sink.audio_data.items():
-            raw_path = f"temp_{user_id}_raw.wav"
-            fixed_path = f"temp_{user_id}_fixed.wav"
-            temp_files.extend([raw_path, fixed_path])
-            with open(raw_path, "wb") as f:
-                f.write(audio.file.getbuffer())
-            subprocess.run(
-                ["ffmpeg", "-y", "-i", raw_path, fixed_path],
-                check=True,
-                capture_output=True,
-            )
-            seg = AudioSegment.from_wav(fixed_path)
-            segments.append(seg)
-        for temp_file in temp_files:
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
-        if not segments:
+
+        def _extract_and_mix() -> str | None:
+            # Extract per-user raw files, convert with ffmpeg, mix with pydub
+            segments_local: list[AudioSegment] = []
+            temp_files_local: list[str] = []
+            try:
+                for user_id, audio in sink.audio_data.items():
+                    raw_path = f"temp_{user_id}_raw.wav"
+                    fixed_path = f"temp_{user_id}_fixed.wav"
+                    temp_files_local.extend([raw_path, fixed_path])
+                    with open(raw_path, "wb") as f:
+                        f.write(audio.file.getbuffer())
+                    # Use blocking ffmpeg in worker thread to avoid event loop blocking
+                    subprocess.run(["ffmpeg", "-y", "-i", raw_path, fixed_path], check=True, capture_output=True)
+                    seg = AudioSegment.from_wav(fixed_path)
+                    segments_local.append(seg)
+
+                if not segments_local:
+                    return None
+
+                combined = segments_local[0]
+                for seg in segments_local[1:]:
+                    combined = combined.overlay(seg)
+
+                file_path_local = self.meeting_service.get_recording_file_path(
+                    session["meeting_name"], session["portfolio_id"]
+                )
+                combined.export(file_path_local, format="wav")
+                return file_path_local
+            finally:
+                for temp_file in temp_files_local:
+                    if os.path.exists(temp_file):
+                        try:
+                            os.remove(temp_file)
+                        except OSError:
+                            pass
+
+        try:
+            file_path = await asyncio.to_thread(_extract_and_mix)
+        except Exception as e:
+            await channel.send(f"❌ Audio processing failed: {str(e)}")
+            return None
+
+        if not file_path:
             await channel.send("❌ No audio recorded!")
             return None
-        combined = segments[0]
-        for seg in segments[1:]:
-            combined = combined.overlay(seg)
-        file_path = self.meeting_service.get_recording_file_path(
-            session["meeting_name"], session["portfolio_id"]
-        )
-        combined.export(file_path, format="wav")
+
         await channel.send(f"✅ Audio file saved: `{file_path}`")
         return file_path
 
     async def transcribe_audio(self, file_path, channel):
-        """Transcribe audio file and return (transcript, summary) or (None, None)"""
-        await channel.send(
-            "📝 Converting audio to transcript and generating summary..."
-        )
+        """Transcribe audio file and return (transcript, summary) or (None, None), non-blocking"""
+        await channel.send("📝 Converting audio to transcript and generating summary...")
         try:
-            transcript, summary = speech_to_text(file_path)
+            transcript, summary = await speech_to_text_async(file_path)
             await channel.send("✅ Transcript and Summary generated successfully!")
             return transcript, summary
         except Exception as e:
@@ -241,7 +282,7 @@ class MeetingRecord(commands.Cog):
             "🤖 Based on the meeting transcript, the tasks are generated as follows..."
         )
         try:
-            tasks = generate_tasks(
+            tasks = await generate_tasks_async(
                 transcript,
                 source_meeting_id=meeting_id,
                 portfolio_id=session["portfolio_id"],
@@ -268,9 +309,10 @@ class MeetingRecord(commands.Cog):
             f"✅ To make any changes to the tasks, access the taskbot website: {config.frontend_base_url}/taskbot/meeting/{meeting_id}/confirm"
         )
         url = f"{config.api_base_url}/api/v1/tasks/group"
-        payload = {"tasks": tasks, "source_meeting_id": meeting_id}
+        payload = {"tasks": tasks, "portfolio_id": session["portfolio_id"], "source_meeting_id": meeting_id}
         headers = self.auth_manager.auth_headers
         try:
+            assert self.session is not None
             async with self.session.post(url, json=payload, headers=headers) as resp:
                 if resp.status == 200:
                     data = await resp.json()
@@ -412,7 +454,7 @@ class MeetingRecord(commands.Cog):
             for guild_id, session in list(self.recording_sessions.items()):
                 if session["voice_client"].channel == before.channel:
                     logger.warning(
-                        f"Bot was disconnected from voice channel during recording"
+                        "Bot was disconnected from voice channel during recording"
                     )
                     del self.recording_sessions[guild_id]
 

@@ -3,19 +3,19 @@
 # =============================================================================
 # This docker-compose.yml file is for deploying the Discord taskbot service
 # independently from the main application stack.
-# 
+#
 # SETUP INSTRUCTIONS:
 # 1. Create a .env file in this directory with your actual configuration values
 # 2. Update the environment variables to match your deployment environment
-# 
+#
 # REQUIRED ENVIRONMENT VARIABLES:
 # - DISCORD_TOKEN: Discord bot token
 # - FRONTEND_BASE_URL: Frontend application URL
-# - API_BASE_URL: Backend API URL  
+# - API_BASE_URL: Backend API URL
 # - API_USERNAME: API username for bot authentication
 # - API_PASSWORD: API password for bot authentication
 # - OPENAI_API_KEY: OpenAI API key for AI features
-# - GEMINI_API_KEY: Google Gemini API key for AI features
+# Note: GEMINI_API_KEY removed - using OpenAI for all AI features
 # - RECORDING_SAVE_PATH: Path to save voice recordings (optional)
 # - LOG_LEVEL: Logging level (optional, defaults to INFO)
 # - DEV_MODE: Development mode flag (optional, defaults to false)
@@ -32,7 +32,7 @@ services:
       # Discord Bot Configuration
       # Get bot token from Discord Developer Portal: https://discord.com/developers/applications
       - DISCORD_TOKEN=${DISCORD_TOKEN}
-      
+
       # API Configuration
       # Update with your actual frontend and backend URLs
       - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
@@ -40,23 +40,22 @@ services:
       # Use a dedicated API user account for the bot
       - API_USERNAME=${API_USERNAME}
       - API_PASSWORD=${API_PASSWORD}
-      
+
       # Recording Configuration
       - RECORDING_SAVE_PATH=${RECORDING_SAVE_PATH:-./recordings/}
-      
+
       # AI API Keys
       # Get from respective providers:
       # OpenAI: https://platform.openai.com/api-keys
-      # Google AI Studio: https://aistudio.google.com/app/apikey
+      # Note: Google AI Studio integration removed - using OpenAI for all AI features
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      
+
       # Development Configuration
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - DEV_MODE=${DEV_MODE:-false}
-    
+
     restart: unless-stopped
 
 networks:
   default:
-    name: ai-society-taskbot-net 
+    name: ai-society-taskbot-net
